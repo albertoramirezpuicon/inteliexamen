@@ -4,6 +4,48 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **Deployment Infrastructure**: Complete CI/CD and deployment setup
+  - **Docker Configuration**: Multi-stage Dockerfile with Node.js 18 Alpine base for production optimization
+  - **Docker Compose**: Complete stack with MySQL 8.0, Next.js app, and Nginx reverse proxy
+  - **GitHub Actions CI/CD**: Automated testing, building, and deployment to EC2
+    - Test job with MySQL service for database testing
+    - Build job with Docker image creation
+    - Deploy job with SSH deployment to EC2
+  - **EC2 Setup Script**: Automated server configuration script
+    - System package updates and security hardening
+    - Docker and Docker Compose installation
+    - Nginx configuration with SSL support
+    - Firewall setup (UFW) with proper port rules
+    - Systemd service for auto-restart
+    - Monitoring script with health checks
+    - Backup script with automated daily backups
+  - **Deployment Script**: Manual deployment script with backup and health checks
+  - **Nginx Configuration**: Production-ready reverse proxy with rate limiting and SSL
+  - **Health Check API**: `/api/health` endpoint for monitoring application and database status
+  - **Environment Template**: `env.example` with all required environment variables
+  - **Documentation**: Comprehensive deployment guide in README.md
+
+### Changed
+- **Next.js Configuration**: Added standalone output for Docker deployment
+  - Updated `next.config.ts` with `output: 'standalone'` for optimized Docker builds
+  - Added experimental output file tracing configuration
+- **Port Configuration**: Changed application port from 3000 to 3006 to avoid conflicts
+  - Updated Docker Compose, Nginx, and deployment scripts
+  - Health checks now use port 3006
+
+### Technical Details
+- **Security**: Rate limiting, SSL/TLS, firewall configuration, secure headers
+- **Performance**: Gzip compression, caching headers, optimized static assets
+- **Monitoring**: Health checks, automatic container restart, log rotation
+- **Backup**: Automated daily database and application backups with 7-day retention
+- **CI/CD**: Automated testing with MySQL service, build verification, and EC2 deployment
+
+### Important Rules Established
+- **GitHub Actions Workflow**: The `.github/workflows/deploy.yml` file is managed by the user and should not be modified
+- **Environment Variables**: Database credentials are uploaded manually via `.env` file, not stored in GitHub Secrets
+- **Port Management**: Application runs on port 3006 to avoid conflicts with existing services
+
 ### Fixed
 - **Landing Page Routing Issue**: Fixed landing page to display correctly at locale-based URLs
   - Moved landing page content from root `/page.tsx` to `/[locale]/page.tsx` to support internationalization
@@ -935,3 +977,35 @@ All notable changes to this project will be documented in this file.
     - Email content in user's preferred language
     - Consistent terminology across languages
   - **Database Integration**: Uses existing `reset_token` and `reset_token_expiry` fields in `inteli_users` table
+
+### Added
+- **Deployment Infrastructure**: Complete CI/CD and deployment setup
+  - Dockerfile with multi-stage build for production optimization
+  - Docker Compose configuration with MySQL, Next.js app, and Nginx
+  - GitHub Actions workflow for automated testing and deployment
+  - EC2 setup script for initial server configuration
+  - Deployment script for manual deployments
+  - Nginx configuration with SSL support and rate limiting
+  - Health check API endpoint for monitoring
+  - Environment variables template
+  - Comprehensive deployment documentation
+
+### Changed
+- **Next.js Configuration**: Added standalone output for Docker deployment
+- **Documentation**: Updated README with complete deployment instructions
+
+### Technical Details
+- **Docker**: Multi-stage build with Node.js 18 Alpine base
+- **CI/CD**: Automated testing with MySQL service, build verification, and EC2 deployment
+- **Monitoring**: Health checks, automatic container restart, and log rotation
+- **Security**: Rate limiting, SSL/TLS, firewall configuration, and secure headers
+- **Backup**: Automated daily database and application backups
+- **Performance**: Gzip compression, caching headers, and optimized static assets
+
+### Fixed
+- **GitHub Actions AWS Credentials Error**: Removed unnecessary AWS credentials configuration from deployment workflow
+  - Removed `aws-actions/configure-aws-credentials@v2` step from `.github/workflows/deploy.yml`
+  - The deployment uses SSH to connect directly to EC2, not AWS services
+  - This resolves the "Context access might be invalid: AWS_ACCESS_KEY_ID" error
+  - Updated README.md to reflect the correct required GitHub secrets
+  - Simplified deployment workflow by removing unused AWS configuration

@@ -1,5 +1,20 @@
 # Lessons Learned
 
+This document contains important lessons learned during the development of the Inteliexamen Platform.
+
+## Deployment and CI/CD
+
+### GitHub Actions Workflow Management
+**Issue**: Attempting to modify the `.github/workflows/deploy.yml` file without user permission
+**Problem**: The user has custom deployment logic and manages this file directly
+**Solution**: 
+- **NEVER modify** the `.github/workflows/deploy.yml file
+- Document this rule in README.md and LESSONS_LEARNED.md
+- All deployment configuration changes must be made by the user
+- The workflow file contains user-specific deployment logic and should remain untouched
+
+**Prevention**: Always ask the user before making any changes to deployment configuration files
+
 ## Database and API Issues
 
 ### Foreign Key Constraint Errors with AI-Generated IDs
