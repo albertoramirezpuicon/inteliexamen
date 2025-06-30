@@ -1009,3 +1009,15 @@ All notable changes to this project will be documented in this file.
   - This resolves the "Context access might be invalid: AWS_ACCESS_KEY_ID" error
   - Updated README.md to reflect the correct required GitHub secrets
   - Simplified deployment workflow by removing unused AWS configuration
+
+- **Build Errors - Duplicate Identifier Declarations**: Fixed duplicate content in API route files causing build failures
+  - Fixed `src/app/api/admin/domains/[id]/route.ts`: Removed duplicate import and handler exports
+  - Fixed `src/app/api/admin/skills/[id]/route.ts`: Removed duplicate import and handler exports  
+  - Fixed `src/app/api/ai/generate-case/route.ts`: Removed duplicate OPENAI_API_KEY declaration
+  - These files had their entire content duplicated, causing "Identifier has already been declared" errors
+  - Build process should now complete successfully without TypeScript compilation errors
+
+- **Health API Route**: Fixed health check endpoint to use MySQL connection instead of Prisma
+  - Updated `/api/health/route.ts` to use `checkDatabaseConnection()` from MySQL library
+  - Removed Prisma-specific `db.$queryRaw` syntax that was causing build errors
+  - Health endpoint now properly tests MySQL connectivity for production monitoring

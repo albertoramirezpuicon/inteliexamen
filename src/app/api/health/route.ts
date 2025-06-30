@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { checkDatabaseConnection } from '@/lib/db';
 
 export async function GET() {
   try {
     // Test database connection
-    await db.$queryRaw`SELECT 1`;
+    const dbConnected = await checkDatabaseConnection();
     
     return NextResponse.json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      database: 'connected',
+      database: dbConnected ? 'connected' : 'disconnected',
       uptime: process.uptime()
     });
   } catch (error) {
