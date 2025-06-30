@@ -1195,3 +1195,8 @@ All notable changes to this project will be documented in this file.
     - **Optimized image formats**: Removed AVIF format support to reduce build time
     - **Enabled telemetry disable**: Added `NEXT_TELEMETRY_DISABLED=1` to reduce build overhead
   - **Result**: Significantly reduced build time and eliminated timeout issues in GitHub Actions
+- **PostCSS Module Fix**: Fixed build error with missing PostCSS module:
+  - **Problem**: Build was failing with "Cannot find module '@tailwindcss/postcss'" error
+  - **Root Cause**: Dockerfile was using `npm ci --only=production` which only installed production dependencies, but `@tailwindcss/postcss` is in devDependencies and required for the build process
+  - **Solution**: Changed Dockerfile to use `npm ci` (without `--only=production`) to install all dependencies including devDependencies needed for the build
+  - **Result**: Resolves the PostCSS module not found error and allows the build to proceed
