@@ -181,7 +181,7 @@ export async function DELETE(
       `DELETE FROM inteli_assessments_groups 
        WHERE assessment_id = ? AND group_id IN (${groupIdArray.map(() => '?').join(',')})`,
       [assessmentId, ...groupIdArray]
-    );
+    ) as any;
 
     return NextResponse.json({
       message: 'Groups removed successfully',

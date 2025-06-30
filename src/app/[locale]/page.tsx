@@ -6,8 +6,6 @@ import {
   Container, 
   Typography, 
   Button, 
-  AppBar, 
-  Toolbar, 
   IconButton, 
   Modal, 
   Paper,
@@ -17,13 +15,11 @@ import {
   Stack
 } from '@mui/material';
 import { 
-  Language as LanguageIcon,
   AdminPanelSettings as AdminIcon,
   School as TeacherIcon,
   Person as StudentIcon,
   Close as CloseIcon,
   SmartToy as AIIcon,
-  Assessment as AssessmentIcon,
   Analytics as AnalyticsIcon,
   Security as SecurityIcon,
   Speed as SpeedIcon,
@@ -33,7 +29,6 @@ import {
 import LoginFormWrapper from '@/components/auth/LoginFormWrapper';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 
 export default function LandingPage() {
   const t = useTranslations('landing');

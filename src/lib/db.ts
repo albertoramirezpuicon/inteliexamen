@@ -12,23 +12,28 @@ const pool = mysql.createPool({
   charset: 'utf8mb4'
 });
 
+// Database error type
+interface DatabaseError extends Error {
+  code?: string;
+}
+
 // Retry function for database operations
 async function retryOperation<T>(operation: () => Promise<T>, maxRetries: number = 3): Promise<T> {
-  let lastError: any;
+  let lastError: DatabaseError | undefined;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       return await operation();
-    } catch (error: any) {
-      lastError = error;
+    } catch (error: unknown) {
+      lastError = error as DatabaseError;
       
       // Check if it's a connection error that we should retry
-      if (error.code === 'ECONNRESET' || 
-          error.code === 'PROTOCOL_CONNECTION_LOST' || 
-          error.code === 'ER_CON_COUNT_ERROR' ||
-          error.code === 'ETIMEDOUT') {
+      if (lastError.code === 'ECONNRESET' || 
+          lastError.code === 'PROTOCOL_CONNECTION_LOST' || 
+          lastError.code === 'ER_CON_COUNT_ERROR' ||
+          lastError.code === 'ETIMEDOUT') {
         
-        console.log(`Database connection error (attempt ${attempt}/${maxRetries}):`, error.code);
+        console.log(`Database connection error (attempt ${attempt}/${maxRetries}):`, lastError.code);
         
         if (attempt < maxRetries) {
           // Wait before retrying (exponential backoff)
@@ -43,11 +48,11 @@ async function retryOperation<T>(operation: () => Promise<T>, maxRetries: number
     }
   }
   
-  throw lastError;
+  throw lastError || new Error('Operation failed after all retries');
 }
 
 // Export query function for database operations with retry logic
-export async function query(sql: string, params: any[] = []) {
+export async function query(sql: string, params: (string | number | boolean | null)[] = []) {
   return retryOperation(async () => {
     try {
       const [rows] = await pool.execute(sql, params);
@@ -60,11 +65,11 @@ export async function query(sql: string, params: any[] = []) {
 }
 
 // Export insertQuery function for INSERT operations that return the insert ID
-export async function insertQuery(sql: string, params: any[] = []) {
+export async function insertQuery(sql: string, params: (string | number | boolean | null)[] = []) {
   return retryOperation(async () => {
     try {
       const [result] = await pool.execute(sql, params);
-      return result as any;
+      return result as mysql.ResultSetHeader;
     } catch (error) {
       console.error('Database insert error:', error);
       throw error;

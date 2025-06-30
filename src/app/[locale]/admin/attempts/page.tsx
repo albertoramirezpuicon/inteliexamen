@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Paper,
@@ -34,10 +34,7 @@ import {
   Grid
 } from '@mui/material';
 import {
-  Home as HomeIcon,
   Visibility as ViewIcon,
-  Assessment as AssessmentIcon,
-  Psychology as PsychologyIcon,
   Close as CloseIcon,
   Delete as DeleteIcon,
   Person as PersonIcon,
@@ -84,9 +81,8 @@ export default function AdminAttemptsPage() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('admin');
-  const tCommon = useTranslations('common');
   
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ id: number; email: string; given_name: string; family_name: string; role: string } | null>(null);
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [selectedInstitution, setSelectedInstitution] = useState<number | null>(null);
@@ -97,7 +93,6 @@ export default function AdminAttemptsPage() {
   
   // Results modal
   const [resultsModalOpen, setResultsModalOpen] = useState(false);
-  const [selectedAttemptId, setSelectedAttemptId] = useState<number | null>(null);
   const [results, setResults] = useState<AssessmentResult[]>([]);
   const [resultsLoading, setResultsLoading] = useState(false);
 
@@ -150,7 +145,7 @@ export default function AdminAttemptsPage() {
   };
 
   // Load attempts with filters
-  const loadAttempts = async () => {
+  const loadAttempts = useCallback(async () => {
     try {
       setLoading(true);
       let url = '/api/admin/attempts';
@@ -174,12 +169,12 @@ export default function AdminAttemptsPage() {
       } else {
         setError('Failed to load attempts');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to load attempts');
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedInstitution, selectedAssessment]);
 
   // Load results for an attempt
   const loadResults = async (attemptId: number) => {
@@ -192,7 +187,7 @@ export default function AdminAttemptsPage() {
       } else {
         setError('Failed to load results');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to load results');
     } finally {
       setResultsLoading(false);
@@ -209,7 +204,6 @@ export default function AdminAttemptsPage() {
   };
 
   const handleViewResults = async (attemptId: number) => {
-    setSelectedAttemptId(attemptId);
     setResultsModalOpen(true);
     await loadResults(attemptId);
   };
@@ -238,7 +232,7 @@ export default function AdminAttemptsPage() {
       } else {
         setError('Failed to delete attempt');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to delete attempt');
     } finally {
       setDeleting(false);
@@ -249,10 +243,6 @@ export default function AdminAttemptsPage() {
     setDeleteModalOpen(false);
     setDeleteAttemptId(null);
     setDeleteAttemptName('');
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
   };
 
   const formatDateTime = (dateString: string) => {
@@ -291,7 +281,7 @@ export default function AdminAttemptsPage() {
     if (user) {
       loadAttempts();
     }
-  }, [user, selectedInstitution, selectedAssessment]);
+  }, [user, selectedInstitution, selectedAssessment, loadAttempts]);
 
   if (!user) {
     return (
@@ -454,7 +444,7 @@ export default function AdminAttemptsPage() {
                       <TableCell>
                         <Chip
                           label={attempt.status}
-                          color={getStatusColor(attempt.status) as any}
+                          color={getStatusColor(attempt.status) as 'success' | 'warning' | 'info' | 'default'}
                           size="small"
                         />
                       </TableCell>
@@ -579,7 +569,7 @@ export default function AdminAttemptsPage() {
           <DialogTitle>Confirm Delete</DialogTitle>
           <DialogContent>
             <Typography>
-              Are you sure you want to delete the attempt for student "{deleteAttemptName}"? This action cannot be undone.
+              Are you sure you want to delete the attempt for student &quot;{deleteAttemptName}&quot;? This action cannot be undone.
             </Typography>
           </DialogContent>
           <DialogActions>

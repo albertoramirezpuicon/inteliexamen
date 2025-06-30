@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   Box,
@@ -12,16 +12,14 @@ import {
   CircularProgress,
   Breadcrumbs,
   Link,
-  Divider,
   Card,
   CardContent,
-  Grid,
   FormControl,
   InputLabel,
   Select,
   MenuItem
 } from '@mui/material';
-import { ArrowBack, Save, Psychology, AutoAwesome } from '@mui/icons-material';
+import { ArrowBack, Save, AutoAwesome } from '@mui/icons-material';
 import Navbar from '@/components/layout/Navbar';
 
 interface SkillLevel {
@@ -96,8 +94,8 @@ export default function SkillLevelsPage() {
       } else {
         setSkillLevels(data.skillLevels);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: Error | unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load skill levels');
     } finally {
       setLoading(false);
     }
@@ -136,8 +134,8 @@ export default function SkillLevelsPage() {
 
       setSuccess('Skill levels saved successfully');
       setSkillLevels(data.skillLevels);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: Error | unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to save skill levels');
     } finally {
       setSaving(false);
     }
@@ -177,8 +175,8 @@ export default function SkillLevelsPage() {
       
       setSkillLevels(updatedLevels);
       setSuccess('AI suggestions generated successfully! You can now review and edit them.');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: Error | unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to generate AI suggestions');
     } finally {
       setAiLoading(false);
     }
@@ -256,7 +254,6 @@ export default function SkillLevelsPage() {
         <Card sx={{ mb: 3 }}>
           <CardContent>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <Psychology sx={{ mr: 1, color: 'primary.main' }} />
               <Typography variant="h6">Level Template</Typography>
             </Box>
             <Typography variant="body2" color="text.secondary">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { 
   Box, 
@@ -22,7 +22,6 @@ import {
 import { 
   Send as SendIcon, 
   ArrowBack as ArrowBackIcon,
-  ContentCopy as ContentCopyIcon,
   Block as BlockIcon,
   Home as HomeIcon,
   Assessment as AssessmentIcon
@@ -69,15 +68,12 @@ interface Attempt {
   completed_at?: string;
 }
 
-interface AIEvaluationResponse {
-  canDetermineLevel: boolean;
+interface AssessmentResult {
+  skill_id: number;
+  skill_name: string;
+  skill_level_id: number;
+  skill_level_label: string;
   feedback: string;
-  skillResults?: {
-    skillId: number;
-    skillLevelId: number;
-    feedback: string;
-  }[];
-  message?: string;
 }
 
 export default function AssessmentAttemptPage() {
@@ -93,28 +89,13 @@ export default function AssessmentAttemptPage() {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<AssessmentResult[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    if (assessmentId && !isInitialized) {
-      setIsInitialized(true);
-      loadAssessmentAndStartAttempt();
-    }
-  }, [assessmentId, isInitialized]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [conversation]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const loadAssessmentAndStartAttempt = async () => {
+  const loadAssessmentAndStartAttempt = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -164,6 +145,21 @@ export default function AssessmentAttemptPage() {
     } finally {
       setIsLoading(false);
     }
+  }, [assessmentId]);
+
+  useEffect(() => {
+    if (assessmentId && !isInitialized) {
+      setIsInitialized(true);
+      loadAssessmentAndStartAttempt();
+    }
+  }, [assessmentId, isInitialized, loadAssessmentAndStartAttempt]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [conversation]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const loadConversation = async (attemptId: number) => {

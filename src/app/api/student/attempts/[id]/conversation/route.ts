@@ -140,7 +140,7 @@ export async function POST(
 
     // Get skill levels for each skill
     const skillsWithLevels = await Promise.all(
-      assessmentResult.map(async (skill: any) => {
+      assessmentResult.map(async (skill: { skill_id: number; skill_name: string; skill_description: string }) => {
         const levelsQuery = `
           SELECT 
             id,
@@ -190,7 +190,7 @@ export async function POST(
       console.log('Available skill levels:', skillsWithLevels.map(skill => ({
         skillId: skill.skill_id,
         skillName: skill.skill_name,
-        levels: skill.levels.map((level: any) => ({ id: level.id, label: level.label }))
+        levels: skill.levels.map((level: { id: number; label: string }) => ({ id: level.id, label: level.label }))
       })));
       
       // Validate skill level IDs before saving
@@ -288,9 +288,25 @@ export async function POST(
 
 async function evaluateWithAI(params: {
   studentReply: string;
-  assessment: any;
-  skills: any[];
-  conversationHistory: any[];
+  assessment: {
+    case_text: string;
+    questions_per_skill: number;
+    output_language: string;
+  };
+  skills: Array<{
+    skill_id: number;
+    skill_name: string;
+    skill_description: string;
+    levels: Array<{
+      id: number;
+      label: string;
+      description: string;
+    }>;
+  }>;
+  conversationHistory: Array<{
+    message_type: string;
+    message_text: string;
+  }>;
   attemptId: number;
 }) {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -395,9 +411,24 @@ async function evaluateWithAI(params: {
 
 function createEvaluationPrompt(params: {
   studentReply: string;
-  assessment: any;
-  skills: any[];
-  conversationHistory: any[];
+  assessment: {
+    case_text: string;
+    output_language: string;
+  };
+  skills: Array<{
+    skill_id: number;
+    skill_name: string;
+    skill_description: string;
+    levels: Array<{
+      id: number;
+      label: string;
+      description: string;
+    }>;
+  }>;
+  conversationHistory: Array<{
+    message_type: string;
+    message_text: string;
+  }>;
   turnCount: number;
   maxTurns: number;
   outputLanguage: string;
@@ -409,7 +440,7 @@ function createEvaluationPrompt(params: {
     .join('\n');
 
   const skillsText = skills.map(skill => {
-    const levelsText = skill.levels.map((level: any) => 
+    const levelsText = skill.levels.map((level: { id: number; label: string; description: string }) => 
       `- Level ID ${level.id} (${level.label}): ${level.description}`
     ).join('\n');
     

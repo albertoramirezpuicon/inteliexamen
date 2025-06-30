@@ -84,7 +84,15 @@ export async function GET(
     console.log('Results query result:', results);
 
     // Format the results
-    const formattedResults = results.map((result: any) => ({
+    const formattedResults = results.map((result: {
+      id: number;
+      skill_id: number;
+      skill_level_id: number;
+      skill_name: string;
+      skill_level_label: string;
+      skill_level_description: string;
+      feedback: string;
+    }) => ({
       id: result.id,
       skillId: result.skill_id,
       skillLevelId: result.skill_level_id,

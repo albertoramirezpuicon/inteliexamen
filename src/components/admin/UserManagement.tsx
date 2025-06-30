@@ -36,12 +36,12 @@ import {
 import { Edit, Delete, Add, Search, Clear, Group } from '@mui/icons-material';
 
 interface User {
-  id: string;
+  id: number;
   email: string;
   given_name: string;
   family_name: string;
   role: string;
-  institution_id: string;
+  institution_id: number;
   institution_name?: string;
   language_preference: string;
   created_at: string;
@@ -49,15 +49,15 @@ interface User {
 }
 
 interface Institution {
-  id: string;
+  id: number;
   name: string;
 }
 
 interface Group {
-  id: string;
+  id: number;
   name: string;
   description: string;
-  institution_id: string;
+  institution_id: number;
   institution_name?: string;
   created_at: string;
   updated_at: string;
@@ -223,7 +223,7 @@ export default function UserManagement() {
     setOpenDialog(true);
   };
 
-  const handleDeleteUser = async (userId: string) => {
+  const handleDeleteUser = async (userId: number) => {
     if (!confirm('Are you sure you want to delete this user?')) {
       return;
     }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Paper,
@@ -34,7 +34,6 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Visibility as ViewIcon,
-  Search as SearchIcon,
   Clear as ClearIcon,
   Group as GroupIcon,
   Home as HomeIcon
@@ -94,7 +93,7 @@ export default function TeacherAssessmentsPage() {
   const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null);
 
   // Load user info
-  const loadUserInfo = async () => {
+  const loadUserInfo = useCallback(async () => {
     try {
       console.log('Loading user info...');
       // Try to get from localStorage first (using same key as dashboard)
@@ -115,10 +114,10 @@ export default function TeacherAssessmentsPage() {
       setError('Failed to load user information');
       router.push(`/${locale}/teacher/login`);
     }
-  };
+  }, [locale, router]);
 
   // Load assessments
-  const loadAssessments = async () => {
+  const loadAssessments = useCallback(async () => {
     if (!currentUserId || !currentInstitutionId) {
       console.log('Missing user info - currentUserId:', currentUserId, 'currentInstitutionId:', currentInstitutionId);
       return;
@@ -156,17 +155,17 @@ export default function TeacherAssessmentsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUserId, currentInstitutionId, page, rowsPerPage, search, statusFilter]);
 
   useEffect(() => {
     loadUserInfo();
-  }, []);
+  }, [loadUserInfo]);
 
   useEffect(() => {
     if (currentUserId && currentInstitutionId) {
       loadAssessments();
     }
-  }, [page, rowsPerPage, search, statusFilter, currentUserId, currentInstitutionId]);
+  }, [currentUserId, currentInstitutionId, loadAssessments]);
 
   const handleDelete = async () => {
     if (!assessmentToDelete) return;
@@ -338,14 +337,14 @@ export default function TeacherAssessmentsPage() {
                     <TableCell>
                       <Chip
                         label={assessment.status}
-                        color={getStatusColor(assessment.status) as any}
+                        color={getStatusColor(assessment.status) as 'success' | 'default'}
                         size="small"
                       />
                     </TableCell>
                     <TableCell>
                       <Chip
                         label={assessment.difficulty_level}
-                        color={getDifficultyColor(assessment.difficulty_level) as any}
+                        color={getDifficultyColor(assessment.difficulty_level) as 'success' | 'warning' | 'error' | 'default'}
                         size="small"
                       />
                     </TableCell>
@@ -418,7 +417,7 @@ export default function TeacherAssessmentsPage() {
           <DialogTitle>{tCommon('confirm')} {tCommon('delete')}</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Are you sure you want to delete "{assessmentToDelete?.name}"? This action cannot be undone.
+              Are you sure you want to delete &quot;{assessmentToDelete?.name}&quot;? This action cannot be undone.
             </DialogContentText>
           </DialogContent>
           <DialogActions>

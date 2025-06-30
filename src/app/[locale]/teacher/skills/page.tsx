@@ -1,57 +1,40 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
   Button,
+  Card,
+  CardContent,
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
-  TextField,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
+  Grid,
   IconButton,
   Typography,
   Alert,
-  Snackbar,
   TablePagination,
-  TableSortLabel,
-  InputAdornment,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   Breadcrumbs,
   Link,
-  Chip,
   CircularProgress
 } from '@mui/material';
 import { 
   Edit, 
   Delete, 
   Add, 
-  Search, 
   Layers,
   HelpOutline,
   Home as HomeIcon
 } from '@mui/icons-material';
 import { useTranslations, useLocale } from 'next-intl';
 import Navbar from '@/components/layout/Navbar';
-
-const LEVELS = [
-  'Primary',
-  'Secondary',
-  'Technical',
-  'University',
-  'Professional',
-];
 
 const LANGUAGES = [
   { value: 'en', label: 'English' },
@@ -92,7 +75,6 @@ export default function TeacherSkillsPage() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('teacher');
-  const tCommon = useTranslations('common');
   
   const [user, setUser] = useState<User | null>(null);
   const [skills, setSkills] = useState<Skill[]>([]);
@@ -108,8 +90,8 @@ export default function TeacherSkillsPage() {
   // Filters and sorting
   const [searchTerm, setSearchTerm] = useState('');
   const [domainFilter, setDomainFilter] = useState('');
-  const [sortField, setSortField] = useState<SortField>('name');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [sortField] = useState<SortField>('name');
+  const [sortOrder] = useState<SortOrder>('asc');
   
   // Dialog states
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -134,13 +116,6 @@ export default function TeacherSkillsPage() {
     level: '',
     context: '',
     language: 'es',
-  });
-
-  // Snackbar
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
-    open: false,
-    message: '',
-    severity: 'success'
   });
 
   useEffect(() => {
@@ -185,9 +160,62 @@ export default function TeacherSkillsPage() {
     }
   }, [user]);
 
+  const applyFiltersAndSorting = useCallback(() => {
+    let filtered = [...skills];
+
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(skill =>
+        skill.name.toLowerCase().includes(searchLower) ||
+        skill.description.toLowerCase().includes(searchLower) ||
+        skill.domain_name.toLowerCase().includes(searchLower)
+      );
+    }
+
+    if (domainFilter) {
+      filtered = filtered.filter(skill => skill.domain_id.toString() === domainFilter);
+    }
+
+    filtered.sort((a, b) => {
+      let aValue: string | number;
+      let bValue: string | number;
+
+      switch (sortField) {
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'description':
+          aValue = a.description.toLowerCase();
+          bValue = b.description.toLowerCase();
+          break;
+        case 'domain_name':
+          aValue = a.domain_name.toLowerCase();
+          bValue = b.domain_name.toLowerCase();
+          break;
+        case 'assessments_count':
+          aValue = a.assessments_count;
+          bValue = b.assessments_count;
+          break;
+        default:
+          aValue = '';
+          bValue = '';
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    setFilteredSkills(filtered);
+    setPage(0);
+  }, [skills, sortField, sortOrder, searchTerm, domainFilter]);
+
   useEffect(() => {
     applyFiltersAndSorting();
-  }, [skills, sortField, sortOrder, searchTerm, domainFilter]);
+  }, [skills, sortField, sortOrder, searchTerm, domainFilter, applyFiltersAndSorting]);
 
   const fetchSkills = async () => {
     try {
@@ -245,59 +273,6 @@ export default function TeacherSkillsPage() {
     } catch (error) {
       console.error('Error fetching domains:', error);
     }
-  };
-
-  const applyFiltersAndSorting = () => {
-    let filtered = [...skills];
-
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(skill =>
-        skill.name.toLowerCase().includes(searchLower) ||
-        skill.description.toLowerCase().includes(searchLower) ||
-        skill.domain_name.toLowerCase().includes(searchLower)
-      );
-    }
-
-    if (domainFilter) {
-      filtered = filtered.filter(skill => skill.domain_id.toString() === domainFilter);
-    }
-
-    filtered.sort((a, b) => {
-      let aValue: string | number;
-      let bValue: string | number;
-
-      switch (sortField) {
-        case 'name':
-          aValue = a.name.toLowerCase();
-          bValue = b.name.toLowerCase();
-          break;
-        case 'description':
-          aValue = a.description.toLowerCase();
-          bValue = b.description.toLowerCase();
-          break;
-        case 'domain_name':
-          aValue = a.domain_name.toLowerCase();
-          bValue = b.domain_name.toLowerCase();
-          break;
-        case 'assessments_count':
-          aValue = a.assessments_count;
-          bValue = b.assessments_count;
-          break;
-        default:
-          aValue = '';
-          bValue = '';
-      }
-
-      if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
-    });
-
-    setFilteredSkills(filtered);
-    setPage(0);
   };
 
   const handleSort = (field: SortField) => {
@@ -376,8 +351,8 @@ export default function TeacherSkillsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'AI error');
       setAiSuggestions(data.suggestions || []);
-    } catch (err: any) {
-      setAiError(err.message || 'AI error');
+    } catch (err: unknown) {
+      setAiError(err instanceof Error ? err.message : 'AI error');
     } finally {
       setAiLoading(false);
     }
@@ -420,20 +395,12 @@ export default function TeacherSkillsPage() {
       }
 
       const data = await response.json();
-      setSnackbar({
-        open: true,
-        message: data.message || (editingSkill ? 'Skill updated successfully' : 'Skill created successfully'),
-        severity: 'success'
-      });
+      setError(data.message || (editingSkill ? 'Skill updated successfully' : 'Skill created successfully'));
 
       handleCloseDialog();
       fetchSkills();
     } catch (error) {
-      setSnackbar({
-        open: true,
-        message: error instanceof Error ? error.message : 'Failed to save skill',
-        severity: 'error'
-      });
+      setError(error instanceof Error ? error.message : 'Failed to save skill');
     }
   };
 
@@ -459,21 +426,13 @@ export default function TeacherSkillsPage() {
       }
 
       const data = await response.json();
-      setSnackbar({
-        open: true,
-        message: data.message || 'Skill deleted successfully',
-        severity: 'success'
-      });
+      setError(data.message || 'Skill deleted successfully');
 
       setDeleteDialogOpen(false);
       setSkillToDelete(null);
       fetchSkills();
     } catch (error) {
-      setSnackbar({
-        open: true,
-        message: error instanceof Error ? error.message : 'Failed to delete skill',
-        severity: 'error'
-      });
+      setError(error instanceof Error ? error.message : 'Failed to delete skill');
     }
   };
 
@@ -495,8 +454,8 @@ export default function TeacherSkillsPage() {
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
         <Navbar userType="teacher" userName={getUserDisplayName()} />
-        <Box sx={{ p: 3 }}>
-          <Typography>Loading skills...</Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+          <CircularProgress />
         </Box>
       </Box>
     );
@@ -805,20 +764,6 @@ export default function TeacherSkillsPage() {
         onPick={handleAiPick}
         onClose={closeAiModal}
       />
-
-      {/* Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
-      >
-        <Alert 
-          onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} 
-          severity={snackbar.severity}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

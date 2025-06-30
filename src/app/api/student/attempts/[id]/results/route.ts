@@ -38,7 +38,17 @@ export async function GET(
     const resultsResult = await query(resultsQuery, [attemptId]);
 
     // Format results for frontend
-    const formattedResults = resultsResult.map((result: any) => ({
+    const formattedResults = resultsResult.map((result: {
+      id: number;
+      skill_id: number;
+      skill_name: string;
+      skill_description: string;
+      skill_level_id: number;
+      skill_level_label: string;
+      skill_level_description: string;
+      skill_level_order: number;
+      feedback: string;
+    }) => ({
       id: result.id,
       skillId: result.skill_id,
       skillName: result.skill_name,

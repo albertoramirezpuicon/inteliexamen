@@ -1,18 +1,15 @@
 'use client';
 
-import { Box, Typography, Grid, Paper, Card, CardContent, Avatar, Button, Chip, Divider, Tooltip, Accordion, AccordionSummary, AccordionDetails, List, ListItem, ListItemText, ListItemAvatar, TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { Box, Typography, Grid, Paper, Card, CardContent, Avatar, Button, Chip, Tooltip } from '@mui/material';
+import { useState, useEffect, useCallback } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import { useTranslations } from 'next-intl';
 import { 
   Person as PersonIcon, 
-  Assignment as AssignmentIcon, 
   CheckCircle as CheckCircleIcon, 
   Schedule as ScheduleIcon,
   Warning as WarningIcon,
-  Gavel as GavelIcon,
-  ExpandMore as ExpandMoreIcon,
-  SmartToy as SmartToyIcon
+  Gavel as GavelIcon
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 
@@ -72,17 +69,7 @@ export default function StudentDashboard() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    loadStudentData();
-  }, []);
-
-  useEffect(() => {
-    if (student) {
-      loadAssessments();
-    }
-  }, [student]);
-
-  const loadStudentData = async () => {
+  const loadStudentData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -145,9 +132,9 @@ export default function StudentDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tCommon]);
 
-  const loadAssessments = async () => {
+  const loadAssessments = useCallback(async () => {
     if (!student) return;
 
     try {
@@ -159,7 +146,17 @@ export default function StudentDashboard() {
     } catch (error) {
       console.error('Error loading assessments:', error);
     }
-  };
+  }, [student]);
+
+  useEffect(() => {
+    loadStudentData();
+  }, [loadStudentData]);
+
+  useEffect(() => {
+    if (student) {
+      loadAssessments();
+    }
+  }, [student, loadAssessments]);
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty.toLowerCase()) {
@@ -184,12 +181,6 @@ export default function StudentDashboard() {
     const now = new Date();
     
     return now <= disputeDeadline;
-  };
-
-  // Helper function to truncate text to approximately 3 lines
-  const truncateDescription = (text: string, maxLength: number = 150) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength).trim() + '...';
   };
 
   const handleStartAssessment = (assessment: Assessment) => {
@@ -321,7 +312,7 @@ export default function StudentDashboard() {
                       </Typography>
                       <Chip 
                         label={assessment.difficulty_level} 
-                        color={getDifficultyColor(assessment.difficulty_level) as any}
+                        color={getDifficultyColor(assessment.difficulty_level) as 'success' | 'warning' | 'error' | 'default'}
                         size="small"
                         sx={{ flexShrink: 0 }}
                       />

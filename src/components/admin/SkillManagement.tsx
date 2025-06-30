@@ -30,7 +30,7 @@ import {
   CircularProgress,
   Chip
 } from '@mui/material';
-import { Edit, Delete, Add, Search, Clear, Psychology, HelpOutline, Layers } from '@mui/icons-material';
+import { Edit, Delete, Add, Search, HelpOutline, Layers } from '@mui/icons-material';
 
 const LEVELS = [
   'Primary',
@@ -76,7 +76,6 @@ export default function SkillManagement() {
     context: '',
     language: 'es',
   });
-  const [contextError, setContextError] = useState('');
 
   // Data
   const [skills, setSkills] = useState<Skill[]>([]);
@@ -220,8 +219,8 @@ export default function SkillManagement() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'AI error');
       setAiSuggestions(data.suggestions || []);
-    } catch (err: any) {
-      setAiError(err.message || 'AI error');
+    } catch (err: Error | unknown) {
+      setAiError(err instanceof Error ? err.message : 'AI error');
     } finally {
       setAiLoading(false);
     }
@@ -268,7 +267,7 @@ export default function SkillManagement() {
                     description: skill.description
                   }); setOpenDialog(true); }} title="Edit Skill"><Edit /></IconButton>
                   <IconButton size="small" onClick={() => window.location.href = `/admin/skills/${skill.id}/levels`} title="Edit Skill Levels"><Layers /></IconButton>
-                  <IconButton size="small" color="error" onClick={async () => { if (confirm('Delete this skill?')) { try { const res = await fetch(`/api/admin/skills/${skill.id}`, { method: 'DELETE' }); const data = await res.json(); if (!res.ok) throw new Error(data.error); setSnackbar({ open: true, message: 'Skill deleted', severity: 'success' }); fetchSkills(); } catch (e: any) { setSnackbar({ open: true, message: e.message, severity: 'error' }); } } }} title="Delete Skill"><Delete /></IconButton>
+                  <IconButton size="small" color="error" onClick={async () => { if (confirm('Delete this skill?')) { try { const res = await fetch(`/api/admin/skills/${skill.id}`, { method: 'DELETE' }); const data = await res.json(); if (!res.ok) throw new Error(data.error); setSnackbar({ open: true, message: 'Skill deleted', severity: 'success' }); fetchSkills(); } catch (e: Error | unknown) { setSnackbar({ open: true, message: e instanceof Error ? e.message : 'Error deleting skill', severity: 'error' }); } } }} title="Delete Skill"><Delete /></IconButton>
                 </TableCell>
               </TableRow>
             ))}
@@ -378,8 +377,8 @@ export default function SkillManagement() {
                 setSnackbar({ open: true, message: editingSkill ? 'Skill updated' : 'Skill created', severity: 'success' });
                 setOpenDialog(false);
                 fetchSkills();
-              } catch (e: any) {
-                setSnackbar({ open: true, message: e.message, severity: 'error' });
+              } catch (e: Error | unknown) {
+                setSnackbar({ open: true, message: e instanceof Error ? e.message : 'Error saving skill', severity: 'error' });
               }
             }}
           >

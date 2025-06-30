@@ -370,8 +370,8 @@ export default function TeacherSkillsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'AI error');
       setAiSuggestions(data.suggestions || []);
-    } catch (err: any) {
-      setAiError(err.message || 'AI error');
+    } catch (err: Error | unknown) {
+      setAiError(err instanceof Error ? err.message : 'AI error');
     } finally {
       setAiLoading(false);
     }

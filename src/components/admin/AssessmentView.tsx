@@ -76,19 +76,6 @@ export default function AssessmentView({ assessmentId }: AssessmentViewProps) {
     return new Date(dateString).toLocaleString();
   };
 
-  const getStatusColor = (status: string) => {
-    return status === 'Active' ? 'success' : 'default';
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Easy': return 'success';
-      case 'Intermediate': return 'warning';
-      case 'Difficult': return 'error';
-      default: return 'default';
-    }
-  };
-
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>

@@ -25,6 +25,27 @@ All notable changes to this project will be documented in this file.
   - **Health Check API**: `/api/health` endpoint for monitoring application and database status
   - **Environment Template**: `env.example` with all required environment variables
   - **Documentation**: Comprehensive deployment guide in README.md
+- **TypeScript Type Safety Enhancement**: Replaced all `any` types with proper TypeScript types throughout the codebase
+  - **Database Layer**: Enhanced `src/lib/db.ts` with proper types for database operations
+    - Added `DatabaseError` interface for error handling
+    - Replaced `any[]` with `(string | number | boolean | null)[]` for query parameters
+    - Updated `insertQuery` return type to `mysql.ResultSetHeader`
+    - Improved error handling with proper type checking
+  - **API Routes**: Updated all API endpoints with specific type definitions
+    - **Teacher APIs**: Fixed parameter types in assessments, attempts, and groups routes
+    - **Student APIs**: Added proper types for assessment results, conversation handling, and skill mapping
+    - **Admin APIs**: Enhanced type safety in assessments and skills management
+    - **AI APIs**: Improved type definitions for skill level suggestions and evaluation functions
+  - **React Components**: Enhanced component type safety
+    - **Admin Components**: Updated SkillManagement, GroupManagement, and AssessmentForm with proper error types
+    - **Teacher Pages**: Fixed error handling in skills management pages
+    - **Admin Pages**: Improved type safety in skill levels management
+  - **Function Signatures**: Replaced generic `any` parameters with specific interfaces
+    - Database query parameters now use union types for allowed values
+    - API response mapping uses proper object type definitions
+    - Error handling uses `Error | unknown` with proper type guards
+    - AI evaluation functions have comprehensive type definitions for assessment, skills, and conversation data
+  - **Benefits**: Improved code maintainability, better IDE support, reduced runtime errors, and enhanced developer experience
 
 ### Changed
 - **Next.js Configuration**: Added standalone output for Docker deployment
@@ -117,6 +138,28 @@ All notable changes to this project will be documented in this file.
 - **Foreign Key Constraint Error**: Fixed issue where AI was returning invalid skill level IDs causing foreign key constraint failures. Added validation to ensure skill level IDs exist before saving results.
 - **AI Prompt Improvement**: Enhanced AI prompts to be more explicit about using exact skill and skill level IDs from the provided data.
 - **Debugging Enhancement**: Added comprehensive logging to track AI responses and available skill level IDs for better troubleshooting.
+- **ESLint Issues in Admin Attempts Page**: Fixed multiple ESLint errors in `src/app/[locale]/admin/attempts/page.tsx`:
+  - Removed unused imports: `HomeIcon`, `AssessmentIcon`, `PsychologyIcon`
+  - Removed unused variables: `tCommon`, `selectedAttemptId`, `formatDate`
+  - Fixed `any` type usage by replacing with proper TypeScript types
+  - Removed unused error variables in catch blocks
+  - Fixed unescaped quotes in delete confirmation dialog
+  - Fixed React Hook dependency warnings by wrapping `loadAttempts` in `useCallback`
+  - Added proper type for user state
+- **ESLint Issues Across Multiple Files**: Fixed unused imports and variables in various files:
+  - **Admin Dashboard**: Removed unused imports `Grid`, `Divider`, `LayersIcon`
+  - **Layout Files**: Removed unused `getMessages` import from admin and main layout files
+  - **Landing Pages**: Removed unused imports `AppBar`, `Toolbar`, `LanguageIcon`, `AssessmentIcon`, `Image` from main page and `AssessmentIcon` from page_new
+  - **Student Assessment Attempt**: Removed unused `ContentCopyIcon` and `AIEvaluationResponse` interface, fixed `any` type usage, and wrapped `loadAssessmentAndStartAttempt` in `useCallback` to fix React Hook dependency warning
+- **Comprehensive ESLint Fixes**: Fixed multiple ESLint errors across the entire codebase:
+  - **Student Assessment Results Page**: Removed unused imports (`List`, `ListItem`, `ListItemText`, `ListItemAvatar`, `CheckCircleIcon`, `ScheduleIcon`), removed unused state variables (`showConversation`, `setShowConversation`), fixed `any` type usage, fixed unescaped quotes, and wrapped `loadAssessmentResults` in `useCallback`
+  - **Student Dashboard**: Removed unused imports (`Divider`, `Accordion`, `AccordionSummary`, `AccordionDetails`, `List`, `ListItem`, `ListItemText`, `ListItemAvatar`, `TextField`, `FormControl`, `InputLabel`, `Select`, `MenuItem`, `AssignmentIcon`, `ExpandMoreIcon`, `SmartToyIcon`), removed unused function `truncateDescription`, fixed `any` type usage, and wrapped `loadStudentData` and `loadAssessments` in `useCallback`
+  - **Teacher Assessments Page**: Removed unused import `SearchIcon`, fixed `any` type usage in Chip color props, fixed unescaped quotes in delete confirmation dialog, and wrapped `loadUserInfo` and `loadAssessments` in `useCallback`
+  - **Teacher Attempts Page**: Removed unused imports (`HomeIcon`, `ViewIcon`), removed unused variables (`t`, `tCommon`, `handleViewDisputes`, `formatDate`), fixed `any` type usage, fixed unescaped apostrophe, removed unused error variables in catch blocks, and wrapped functions in `useCallback`
+  - **Teacher Dashboard**: Removed unused imports (`Grid`, `Link`, `ListItemText`) and fixed unescaped quotes
+  - **Admin Components**: Fixed multiple issues across admin components including unused imports, variables, and React Hook dependency warnings
+  - **Layout Components**: Removed unused imports and fixed React Hook dependencies
+  - **Internationalization**: Fixed `any` type usage in i18n request utility
 
 ### Added
 - **Landing Page Implementation**: Created a comprehensive landing page for the platform showcase
@@ -1021,3 +1064,60 @@ All notable changes to this project will be documented in this file.
   - Updated `/api/health/route.ts` to use `checkDatabaseConnection()` from MySQL library
   - Removed Prisma-specific `db.$queryRaw` syntax that was causing build errors
   - Health endpoint now properly tests MySQL connectivity for production monitoring
+
+### Added
+- **Code Cleanup**: Removed unused imports and variables throughout the codebase
+  - **Unused Imports**: Removed unused Material-UI icons and components
+    - Removed `PreviewIcon` from AssessmentForm component
+    - Removed `Clear` and `Psychology` icons from SkillManagement component
+    - Removed `Psychology`, `Divider`, and `Grid` from admin skill levels page
+    - Removed unused `React` import from admin skill levels page
+    - Removed unused `insertQuery` import from teacher assessment API
+  - **Unused Variables**: Removed unused state variables and constants
+    - Removed `contextError` state from SkillManagement component
+    - Removed `LEVELS` constant from teacher skills pages
+    - Removed unused `tCommon` translation from locale teacher skills page
+  - **Benefits**: Reduced bundle size, improved code readability, and eliminated potential confusion from unused code
+
+### Fixed
+- **TypeScript Error Resolution**: Fixed multiple TypeScript compilation errors across the codebase
+  - **API Routes**: Fixed type issues in database query results and response handling
+    - Fixed `result.affectedRows` property access in assessment groups API
+    - Fixed `createResult.insertId` property access in student attempt API
+    - Removed unused `insertQuery` import from admin assessment API
+    - Added proper type casting for COUNT(*) query results in institutions API
+    - Fixed database query result type issues across multiple admin APIs
+  - **React Components**: Fixed React type imports and unused function declarations
+    - Added missing React imports for `React.KeyboardEvent` and `React.ReactNode` types
+    - Removed unused `getStatusColor` and `getDifficultyColor` functions from AssessmentView
+    - Fixed React import in admin dashboard for FunctionCard component
+    - Fixed User interface type consistency in UserManagement component
+    - Corrected parameter types for delete handlers and API calls
+  - **Page Components**: Fixed type errors in student and teacher pages
+    - Added React import to student assessment attempt page for event handlers
+    - Fixed event handler type definitions for keyboard and mouse events
+    - Fixed type assertion issues in landing page text function
+  - **Library Files**: Fixed missing imports and type definitions
+    - Added missing import for bcryptjs in auth library
+    - Fixed database connection and query type issues using existing MySQL setup
+    - Corrected createUser function to use MySQL queries instead of Prisma
+  - **Benefits**: Improved type safety, eliminated compilation errors, and enhanced code reliability
+
+### Fixed
+- **ESLint Error Resolution**: Fixed multiple ESLint errors in teacher skills page
+  - **Unused Imports**: Removed unused Material-UI imports
+    - Removed `Snackbar`, `TableSortLabel`, `InputAdornment`, `Chip` components
+    - Removed `Search`, `Clear`, `Psychology` icons
+  - **Unused Variables**: Removed unused state variables and functions
+    - Removed unused `contextError`, `setContextError` state
+    - Removed unused `snackbar` state and related functions
+    - Removed unused `setSortField`, `setSortOrder`, `setFilters` setters
+  - **Type Safety**: Fixed TypeScript type issues
+    - Replaced `any` types with proper error handling types
+    - Fixed error parameter typing in catch blocks
+  - **React Hooks**: Fixed useEffect dependency warnings
+    - Wrapped `applyFiltersAndSorting` in `useCallback` to prevent infinite re-renders
+    - Added proper dependencies to useEffect hook
+  - **Benefits**: Eliminated ESLint warnings, improved code quality, and enhanced performance
+
+- **Client-Side Database Import Error**: Fixed module resolution error caused by importing Node.js-only libraries on the client side

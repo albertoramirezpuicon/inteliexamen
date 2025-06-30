@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Box, Typography, Grid, Card, CardContent, CardActionArea, Divider } from '@mui/material';
+import { Box, Typography, Card, CardContent, CardActionArea } from '@mui/material';
 import Navbar from '@/components/layout/Navbar';
 import { 
   People as PeopleIcon, 
@@ -12,7 +12,6 @@ import {
   Analytics as AnalyticsIcon, 
   Category as CategoryIcon, 
   Psychology as PsychologyIcon, 
-  Layers as LayersIcon,
   Assignment as AssignmentIcon
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';

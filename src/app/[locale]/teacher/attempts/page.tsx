@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Paper,
@@ -39,8 +39,6 @@ import {
   CardContent
 } from '@mui/material';
 import {
-  Home as HomeIcon,
-  Visibility as ViewIcon,
   Assessment as AssessmentIcon,
   Psychology as PsychologyIcon,
   Close as CloseIcon,
@@ -100,13 +98,20 @@ interface ConversationMessage {
   created_at: string;
 }
 
+interface User {
+  id: number;
+  email: string;
+  given_name: string;
+  family_name: string;
+  role: string;
+  institution_id: number;
+}
+
 export default function TeacherAttemptsPage() {
   const router = useRouter();
   const locale = useLocale();
-  const t = useTranslations('teacher');
-  const tCommon = useTranslations('common');
   
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [selectedAssessment, setSelectedAssessment] = useState<number | null>(null);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
@@ -139,7 +144,7 @@ export default function TeacherAttemptsPage() {
   const [loadingDisputes, setLoadingDisputes] = useState(false);
 
   // Load user info
-  const loadUserInfo = async () => {
+  const loadUserInfo = useCallback(async () => {
     try {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
@@ -148,14 +153,14 @@ export default function TeacherAttemptsPage() {
       } else {
         router.push(`/${locale}/teacher/login`);
       }
-    } catch (err) {
-      console.error('Error loading user info:', err);
+    } catch {
+      console.error('Error loading user info');
       router.push(`/${locale}/teacher/login`);
     }
-  };
+  }, [locale, router]);
 
   // Load teacher's assessments
-  const loadAssessments = async () => {
+  const loadAssessments = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -164,13 +169,13 @@ export default function TeacherAttemptsPage() {
         const data = await response.json();
         setAssessments(data.assessments || []);
       }
-    } catch (err) {
-      console.error('Error loading assessments:', err);
+    } catch {
+      console.error('Error loading assessments');
     }
-  };
+  }, [user]);
 
   // Load attempts for selected assessment
-  const loadAttempts = async () => {
+  const loadAttempts = useCallback(async () => {
     if (!selectedAssessment || !user) return;
 
     try {
@@ -190,38 +195,22 @@ export default function TeacherAttemptsPage() {
       } else {
         setError('Failed to load attempts');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to load attempts');
     } finally {
       setLoading(false);
     }
-  };
-
-  // Load results for an attempt
-  const loadResults = async (attemptId: number) => {
-    try {
-      setResultsLoading(true);
-      const response = await fetch(`/api/teacher/attempts/${attemptId}/results`);
-      if (response.ok) {
-        const data = await response.json();
-        setResults(data.results || []);
-      }
-    } catch (err) {
-      console.error('Error loading results:', err);
-    } finally {
-      setResultsLoading(false);
-    }
-  };
+  }, [selectedAssessment, user]);
 
   useEffect(() => {
     loadUserInfo();
-  }, []);
+  }, [loadUserInfo]);
 
   useEffect(() => {
     if (user) {
       loadAssessments();
     }
-  }, [user]);
+  }, [user, loadAssessments]);
 
   useEffect(() => {
     if (selectedAssessment) {
@@ -229,7 +218,7 @@ export default function TeacherAttemptsPage() {
     } else {
       setAttempts([]);
     }
-  }, [selectedAssessment]);
+  }, [selectedAssessment, loadAttempts]);
 
   const handleAssessmentChange = (assessmentId: number) => {
     setSelectedAssessment(assessmentId);
@@ -408,10 +397,6 @@ export default function TeacherAttemptsPage() {
     setDeleteModalOpen(false);
     setDeleteAttemptId(null);
     setDeleteAttemptName('');
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
   };
 
   const formatDateTime = (dateString: string) => {
@@ -720,7 +705,7 @@ export default function TeacherAttemptsPage() {
                               dispute.status === 'Pending' ? 'warning' : 
                               dispute.status === 'Under review' ? 'info' : 
                               dispute.status === 'Solved' ? 'success' : 'error'
-                            }
+                            } as 'warning' | 'info' | 'success' | 'error'
                             size="small"
                           />
                         </Box>
@@ -731,7 +716,7 @@ export default function TeacherAttemptsPage() {
                           Current Level: {dispute.current_skill_level}
                         </Typography>
                         <Typography variant="body2" sx={{ mt: 1 }}>
-                          <strong>Student's Argument:</strong> {dispute.student_argument}
+                          <strong>Student&apos;s Argument:</strong> {dispute.student_argument}
                         </Typography>
                       </CardContent>
                     </Card>

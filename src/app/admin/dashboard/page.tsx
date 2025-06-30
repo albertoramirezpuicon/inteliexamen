@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, Grid, Card, CardContent, CardActionArea, Divider } from '@mui/material';
 import Navbar from '@/components/layout/Navbar';
 import { 

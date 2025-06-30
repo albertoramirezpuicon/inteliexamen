@@ -135,7 +135,7 @@ export async function POST(
       [assessmentId, ...groupIds]
     );
 
-    const existingGroupIds = existingAssociations.map((row: any) => row.group_id);
+    const existingGroupIds = existingAssociations.map((row: { group_id: number }) => row.group_id);
     const newGroupIds = groupIds.filter((id: number) => !existingGroupIds.includes(id));
 
     if (newGroupIds.length === 0) {

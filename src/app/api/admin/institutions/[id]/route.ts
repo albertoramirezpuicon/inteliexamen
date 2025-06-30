@@ -165,7 +165,7 @@ export async function DELETE(
     const users = await query(
       'SELECT COUNT(*) as count FROM inteli_users WHERE institution_id = ?',
       [id]
-    );
+    ) as any;
 
     if (users[0].count > 0) {
       return NextResponse.json(
@@ -178,7 +178,7 @@ export async function DELETE(
     const groups = await query(
       'SELECT COUNT(*) as count FROM inteli_groups WHERE institution_id = ?',
       [id]
-    );
+    ) as any;
 
     if (groups[0].count > 0) {
       return NextResponse.json(
@@ -191,7 +191,7 @@ export async function DELETE(
     const assessments = await query(
       'SELECT COUNT(*) as count FROM inteli_assessments WHERE institution_id = ?',
       [id]
-    );
+    ) as any;
 
     if (assessments[0].count > 0) {
       return NextResponse.json(
@@ -204,7 +204,7 @@ export async function DELETE(
     const domains = await query(
       'SELECT COUNT(*) as count FROM inteli_domains WHERE institution_id = ?',
       [id]
-    );
+    ) as any;
 
     if (domains[0].count > 0) {
       return NextResponse.json(
@@ -217,7 +217,7 @@ export async function DELETE(
     const skills = await query(
       'SELECT COUNT(*) as count FROM inteli_skills WHERE institution_id = ?',
       [id]
-    );
+    ) as any;
 
     if (skills[0].count > 0) {
       return NextResponse.json(

@@ -93,7 +93,7 @@ export async function GET(
 
     // Get skill levels for each skill
     const skillsWithLevels = await Promise.all(
-      skillsResult.map(async (skill: any) => {
+      skillsResult.map(async (skill: { id: number; name: string; description: string }) => {
         const levelsQuery = `
           SELECT 
             id,

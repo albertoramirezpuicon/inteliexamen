@@ -106,7 +106,7 @@ export default function GroupManagement() {
       
       // Validate and sanitize the data
       const validGroups = Array.isArray(data.groups) 
-        ? data.groups.filter((group: any) => group && typeof group === 'object')
+        ? data.groups.filter((group: { id: string; name: string; description: string; institution_id: string }) => group && typeof group === 'object')
         : [];
       
       setGroups(validGroups);

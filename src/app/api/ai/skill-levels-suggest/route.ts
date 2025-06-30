@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function generateAllLevelsAtOnce(skillName: string, skillDescription: string, levelSettings: any[], language: string): Promise<string[]> {
+async function generateAllLevelsAtOnce(skillName: string, skillDescription: string, levelSettings: Array<{ order: number; label: string; description: string }>, language: string): Promise<string[]> {
   const maxRetries = 3;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -66,7 +66,7 @@ async function generateAllLevelsAtOnce(skillName: string, skillDescription: stri
   throw new Error('Failed to generate suggestions after all retries');
 }
 
-function createComprehensivePrompt(skillName: string, skillDescription: string, levelSettings: any[], language: string): string {
+function createComprehensivePrompt(skillName: string, skillDescription: string, levelSettings: Array<{ order: number; label: string; description: string }>, language: string): string {
   const levelInfo = levelSettings.map((level, index) => 
     `NIVEL ${level.order} - "${level.label}": ${level.description}`
   ).join('\n');

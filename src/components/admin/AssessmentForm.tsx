@@ -27,7 +27,6 @@ import {
 import {
   Save as SaveIcon,
   AutoAwesome as AIIcon,
-  Preview as PreviewIcon,
   ArrowBack as BackIcon
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
@@ -150,7 +149,7 @@ export default function AssessmentForm({
           console.log('All users loaded:', data.users.length);
           
           // Filter teachers by role
-          const teacherUsers = data.users.filter((user: any) => {
+          const teacherUsers = data.users.filter((user: { role: string; given_name: string; family_name: string; institution_id: number }) => {
             const isTeacher = user.role === 'teacher';
             if (isTeacher) {
               console.log('Found teacher:', user.given_name, user.family_name, 'from institution:', user.institution_id);

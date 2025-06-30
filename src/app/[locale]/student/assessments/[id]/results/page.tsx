@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { 
   Box, 
@@ -21,19 +21,13 @@ import {
   IconButton,
   Accordion,
   AccordionSummary,
-  AccordionDetails,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar
+  AccordionDetails
 } from '@mui/material';
 import { 
   ArrowBack as ArrowBackIcon,
   Home as HomeIcon,
   Assessment as AssessmentIcon,
   Warning as WarningIcon,
-  CheckCircle as CheckCircleIcon,
-  Schedule as ScheduleIcon,
   ExpandMore as ExpandMoreIcon,
   Person as PersonIcon,
   SmartToy as SmartToyIcon
@@ -103,15 +97,8 @@ export default function AssessmentResultsPage() {
   const [disputeDialogOpen, setDisputeDialogOpen] = useState(false);
   const [disputeArgument, setDisputeArgument] = useState('');
   const [submittingDispute, setSubmittingDispute] = useState(false);
-  const [showConversation, setShowConversation] = useState(false);
 
-  useEffect(() => {
-    if (assessmentId) {
-      loadAssessmentResults();
-    }
-  }, [assessmentId]);
-
-  const loadAssessmentResults = async () => {
+  const loadAssessmentResults = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -167,7 +154,13 @@ export default function AssessmentResultsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [assessmentId]);
+
+  useEffect(() => {
+    if (assessmentId) {
+      loadAssessmentResults();
+    }
+  }, [assessmentId, loadAssessmentResults]);
 
   const loadDispute = async (resultId: number) => {
     if (!resultId) return;
@@ -466,7 +459,7 @@ export default function AssessmentResultsPage() {
                 <Box sx={{ mb: 2 }}>
                   <Chip 
                     label={dispute.status} 
-                    color={getDisputeStatusColor(dispute.status) as any}
+                    color={getDisputeStatusColor(dispute.status) as 'success' | 'warning' | 'error' | 'default'}
                     sx={{ mb: 1 }}
                   />
                   <Typography variant="body2" color="text.secondary">
@@ -476,7 +469,7 @@ export default function AssessmentResultsPage() {
                     <strong>Your Argument:</strong>
                   </Typography>
                   <Typography variant="body1" sx={{ mb: 1, fontStyle: 'italic' }}>
-                    "{dispute.student_argument}"
+                    &quot;{dispute.student_argument}&quot;
                   </Typography>
                   {dispute.teacher_argument && (
                     <>
@@ -484,7 +477,7 @@ export default function AssessmentResultsPage() {
                         <strong>Teacher Response:</strong>
                       </Typography>
                       <Typography variant="body1" sx={{ fontStyle: 'italic' }}>
-                        "{dispute.teacher_argument}"
+                        &quot;{dispute.teacher_argument}&quot;
                       </Typography>
                     </>
                   )}

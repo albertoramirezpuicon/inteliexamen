@@ -23,7 +23,6 @@ import {
   Person as StudentIcon,
   Close as CloseIcon,
   SmartToy as AIIcon,
-  Assessment as AssessmentIcon,
   Analytics as AnalyticsIcon,
   Security as SecurityIcon,
   Speed as SpeedIcon,
@@ -61,7 +60,7 @@ export default function LandingPage() {
     });
   };
 
-  const getText = (key: string) => {
+  const getText = (key: string): string => {
     const texts = {
       en: {
         title: "Inteliexamen",
@@ -114,7 +113,7 @@ export default function LandingPage() {
         chooseRole: "Elige tu rol y comienza a usar la plataforma"
       }
     };
-    return texts[language][key as keyof typeof texts.en] || key;
+    return (texts[language] as any)[key] || key;
   };
 
   const features = [

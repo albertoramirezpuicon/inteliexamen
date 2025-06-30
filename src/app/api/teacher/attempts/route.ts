@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     
     // Build WHERE clause - filter by teacher's assessments
     let whereClause = 'WHERE a.teacher_id = ? AND a.institution_id = ?';
-    const params: any[] = [parseInt(userId), parseInt(userInstitutionId)];
+    const params: (string | number)[] = [parseInt(userId), parseInt(userInstitutionId)];
     
     if (search) {
       whereClause += ' AND (CONCAT(u.given_name, " ", u.family_name) LIKE ? OR a.name LIKE ?)';
