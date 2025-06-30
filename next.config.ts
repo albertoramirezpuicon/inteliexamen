@@ -49,16 +49,23 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
   
-  // Image optimizations
+  // Image optimizations - simplified
   images: {
     formats: ['image/webp'],
     minimumCacheTTL: 60,
+    unoptimized: true, // Disable image optimization for faster builds
   },
   
   // Reduce build output
   generateBuildId: async () => {
     return 'build-' + Date.now();
   },
+  
+  // Disable source maps in production for faster builds
+  productionBrowserSourceMaps: false,
+  
+  // Disable SWC minification for faster builds (use Terser instead)
+  swcMinify: false,
 };
 
 export default withNextIntl(nextConfig);

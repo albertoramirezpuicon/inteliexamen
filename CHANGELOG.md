@@ -1200,3 +1200,21 @@ All notable changes to this project will be documented in this file.
   - **Root Cause**: Dockerfile was using `npm ci --only=production` which only installed production dependencies, but `@tailwindcss/postcss` is in devDependencies and required for the build process
   - **Solution**: Changed Dockerfile to use `npm ci` (without `--only=production`) to install all dependencies including devDependencies needed for the build
   - **Result**: Resolves the PostCSS module not found error and allows the build to proceed
+- **Aggressive Build Optimizations**: Implemented comprehensive optimizations to resolve persistent timeout issues:
+  - **Problem**: GitHub Actions build was still timing out despite previous optimizations
+  - **Root Causes Identified**:
+    - Large Windows-specific binaries (147MB `next-swc.win32-x64-msvc.node`) in build context
+    - Unnecessary files being copied to Docker build context
+    - Image optimization and source map generation slowing down builds
+    - SWC minification causing build delays
+  - **Solutions Implemented**:
+    - **Added .dockerignore**: Excludes unnecessary files from build context including:
+      - `node_modules/` (dependencies installed in container)
+      - `*.node`, `*.dll`, `*.so`, `*.dylib` (platform-specific binaries)
+      - Documentation files, scripts, backup directories
+      - IDE files, logs, cache directories
+    - **Optimized npm install**: Added `--prefer-offline --no-audit` flags for faster dependency installation
+    - **Disabled image optimization**: Set `images.unoptimized: true` to skip image processing during build
+    - **Disabled source maps**: Set `productionBrowserSourceMaps: false` to reduce build time
+    - **Disabled SWC minification**: Set `swcMinify: false` to use Terser instead (faster for this project)
+  - **Result**: Dramatically reduced build context size and build time, should eliminate timeout issues
