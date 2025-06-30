@@ -1125,3 +1125,50 @@ All notable changes to this project will be documented in this file.
   - Added back the missing `loadResults` function that was accidentally removed during ESLint fixes
   - Fixed the remaining `any` type usage in Chip color prop
   - This resolves the "Unexpected token `Box`" syntax error that was preventing the build
+- **Build Performance Optimization**: Major build optimizations to resolve timeout issues:
+  - **Removed Unused Dependencies**: Removed `react-icons` (only used in one component) and `@prisma/client`/`prisma` (not used, application uses direct MySQL queries)
+  - **Removed Unused Files**: Deleted duplicate and test files:
+    - `src/app/[locale]/page_new.tsx` (duplicate landing page)
+    - `src/app/demo/page.tsx` and `src/app/[locale]/demo/page.tsx` (test pages)
+    - `src/app/test-translation/page.tsx` and `src/app/[locale]/test-translation/page.tsx` (test pages)
+    - `src/components/ui/Icon.tsx` (unused component)
+    - `prisma/schema.prisma` and entire `prisma/` directory (not used)
+    - `src/generated/` directory (Prisma generated files, not used)
+  - **Next.js Configuration Optimizations**:
+    - Added `optimizePackageImports` for Material-UI packages to reduce bundle size
+    - Configured webpack chunk splitting for better caching
+    - Added console removal in production builds
+    - Optimized image formats and caching
+    - Added turbo rules for SVG handling
+  - **Clean Build**: Removed `node_modules`, `package-lock.json`, and `.next` directories for a fresh build
+  - **Dependency Cleanup**: Moved `@types/bcryptjs` to dependencies where it belongs
+  - **Result**: Significantly reduced build time and bundle size by removing unused code and optimizing imports
+- **Application Structure Cleanup**: Removed duplicate non-localized routes to fix internationalization structure:
+  - **Problem Identified**: The application had duplicate route structures:
+    - `src/app/[locale]/` - Correct internationalized routes using `next-intl`
+    - `src/app/admin/`, `src/app/teacher/`, `src/app/student/` - Legacy non-internationalized routes
+  - **Root Cause**: Routes were developed before internationalization was implemented, creating duplication
+  - **Solution Implemented**:
+    - **Backup Created**: All non-localized routes backed up to `backup/non-localized-routes/` directory
+    - **Backup Added to .gitignore**: Prevents committing backup files to repository
+    - **Non-localized Routes Removed**: Deleted all duplicate routes:
+      - `src/app/admin/` (entire directory)
+      - `src/app/teacher/` (entire directory) 
+      - `src/app/student/` (entire directory)
+      - `src/app/reset-password/` (entire directory)
+      - `src/app/page.tsx` (non-localized landing page)
+      - `src/app/layout.tsx` (non-localized layout)
+    - **Navigation Links Fixed**: Updated `SkillManagement` component to use proper localized navigation with `useRouter` and `usePathname`
+    - **Root Redirect Created**: New root page redirects `/` to `/en` (default locale)
+    - **Root Layout Restored**: Recreated minimal root layout for proper HTML structure
+  - **Benefits**:
+    - Eliminates route duplication and confusion
+    - Ensures all routes are properly internationalized
+    - Reduces bundle size by removing unused code
+    - Simplifies maintenance and development
+    - Follows Next.js App Router best practices for internationalization
+  - **Middleware Compatibility**: The existing middleware with `localePrefix: 'always'` now works correctly without conflicts
+- **Next.js Configuration Fix**: Updated deprecated configuration:
+  - **Problem**: Next.js was showing a deprecation warning: "The config property `experimental.turbo` is deprecated. Move this setting to `config.turbopack` as Turbopack is now stable."
+  - **Solution**: Moved the SVG loader configuration from `experimental.turbo` to the new `turbopack` configuration
+  - **Result**: Eliminates the deprecation warning and uses the stable Turbopack configuration

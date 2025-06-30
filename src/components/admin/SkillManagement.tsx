@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Button,
@@ -31,6 +31,7 @@ import {
   Chip
 } from '@mui/material';
 import { Edit, Delete, Add, Search, HelpOutline, Layers } from '@mui/icons-material';
+import { useRouter, usePathname } from 'next/navigation';
 
 const LEVELS = [
   'Primary',
@@ -69,6 +70,12 @@ type SortField = 'name' | 'description' | 'institution_name' | 'domain_name';
 type SortOrder = 'asc' | 'desc';
 
 export default function SkillManagement() {
+  const router = useRouter();
+  const pathname = usePathname();
+  
+  // Extract locale from pathname (e.g., /en/admin/skills -> en)
+  const locale = pathname.split('/')[1] || 'en';
+
   // Context fields
   const [context, setContext] = useState({
     idea: '',
@@ -266,7 +273,7 @@ export default function SkillManagement() {
                     name: skill.name,
                     description: skill.description
                   }); setOpenDialog(true); }} title="Edit Skill"><Edit /></IconButton>
-                  <IconButton size="small" onClick={() => window.location.href = `/admin/skills/${skill.id}/levels`} title="Edit Skill Levels"><Layers /></IconButton>
+                  <IconButton size="small" onClick={() => router.push(`/${locale}/admin/skills/${skill.id}/levels`)} title="Edit Skill Levels"><Layers /></IconButton>
                   <IconButton size="small" color="error" onClick={async () => { if (confirm('Delete this skill?')) { try { const res = await fetch(`/api/admin/skills/${skill.id}`, { method: 'DELETE' }); const data = await res.json(); if (!res.ok) throw new Error(data.error); setSnackbar({ open: true, message: 'Skill deleted', severity: 'success' }); fetchSkills(); } catch (e: Error | unknown) { setSnackbar({ open: true, message: e instanceof Error ? e.message : 'Error deleting skill', severity: 'error' }); } } }} title="Delete Skill"><Delete /></IconButton>
                 </TableCell>
               </TableRow>

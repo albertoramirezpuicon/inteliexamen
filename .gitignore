@@ -137,3 +137,6 @@ temp/
 # Backup files
 *.bak
 *.backup
+
+# Backup directories
+backup/
