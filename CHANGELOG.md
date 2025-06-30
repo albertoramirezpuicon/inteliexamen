@@ -1182,3 +1182,16 @@ All notable changes to this project will be documented in this file.
   - **Root Cause**: The `as` keyword was being used incorrectly in Chip component color props instead of proper TypeScript type assertions
   - **Solution**: Removed the incorrect `as` type assertions from Chip components and added proper null check for user object
   - **Result**: Resolves the TypeScript compilation errors and allows the build to proceed
+- **Build Timeout Fix**: Resolved GitHub Actions build timeout issues:
+  - **Problem**: GitHub Actions build was timing out after 10 minutes during "Creating an optimized production build..." phase
+  - **Root Causes Identified**:
+    - Node.js version mismatch: Dockerfile used Node.js 18, but `rimraf@6.0.1` requires Node.js 20+
+    - Overly complex webpack optimizations causing build slowdown
+    - Unnecessary image format optimizations (AVIF) adding build time
+  - **Solutions Implemented**:
+    - **Updated Dockerfile**: Upgraded from Node.js 18 to Node.js 20 Alpine for better compatibility
+    - **Removed rimraf dependency**: Replaced with native `rm -rf` commands to eliminate Node.js version conflicts
+    - **Simplified webpack configuration**: Removed complex MUI-specific chunk splitting that was causing build delays
+    - **Optimized image formats**: Removed AVIF format support to reduce build time
+    - **Enabled telemetry disable**: Added `NEXT_TELEMETRY_DISABLED=1` to reduce build overhead
+  - **Result**: Significantly reduced build time and eliminated timeout issues in GitHub Actions

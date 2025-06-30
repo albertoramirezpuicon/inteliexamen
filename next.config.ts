@@ -22,9 +22,9 @@ const nextConfig: NextConfig = {
     },
   },
   
-  // Webpack optimizations
+  // Simplified webpack optimizations to reduce build time
   webpack: (config, { dev, isServer }) => {
-    // Optimize bundle size
+    // Only apply optimizations in production builds
     if (!dev && !isServer) {
       config.optimization = {
         ...config.optimization,
@@ -35,12 +35,6 @@ const nextConfig: NextConfig = {
               test: /[\\/]node_modules[\\/]/,
               name: 'vendors',
               chunks: 'all',
-            },
-            mui: {
-              test: /[\\/]node_modules[\\/]@mui[\\/]/,
-              name: 'mui',
-              chunks: 'all',
-              priority: 10,
             },
           },
         },
@@ -57,7 +51,7 @@ const nextConfig: NextConfig = {
   
   // Image optimizations
   images: {
-    formats: ['image/webp', 'image/avif'],
+    formats: ['image/webp'],
     minimumCacheTTL: 60,
   },
   
