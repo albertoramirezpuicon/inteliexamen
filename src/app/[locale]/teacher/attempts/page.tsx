@@ -202,6 +202,22 @@ export default function TeacherAttemptsPage() {
     }
   }, [selectedAssessment, user]);
 
+  // Load results for an attempt
+  const loadResults = async (attemptId: number) => {
+    try {
+      setResultsLoading(true);
+      const response = await fetch(`/api/teacher/attempts/${attemptId}/results`);
+      if (response.ok) {
+        const data = await response.json();
+        setResults(data.results || []);
+      }
+    } catch {
+      console.error('Error loading results');
+    } finally {
+      setResultsLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadUserInfo();
   }, [loadUserInfo]);
@@ -521,7 +537,7 @@ export default function TeacherAttemptsPage() {
                         <TableCell>
                           <Chip 
                             label={attempt.status} 
-                            color={getStatusColor(attempt.status) as any}
+                            color={getStatusColor(attempt.status) as 'success' | 'warning' | 'error' | 'default'}
                             size="small"
                           />
                         </TableCell>
