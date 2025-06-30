@@ -261,7 +261,7 @@ export default function TeacherAttemptsPage() {
         setDisputes(disputesData.disputes || []);
         
         // Load skill levels for the first dispute's skill
-        if (disputesData.disputes && disputesData.disputes.length > 0) {
+        if (disputesData.disputes && disputesData.disputes.length > 0 && user) {
           const firstDispute = disputesData.disputes[0];
           const skillLevelsResponse = await fetch(`/api/teacher/skills/${firstDispute.skill_id}/levels`, {
             headers: {
@@ -537,7 +537,7 @@ export default function TeacherAttemptsPage() {
                         <TableCell>
                           <Chip 
                             label={attempt.status} 
-                            color={getStatusColor(attempt.status) as 'success' | 'warning' | 'error' | 'default'}
+                            color={getStatusColor(attempt.status)}
                             size="small"
                           />
                         </TableCell>
@@ -721,7 +721,7 @@ export default function TeacherAttemptsPage() {
                               dispute.status === 'Pending' ? 'warning' : 
                               dispute.status === 'Under review' ? 'info' : 
                               dispute.status === 'Solved' ? 'success' : 'error'
-                            } as 'warning' | 'info' | 'success' | 'error'
+                            }
                             size="small"
                           />
                         </Box>
