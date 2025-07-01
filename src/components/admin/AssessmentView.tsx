@@ -12,7 +12,7 @@ import {
   Alert,
   Divider
 } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import {
   ArrowBack as BackIcon,
   Edit as EditIcon
@@ -52,9 +52,7 @@ export default function AssessmentView({ assessmentId }: AssessmentViewProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadAssessment();
-  }, [assessmentId, loadAssessment]);
+  // Move this useEffect after the function declarations
 
   const loadAssessment = useCallback(async () => {
     try {
@@ -69,11 +67,16 @@ export default function AssessmentView({ assessmentId }: AssessmentViewProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [assessmentId]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
   };
+
+  // Load assessment data
+  useEffect(() => {
+    loadAssessment();
+  }, [assessmentId, loadAssessment]);
 
   if (loading) {
     return (

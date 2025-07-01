@@ -1,5 +1,11 @@
 import mysql from 'mysql2/promise';
 
+// Type definitions for database query results
+export type QueryResult<T = any> = T[];
+export type InsertResult = mysql.ResultSetHeader;
+export type UpdateResult = mysql.ResultSetHeader;
+export type DeleteResult = mysql.ResultSetHeader;
+
 // Create connection pool with better configuration
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
@@ -52,11 +58,11 @@ async function retryOperation<T>(operation: () => Promise<T>, maxRetries: number
 }
 
 // Export query function for database operations with retry logic
-export async function query(sql: string, params: (string | number | boolean | null)[] = []) {
+export async function query<T = any>(sql: string, params: (string | number | boolean | null)[] = []): Promise<QueryResult<T>> {
   return retryOperation(async () => {
     try {
       const [rows] = await pool.execute(sql, params);
-      return rows;
+      return rows as QueryResult<T>;
     } catch (error) {
       console.error('Database query error:', error);
       throw error;
@@ -65,13 +71,39 @@ export async function query(sql: string, params: (string | number | boolean | nu
 }
 
 // Export insertQuery function for INSERT operations that return the insert ID
-export async function insertQuery(sql: string, params: (string | number | boolean | null)[] = []) {
+export async function insertQuery(sql: string, params: (string | number | boolean | null)[] = []): Promise<InsertResult> {
   return retryOperation(async () => {
     try {
       const [result] = await pool.execute(sql, params);
-      return result as mysql.ResultSetHeader;
+      return result as InsertResult;
     } catch (error) {
       console.error('Database insert error:', error);
+      throw error;
+    }
+  });
+}
+
+// Export updateQuery function for UPDATE operations
+export async function updateQuery(sql: string, params: (string | number | boolean | null)[] = []): Promise<UpdateResult> {
+  return retryOperation(async () => {
+    try {
+      const [result] = await pool.execute(sql, params);
+      return result as UpdateResult;
+    } catch (error) {
+      console.error('Database update error:', error);
+      throw error;
+    }
+  });
+}
+
+// Export deleteQuery function for DELETE operations
+export async function deleteQuery(sql: string, params: (string | number | boolean | null)[] = []): Promise<DeleteResult> {
+  return retryOperation(async () => {
+    try {
+      const [result] = await pool.execute(sql, params);
+      return result as DeleteResult;
+    } catch (error) {
+      console.error('Database delete error:', error);
       throw error;
     }
   });

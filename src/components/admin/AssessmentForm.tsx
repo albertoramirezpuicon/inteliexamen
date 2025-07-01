@@ -23,7 +23,7 @@ import {
   Divider,
   Chip
 } from '@mui/material';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import {
   Save as SaveIcon,
   AutoAwesome as AIIcon,
@@ -110,12 +110,7 @@ export default function AssessmentForm({
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
 
   // Load initial data
-  useEffect(() => {
-    loadInitialData();
-    if (assessmentId) {
-      loadAssessment();
-    }
-  }, [assessmentId, loadInitialData, loadAssessment]);
+  // Move this useEffect after the function declarations
 
   const loadInitialData = useCallback(async () => {
     try {
@@ -164,7 +159,7 @@ export default function AssessmentForm({
     } catch {
       setError('Failed to load initial data');
     }
-  };
+  }, [userType]);
 
   const loadAssessment = useCallback(async () => {
     if (!assessmentId) return;
@@ -265,7 +260,7 @@ export default function AssessmentForm({
     } finally {
       setLoading(false);
     }
-  };
+  }, [assessmentId, userType]);
 
   const loadDomains = async (institutionId: number) => {
     try {
@@ -348,6 +343,14 @@ export default function AssessmentForm({
       console.error('Error loading skills:', err);
     }
   };
+
+  // Load initial data
+  useEffect(() => {
+    loadInitialData();
+    if (assessmentId) {
+      loadAssessment();
+    }
+  }, [assessmentId, loadInitialData, loadAssessment]);
 
   const handleInstitutionChange = async (institutionId: number) => {
     setFormData(prev => ({ ...prev, institution_id: institutionId.toString(), skill_id: '' }));
