@@ -41,7 +41,7 @@ export default function AdminAssessmentsPage() {
           {t('assessmentsDescription')}
         </Typography>
         
-        <AssessmentManagement />
+        <AssessmentManagement userType="admin" />
       </Box>
     </Box>
   );

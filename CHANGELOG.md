@@ -230,6 +230,11 @@ All notable changes to this project will be documented in this file.
     - Reduces Docker build context size significantly
     - Improves build performance by excluding non-essential files
   - **Benefits**: These optimizations should resolve the GitHub Actions timeout issues during "Linting and checking validity of types" step
+
+- **Admin Assessments Page Type Error**: Fixed missing `userType` prop in AssessmentManagement component
+  - Added `userType="admin"` prop to AssessmentManagement component in admin assessments page
+  - This resolves the TypeScript error about missing required property in AssessmentManagementProps interface
+  - Ensures proper type safety and component functionality for admin users
 - **Admin Components ESLint Fixes**: Fixed multiple ESLint errors in admin components:
   - **AssessmentForm**: Fixed missing React hook dependencies in useEffect, removed unused `err` variable, wrapped `loadInitialData` and `loadAssessment` in `useCallback`
   - **AssessmentGroupsModal**: Removed unused variables (`userType`, `currentUserId`, `institutionId`, `parseError`), fixed missing React hook dependency, wrapped `loadGroupsData` in `useCallback`
