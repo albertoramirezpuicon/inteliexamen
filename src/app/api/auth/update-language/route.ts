@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query, updateQuery } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update user's language preference
-    const result = await query(
+    const result = await updateQuery(
       'UPDATE inteli_users SET language_preference = ?, updated_at = NOW() WHERE id = ?',
       [language, userId]
     );

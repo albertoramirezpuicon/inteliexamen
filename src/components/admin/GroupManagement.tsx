@@ -90,10 +90,6 @@ export default function GroupManagement() {
     fetchGroups();
   }, []);
 
-  useEffect(() => {
-    applyFiltersAndSorting();
-  }, [groups, sortField, sortOrder, filters, applyFiltersAndSorting]);
-
   const fetchGroups = async () => {
     try {
       setLoading(true);
@@ -157,6 +153,10 @@ export default function GroupManagement() {
     setFilteredGroups(filtered);
     setPage(0); // Reset to first page when filters change
   }, [groups, sortField, sortOrder, filters]);
+
+  useEffect(() => {
+    applyFiltersAndSorting();
+  }, [applyFiltersAndSorting]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query, insertQuery } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
@@ -97,7 +97,7 @@ export async function POST(
       ) VALUES (?, 'student', ?, NOW())
     `;
 
-    const saveResult = await query(saveMessageQuery, [attemptId, message]);
+    const saveResult = await insertQuery(saveMessageQuery, [attemptId, message]);
 
     if (!saveResult || !saveResult.insertId) {
       throw new Error('Failed to save message');

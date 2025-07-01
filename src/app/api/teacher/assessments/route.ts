@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, insertQuery } from '@/lib/db';
+import pool from '@/lib/db';
 
 // GET - List assessments with filtering and pagination (restricted to teacher's institution and assessments)
 export async function GET(request: NextRequest) {
@@ -174,7 +175,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Start transaction
-    const connection = await (await import('@/lib/db')).getConnection();
+    const connection = await pool.getConnection();
     await connection.beginTransaction();
     
     try {

@@ -75,10 +75,6 @@ export default function DomainManagement() {
     fetchInstitutions();
   }, []);
 
-  useEffect(() => {
-    applyFiltersAndSorting();
-  }, [domains, sortField, sortOrder, filters, applyFiltersAndSorting]);
-
   const fetchDomains = async () => {
     try {
       setLoading(true);
@@ -142,6 +138,10 @@ export default function DomainManagement() {
     setFilteredDomains(filtered);
     setPage(0);
   }, [domains, sortField, sortOrder, filters]);
+
+  useEffect(() => {
+    applyFiltersAndSorting();
+  }, [applyFiltersAndSorting]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {

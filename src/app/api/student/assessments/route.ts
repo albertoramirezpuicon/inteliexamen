@@ -65,8 +65,8 @@ export async function GET(request: NextRequest) {
     });
 
     // Separate assessments into active (no attempts or incomplete) and completed
-    const activeAssessments = [];
-    const completedAssessments = [];
+    const activeAssessments: any[] = [];
+    const completedAssessments: any[] = [];
 
     assessments.forEach(assessment => {
       const attempt = attemptsMap.get(assessment.id);

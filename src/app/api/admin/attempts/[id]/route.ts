@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query, deleteQuery } from '@/lib/db';
 
 // DELETE - Delete a specific attempt
 export async function DELETE(
@@ -23,7 +23,7 @@ export async function DELETE(
     );
 
     // Then delete the attempt
-    const result = await query(
+    const result = await deleteQuery(
       'DELETE FROM inteli_assessments_attempts WHERE id = ?',
       [attemptId]
     );

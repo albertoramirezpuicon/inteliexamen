@@ -65,10 +65,6 @@ export default function InstitutionManagement() {
     fetchInstitutions();
   }, []);
 
-  useEffect(() => {
-    applyFiltersAndSorting();
-  }, [institutions, sortField, sortOrder, filters, applyFiltersAndSorting]);
-
   const fetchInstitutions = async () => {
     try {
       setLoading(true);
@@ -120,6 +116,10 @@ export default function InstitutionManagement() {
     setFilteredInstitutions(filtered);
     setPage(0);
   }, [institutions, sortField, sortOrder, filters]);
+
+  useEffect(() => {
+    applyFiltersAndSorting();
+  }, [applyFiltersAndSorting]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {

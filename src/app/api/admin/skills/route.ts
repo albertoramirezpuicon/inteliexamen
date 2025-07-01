@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query, insertQuery } from '@/lib/db';
 
 // GET - Get all skills with institution and domain info
 export async function GET() {
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'A skill with this name already exists in this domain.' }, { status: 409 });
     }
     // Insert
-    const result = await query(
+    const result = await insertQuery(
       `INSERT INTO inteli_skills (institution_id, domain_id, name, description, created_at, updated_at)
        VALUES (?, ?, ?, ?, NOW(), NOW())`,
       [institution_id, domain_id, name.trim(), description.trim()]

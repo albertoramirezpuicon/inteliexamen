@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query, insertQuery } from '@/lib/db';
 
 // GET - Get skills from teacher's institution with assessment count
 export async function GET(request: NextRequest) {
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert new skill
-    const result = await query(
+    const result = await insertQuery(
       `INSERT INTO inteli_skills (institution_id, domain_id, name, description)
        VALUES (?, ?, ?, ?)`,
       [teacherInstitutionId, domain_id, name.trim(), description.trim()]

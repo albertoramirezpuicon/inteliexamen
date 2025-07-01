@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query, insertQuery } from '@/lib/db';
 
 // GET - Get all domains with institution information
 export async function GET() {
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
     }
 
     // Create domain
-    const result = await query(
+    const result = await insertQuery(
       `INSERT INTO inteli_domains 
         (institution_id, name, description) 
        VALUES (?, ?, ?)`,

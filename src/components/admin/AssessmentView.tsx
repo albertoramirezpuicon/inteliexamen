@@ -12,7 +12,7 @@ import {
   Alert,
   Divider
 } from '@mui/material';
-import Grid from '@mui/material/Grid';
+import Grid from '@mui/material/Grid2';
 import {
   ArrowBack as BackIcon,
   Edit as EditIcon

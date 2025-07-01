@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query, insertQuery } from '@/lib/db';
 
 export async function POST(
   request: NextRequest,
@@ -79,7 +79,7 @@ export async function POST(
       ) VALUES (?, ?, 0.00, NOW(), NOW(), 'In progress')
     `;
 
-    const createResult = await query(createAttemptQuery, [assessmentId, userId]) as { insertId: number };
+    const createResult = await insertQuery(createAttemptQuery, [assessmentId, userId]);
 
     if (!createResult || !createResult.insertId) {
       throw new Error('Failed to create attempt');

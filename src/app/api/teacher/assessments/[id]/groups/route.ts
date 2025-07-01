@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query, deleteQuery } from '@/lib/db';
 
 // GET - Get groups for a specific assessment (restricted to teacher's assessments)
 export async function GET(
@@ -228,7 +228,7 @@ export async function DELETE(
     }
 
     // Remove associations
-    const result = await query(
+    const result = await deleteQuery(
       `DELETE FROM inteli_assessments_groups 
        WHERE assessment_id = ? AND group_id IN (${groupIds.map(() => '?').join(',')})`,
       [assessmentId, ...groupIds]

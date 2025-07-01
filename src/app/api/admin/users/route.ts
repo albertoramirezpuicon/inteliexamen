@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { query } from '@/lib/db';
+import { query, insertQuery } from '@/lib/db';
 
 // GET - List all users
 export async function GET() {
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Insert new user
-    const result = await query(
+    const result = await insertQuery(
       `INSERT INTO inteli_users 
        (email, password, given_name, family_name, role, institution_id, language_preference) 
        VALUES (?, ?, ?, ?, ?, ?, ?)`,

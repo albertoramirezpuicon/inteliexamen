@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     // Split into up to 4 suggestions
     const suggestions = text
       .split('\n')
-      .map(s => s.trim())
+      .map((s: string) => s.trim())
       .filter(Boolean)
       .slice(0, 4);
     return NextResponse.json({ suggestions });

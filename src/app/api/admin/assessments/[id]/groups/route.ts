@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query, deleteQuery } from '@/lib/db';
 
 // GET: Retrieve groups associated with an assessment
 export async function GET(
@@ -177,15 +177,15 @@ export async function DELETE(
     }
 
     // Remove associations
-    const result = await query(
+    const result = await deleteQuery(
       `DELETE FROM inteli_assessments_groups 
        WHERE assessment_id = ? AND group_id IN (${groupIdArray.map(() => '?').join(',')})`,
       [assessmentId, ...groupIdArray]
-    ) as { affectedRows: number };
+    );
 
     return NextResponse.json({
       message: 'Groups removed successfully',
-      removedAssociations: result.affectedRows || 0
+      removedAssociations: result.affectedRows
     });
   } catch (error) {
     console.error('Error removing groups from assessment:', error);

@@ -6,6 +6,9 @@ export type InsertResult = mysql.ResultSetHeader;
 export type UpdateResult = mysql.ResultSetHeader;
 export type DeleteResult = mysql.ResultSetHeader;
 
+// Type for operations that return affected rows and insert ID
+export type DatabaseResult = mysql.ResultSetHeader;
+
 // Create connection pool with better configuration
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',

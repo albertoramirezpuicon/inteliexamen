@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query, insertQuery } from '@/lib/db';
 
 // GET - Get all institutions
 export async function GET() {
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     }
 
     // Create institution
-    const result = await query(
+    const result = await insertQuery(
       `INSERT INTO inteli_institutions 
         (name, contact_name, contact_email, created_at, updated_at) 
        VALUES (?, ?, ?, NOW(), NOW())`,

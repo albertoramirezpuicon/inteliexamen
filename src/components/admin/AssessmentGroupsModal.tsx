@@ -58,13 +58,6 @@ export default function AssessmentGroupsModal({
   const [membersDialogOpen, setMembersDialogOpen] = useState(false);
   const [selectedGroupForMembers, setSelectedGroupForMembers] = useState<Group | null>(null);
 
-  // Load groups data when modal opens
-  useEffect(() => {
-    if (open && assessmentId) {
-      loadGroupsData();
-    }
-  }, [open, assessmentId, loadGroupsData]);
-
   const loadGroupsData = useCallback(async () => {
     try {
       setLoading(true);
@@ -107,6 +100,13 @@ export default function AssessmentGroupsModal({
       setLoading(false);
     }
   }, [assessmentId]);
+
+  // Load groups data when modal opens
+  useEffect(() => {
+    if (open && assessmentId) {
+      loadGroupsData();
+    }
+  }, [open, assessmentId, loadGroupsData]);
 
   const handleGroupToggle = (groupId: number) => {
     setSelectedGroups(prev => {

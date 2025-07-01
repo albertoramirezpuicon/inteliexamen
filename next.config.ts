@@ -12,8 +12,10 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['@mui/material', '@mui/icons-material'],
     // Disable some features for faster builds
     typedRoutes: false,
-    serverComponentsExternalPackages: [],
   },
+  
+  // Server external packages configuration
+  serverExternalPackages: [],
   
   // Turbopack configuration (replaces deprecated experimental.turbo)
   turbopack: {
@@ -78,8 +80,7 @@ const nextConfig: NextConfig = {
   // Disable source maps in production for faster builds
   productionBrowserSourceMaps: false,
   
-  // Disable SWC minification for faster builds (use Terser instead)
-  swcMinify: false,
+  // SWC minification is enabled by default in Next.js 15
   
   // TypeScript optimizations
   typescript: {

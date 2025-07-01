@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { query, insertQuery } from '@/lib/db';
 
 interface CountResult { count: number; }
 
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert new group
-    const result = await query(
+    const result = await insertQuery(
       `INSERT INTO inteli_groups (name, description, institution_id) VALUES (?, ?, ?)`,
       [name.trim(), description || '', institution_id]
     );
