@@ -7,9 +7,12 @@ const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
   
-  // Build optimizations
+  // Build optimizations for faster builds
   experimental: {
     optimizePackageImports: ['@mui/material', '@mui/icons-material'],
+    // Disable some features for faster builds
+    typedRoutes: false,
+    serverComponentsExternalPackages: [],
   },
   
   // Turbopack configuration (replaces deprecated experimental.turbo)
@@ -22,7 +25,7 @@ const nextConfig: NextConfig = {
     },
   },
   
-  // Simplified webpack optimizations to reduce build time
+  // Optimized webpack configuration for faster builds
   webpack: (config, { dev, isServer }) => {
     // Only apply optimizations in production builds
     if (!dev && !isServer) {
@@ -38,6 +41,17 @@ const nextConfig: NextConfig = {
             },
           },
         },
+        // Reduce bundle analysis for faster builds
+        minimize: true,
+        minimizer: config.optimization.minimizer,
+      };
+      
+      // Disable some webpack features for faster builds
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
       };
     }
     
@@ -66,6 +80,18 @@ const nextConfig: NextConfig = {
   
   // Disable SWC minification for faster builds (use Terser instead)
   swcMinify: false,
+  
+  // TypeScript optimizations
+  typescript: {
+    // Ignore TypeScript errors during build for faster builds
+    ignoreBuildErrors: false,
+  },
+  
+  // ESLint optimizations
+  eslint: {
+    // Ignore ESLint errors during build for faster builds
+    ignoreDuringBuilds: false,
+  },
 };
 
 export default withNextIntl(nextConfig);

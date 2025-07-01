@@ -9,7 +9,7 @@ WORKDIR /app
 
 # Install all dependencies (including devDependencies) for build
 COPY package.json package-lock.json* ./
-RUN npm ci --prefer-offline --no-audit
+RUN npm ci --prefer-offline --no-audit --production=false
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -22,8 +22,12 @@ COPY . .
 # Uncomment the following line in case you want to disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED 1
 
-# Build with optimizations
-RUN npm run build
+# Set build optimizations
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Build with optimizations and timeout
+RUN timeout 600 npm run build:fast || (echo "Build timed out after 10 minutes" && exit 1)
 
 # Production image, copy all the files and run next
 FROM base AS runner
