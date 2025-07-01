@@ -1,6 +1,7 @@
 'use client';
 
-import { Box, Typography, Grid, Paper, Card, CardContent, Avatar, Button, Chip, Tooltip } from '@mui/material';
+import { Box, Typography, Paper, Card, CardContent, Avatar, Button, Chip, Tooltip } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import { useState, useEffect, useCallback } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import { useTranslations } from 'next-intl';

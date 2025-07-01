@@ -236,10 +236,15 @@ All notable changes to this project will be documented in this file.
   - This resolves the TypeScript error about missing required property in AssessmentManagementProps interface
   - Ensures proper type safety and component functionality for admin users
 
-- **Admin Attempts Page Grid Component Type Error**: Fixed Material-UI Grid component import issue
-  - Changed Grid import from destructured import to direct import: `import Grid from '@mui/material/Grid'`
-  - This resolves the TypeScript error about Grid component overloads and missing `item` prop
-  - Ensures proper type recognition for Material-UI Grid component props
+- **Material-UI Grid Component Migration**: Fixed Grid component compatibility issues across multiple files for Material-UI v7
+  - **Root Cause**: Material-UI v7 replaced the old Grid component with Grid2, causing TypeScript errors
+  - **Files Fixed**:
+    - `src/app/[locale]/admin/attempts/page.tsx`: Updated import to `import Grid from '@mui/material/Grid2'`
+    - `src/app/[locale]/student/dashboard/page.tsx`: Updated import to `import Grid from '@mui/material/Grid2'`
+    - `src/components/admin/AssessmentView.tsx`: Updated import to `import Grid from '@mui/material/Grid2'`
+    - `src/components/admin/AssessmentForm.tsx`: Updated import to `import Grid from '@mui/material/Grid2'`
+  - **Benefits**: Resolves all TypeScript errors related to Grid component overloads and missing props
+  - **Compatibility**: Ensures proper functionality with Material-UI v7.1.1
 - **Admin Components ESLint Fixes**: Fixed multiple ESLint errors in admin components:
   - **AssessmentForm**: Fixed missing React hook dependencies in useEffect, removed unused `err` variable, wrapped `loadInitialData` and `loadAssessment` in `useCallback`
   - **AssessmentGroupsModal**: Removed unused variables (`userType`, `currentUserId`, `institutionId`, `parseError`), fixed missing React hook dependency, wrapped `loadGroupsData` in `useCallback`

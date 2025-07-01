@@ -32,7 +32,7 @@ import {
   Divider,
   Avatar
 } from '@mui/material';
-import Grid from '@mui/material/Grid';
+import Grid from '@mui/material/Grid2';
 import {
   Visibility as ViewIcon,
   Close as CloseIcon,

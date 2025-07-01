@@ -11,7 +11,6 @@ import {
   MenuItem,
   Button,
   Typography,
-  Grid,
   FormControlLabel,
   Switch,
   Alert,
@@ -24,6 +23,7 @@ import {
   Divider,
   Chip
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import {
   Save as SaveIcon,
   AutoAwesome as AIIcon,
