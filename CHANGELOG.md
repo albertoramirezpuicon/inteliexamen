@@ -235,6 +235,11 @@ All notable changes to this project will be documented in this file.
   - Added `userType="admin"` prop to AssessmentManagement component in admin assessments page
   - This resolves the TypeScript error about missing required property in AssessmentManagementProps interface
   - Ensures proper type safety and component functionality for admin users
+
+- **Admin Attempts Page Grid Component Type Error**: Fixed Material-UI Grid component import issue
+  - Changed Grid import from destructured import to direct import: `import Grid from '@mui/material/Grid'`
+  - This resolves the TypeScript error about Grid component overloads and missing `item` prop
+  - Ensures proper type recognition for Material-UI Grid component props
 - **Admin Components ESLint Fixes**: Fixed multiple ESLint errors in admin components:
   - **AssessmentForm**: Fixed missing React hook dependencies in useEffect, removed unused `err` variable, wrapped `loadInitialData` and `loadAssessment` in `useCallback`
   - **AssessmentGroupsModal**: Removed unused variables (`userType`, `currentUserId`, `institutionId`, `parseError`), fixed missing React hook dependency, wrapped `loadGroupsData` in `useCallback`

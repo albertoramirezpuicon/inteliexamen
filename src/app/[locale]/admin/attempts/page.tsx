@@ -30,9 +30,9 @@ import {
   ListItem,
   ListItemText,
   Divider,
-  Avatar,
-  Grid
+  Avatar
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import {
   Visibility as ViewIcon,
   Close as CloseIcon,
