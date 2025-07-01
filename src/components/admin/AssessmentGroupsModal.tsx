@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -43,9 +43,7 @@ export default function AssessmentGroupsModal({
   open,
   onClose,
   assessmentId,
-  assessmentName,
-  userType,
-  currentUserId
+  assessmentName
 }: AssessmentGroupsModalProps) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -55,7 +53,6 @@ export default function AssessmentGroupsModal({
   const [availableGroups, setAvailableGroups] = useState<Group[]>([]);
   const [associatedGroups, setAssociatedGroups] = useState<Group[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<number[]>([]);
-  const [institutionId, setInstitutionId] = useState<number | null>(null);
 
   // Group members dialog state
   const [membersDialogOpen, setMembersDialogOpen] = useState(false);
@@ -66,9 +63,9 @@ export default function AssessmentGroupsModal({
     if (open && assessmentId) {
       loadGroupsData();
     }
-  }, [open, assessmentId]);
+  }, [open, assessmentId, loadGroupsData]);
 
-  const loadGroupsData = async () => {
+  const loadGroupsData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -89,7 +86,7 @@ export default function AssessmentGroupsModal({
         try {
           const errorData = JSON.parse(text);
           throw new Error(errorData.error || 'Failed to load groups data');
-        } catch (parseError) {
+        } catch {
           console.log('Could not parse error as JSON, using text as error');
           throw new Error(`Server error: ${response.status} - ${text.substring(0, 200)}`);
         }
@@ -100,7 +97,6 @@ export default function AssessmentGroupsModal({
       
       setAvailableGroups(data.availableGroups);
       setAssociatedGroups(data.associatedGroups);
-      setInstitutionId(data.institutionId);
       
       // Pre-select currently associated groups
       setSelectedGroups(data.associatedGroups.map((group: Group) => group.id));

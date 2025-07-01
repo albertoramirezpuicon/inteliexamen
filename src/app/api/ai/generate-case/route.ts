@@ -80,7 +80,6 @@ async function generateCase(params: {
     educationalLevel,
     outputLanguage,
     evaluationContext,
-    domainName,
     skillName,
     skillDescription
   });
@@ -123,7 +122,6 @@ function createCasePrompt(params: {
   educationalLevel: string;
   outputLanguage: string;
   evaluationContext: string;
-  domainName: string;
   skillName: string;
   skillDescription: string;
 }): string {
@@ -133,7 +131,6 @@ function createCasePrompt(params: {
     educationalLevel,
     outputLanguage,
     evaluationContext,
-    domainName,
     skillName,
     skillDescription
   } = params;

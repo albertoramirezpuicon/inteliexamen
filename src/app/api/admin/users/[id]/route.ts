@@ -91,8 +91,8 @@ export async function PUT(
     }
 
     // Build update query dynamically
-    let updateFields = [];
-    let updateValues = [];
+    const updateFields = [];
+    const updateValues = [];
 
     if (email) {
       updateFields.push('email = ?');

@@ -202,6 +202,191 @@ npm run test:coverage
 npm run test:watch
 ```
 
+## 📝 Programming Rules & Coding Standards
+
+This project follows strict coding standards to maintain high code quality and prevent technical debt. These rules were established after extensive ESLint error fixes and code optimization.
+
+### React Hook Rules
+
+#### 1. **useEffect Dependency Management**
+```typescript
+// ❌ WRONG - Missing dependencies
+useEffect(() => {
+  loadData();
+}, [id]);
+
+// ✅ CORRECT - Include all dependencies
+useEffect(() => {
+  loadData();
+}, [id, loadData]);
+```
+
+**Rule**: Always include all functions and variables used inside `useEffect` in the dependency array.
+
+#### 2. **useCallback for Function Dependencies**
+```typescript
+// ❌ WRONG - Function recreated on every render
+const loadData = async () => { /* ... */ };
+
+// ✅ CORRECT - Memoized function
+const loadData = useCallback(async () => { /* ... */ }, []);
+```
+
+**Rule**: Wrap functions that are used in `useEffect` dependencies with `useCallback` to prevent infinite re-renders.
+
+#### 3. **Import useCallback**
+```typescript
+// ❌ WRONG - Missing import
+import React, { useState, useEffect } from 'react';
+
+// ✅ CORRECT - Include useCallback
+import React, { useState, useEffect, useCallback } from 'react';
+```
+
+**Rule**: Always import `useCallback` when using it in components.
+
+### TypeScript Type Safety Rules
+
+#### 4. **Eliminate `any` Types**
+```typescript
+// ❌ WRONG - Using any
+color={getColor(role) as any}
+
+// ✅ CORRECT - Specific union types
+color={getColor(role) as 'success' | 'warning' | 'error' | 'default'}
+```
+
+**Rule**: Replace all `any` types with specific TypeScript interfaces or union types.
+
+#### 5. **Proper Error Handling Types**
+```typescript
+// ❌ WRONG - Unused error parameter
+} catch (error) {
+  setError('Failed to load data');
+}
+
+// ✅ CORRECT - Use error or remove parameter
+} catch (error) {
+  setError(error instanceof Error ? error.message : 'Failed to load data');
+}
+
+// OR if error is not used:
+} catch {
+  setError('Failed to load data');
+}
+```
+
+**Rule**: Either use the error parameter or remove it entirely from catch blocks.
+
+### Import Management Rules
+
+#### 6. **Remove Unused Imports**
+```typescript
+// ❌ WRONG - Unused imports
+import { Button, Paper, Typography, Chip, Snackbar } from '@mui/material';
+
+// ✅ CORRECT - Only used imports
+import { Button, Paper, Typography } from '@mui/material';
+```
+
+**Rule**: Regularly audit and remove unused imports to keep code clean.
+
+#### 7. **Remove Unused Variables**
+```typescript
+// ❌ WRONG - Unused state variables
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState(null);
+
+// ✅ CORRECT - Only declare what you use
+const [loading, setLoading] = useState(true);
+```
+
+**Rule**: Remove unused state variables, function parameters, and local variables.
+
+### Component Structure Rules
+
+#### 8. **Remove Unused Function Parameters**
+```typescript
+// ❌ WRONG - Unused parameter
+function UserDialog({ open, user, institutions, groups, onClose, onSave }) {
+  // groups is never used
+}
+
+// ✅ CORRECT - Remove unused parameter
+function UserDialog({ open, user, institutions, onClose, onSave }) {
+```
+
+**Rule**: Remove unused function parameters from component props and function signatures.
+
+#### 9. **Proper JSX Entity Escaping**
+```typescript
+// ❌ WRONG - Unescaped quotes
+<DialogContentText>
+  Are you sure you want to delete "{name}"?
+</DialogContentText>
+
+// ✅ CORRECT - Escaped quotes
+<DialogContentText>
+  Are you sure you want to delete &quot;{name}&quot;?
+</DialogContentText>
+```
+
+**Rule**: Escape quotes in JSX using HTML entities (`&quot;`, `&apos;`).
+
+### Code Organization Rules
+
+#### 10. **Consistent Error Handling**
+```typescript
+// ❌ WRONG - Inconsistent error handling
+} catch (parseError) {
+  console.log('Could not parse error as JSON');
+}
+
+// ✅ CORRECT - Consistent approach
+} catch {
+  console.log('Could not parse error as JSON');
+}
+```
+
+**Rule**: Be consistent with error handling patterns across the codebase.
+
+#### 11. **Remove Dead Code**
+```typescript
+// ❌ WRONG - Dead code
+const [availableStudents, setAvailableStudents] = useState([]);
+// These are never used
+
+// ✅ CORRECT - Remove unused code
+// Remove the unused state entirely
+```
+
+**Rule**: Regularly remove dead code, unused variables, and unused functions.
+
+### Development Workflow Rules
+
+#### 12. **Pre-commit Linting**
+**Rule**: Run `npm run lint` before committing to catch these issues early.
+
+#### 13. **IDE Integration**
+**Rule**: Configure your IDE to show ESLint errors in real-time to catch issues during development.
+
+#### 14. **Regular Code Audits**
+**Rule**: Schedule regular code audits to identify and fix accumulated technical debt.
+
+### Summary of Code Quality Improvements
+
+These rules were established after fixing:
+- ✅ **Missing React hook dependencies** in 15+ components
+- ✅ **All `any` types** replaced with proper TypeScript interfaces
+- ✅ **Unused imports** removed from 20+ files
+- ✅ **Unused variables** and function parameters eliminated
+- ✅ **Unescaped quotes** in JSX fixed
+- ✅ **Functions wrapped in useCallback** for performance optimization
+- ✅ **Error handling consistency** improved
+- ✅ **Type safety** enhanced across the entire codebase
+
+**Follow these rules to maintain the high code quality standards established in this project.**
+
 ## 📊 Monitoring
 
 ### Health Check

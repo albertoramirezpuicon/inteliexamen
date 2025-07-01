@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -74,9 +74,9 @@ export default function GroupMembersDialog({
     if (open && group) {
       fetchGroupData();
     }
-  }, [open, group]);
+  }, [open, group, fetchGroupData]);
 
-  const fetchGroupData = async () => {
+  const fetchGroupData = useCallback(async () => {
     if (!group || !userInstitutionId) return;
 
     try {

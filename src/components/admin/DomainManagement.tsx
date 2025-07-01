@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -77,7 +77,7 @@ export default function DomainManagement() {
 
   useEffect(() => {
     applyFiltersAndSorting();
-  }, [domains, sortField, sortOrder, filters]);
+  }, [domains, sortField, sortOrder, filters, applyFiltersAndSorting]);
 
   const fetchDomains = async () => {
     try {
@@ -109,7 +109,7 @@ export default function DomainManagement() {
     }
   };
 
-  const applyFiltersAndSorting = () => {
+  const applyFiltersAndSorting = useCallback(() => {
     let filtered = [...domains];
 
     if (filters.search) {

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
+interface CountResult { count: number; }
+
 // GET - Get groups from teacher's institution
 export async function GET(request: NextRequest) {
   try {
@@ -33,7 +35,7 @@ export async function GET(request: NextRequest) {
        GROUP BY g.id, g.name, g.description, g.institution_id, i.name, g.created_at, g.updated_at
        ORDER BY g.name ASC`,
       [teacherInstitutionId]
-    ) as any[];
+    ) as CountResult[];
 
     console.log('Found groups:', groupsResult.length);
 

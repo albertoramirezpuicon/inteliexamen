@@ -49,7 +49,7 @@ import {
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
-import { useTranslations, useLocale } from 'next-intl';
+import { useLocale } from 'next-intl';
 
 interface Assessment {
   id: number;
@@ -246,9 +246,7 @@ export default function TeacherAttemptsPage() {
     await loadResults(attemptId);
   };
 
-  const handleViewDisputes = (attemptId: number) => {
-    router.push(`/${locale}/teacher/attempts/${attemptId}/disputes`);
-  };
+
 
   const handleViewDisputesModal = async (attemptId: number) => {
     setSelectedAttemptId(attemptId);
@@ -368,7 +366,7 @@ export default function TeacherAttemptsPage() {
         hour: '2-digit', 
         minute: '2-digit' 
       });
-    } catch (error) {
+    } catch {
       return 'Invalid Date';
     }
   };
@@ -402,7 +400,7 @@ export default function TeacherAttemptsPage() {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to delete attempt');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to delete attempt');
     } finally {
       setDeleting(false);

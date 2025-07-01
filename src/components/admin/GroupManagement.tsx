@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -68,7 +68,6 @@ export default function GroupManagement() {
   const [openMembersDialog, setOpenMembersDialog] = useState(false);
   const [editingGroup, setEditingGroup] = useState<Group | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
-  const [availableStudents, setAvailableStudents] = useState<User[]>([]);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
     message: '',
@@ -93,7 +92,7 @@ export default function GroupManagement() {
 
   useEffect(() => {
     applyFiltersAndSorting();
-  }, [groups, sortField, sortOrder, filters]);
+  }, [groups, sortField, sortOrder, filters, applyFiltersAndSorting]);
 
   const fetchGroups = async () => {
     try {
@@ -118,7 +117,7 @@ export default function GroupManagement() {
     }
   };
 
-  const applyFiltersAndSorting = () => {
+  const applyFiltersAndSorting = useCallback(() => {
     let filtered = [...groups].filter(group => group && typeof group === 'object');
 
     // Apply search filter
@@ -195,7 +194,7 @@ export default function GroupManagement() {
       const data = await response.json();
       setSelectedGroup(data.group);
       setOpenMembersDialog(true);
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Failed to fetch group members',
@@ -225,7 +224,7 @@ export default function GroupManagement() {
       });
 
       fetchGroups();
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Failed to delete group',
@@ -674,9 +673,9 @@ function MembersDialog({ open, group, onClose, onAddMember, onRemoveMember }: Me
       fetchGroupData();
       fetchAvailableStudents();
     }
-  }, [open, group]);
+  }, [open, group, fetchGroupData, fetchAvailableStudents]);
 
-  const fetchGroupData = async () => {
+  const fetchGroupData = useCallback(async () => {
     if (!group) return;
     
     try {
@@ -698,7 +697,7 @@ function MembersDialog({ open, group, onClose, onAddMember, onRemoveMember }: Me
     }
   };
 
-  const fetchAvailableStudents = async () => {
+  const fetchAvailableStudents = useCallback(async () => {
     if (!group) return;
     
     try {

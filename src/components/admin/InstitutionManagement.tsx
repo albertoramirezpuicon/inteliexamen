@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -67,7 +67,7 @@ export default function InstitutionManagement() {
 
   useEffect(() => {
     applyFiltersAndSorting();
-  }, [institutions, sortField, sortOrder, filters]);
+  }, [institutions, sortField, sortOrder, filters, applyFiltersAndSorting]);
 
   const fetchInstitutions = async () => {
     try {
@@ -86,7 +86,7 @@ export default function InstitutionManagement() {
     }
   };
 
-  const applyFiltersAndSorting = () => {
+  const applyFiltersAndSorting = useCallback(() => {
     let filtered = [...institutions];
 
     if (filters.search) {

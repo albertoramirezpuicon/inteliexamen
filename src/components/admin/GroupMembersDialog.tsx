@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -60,9 +60,9 @@ export default function GroupMembersDialog({
       setMembers([]);
       setError(null);
     }
-  }, [open, groupId]);
+  }, [open, groupId, loadGroupMembers]);
 
-  const loadGroupMembers = async () => {
+  const loadGroupMembers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -84,7 +84,7 @@ export default function GroupMembersDialog({
         try {
           const errorData = JSON.parse(text);
           throw new Error(errorData.error || 'Failed to load group members');
-        } catch (parseError) {
+        } catch {
           console.log('Could not parse error as JSON, using text as error');
           throw new Error(`Server error: ${response.status} - ${text.substring(0, 200)}`);
         }
@@ -205,7 +205,7 @@ export default function GroupMembersDialog({
                               <Chip
                                 label={member.role}
                                 size="small"
-                                color={getRoleColor(member.role) as any}
+                                color={getRoleColor(member.role) as 'error' | 'warning' | 'primary' | 'default'}
                                 variant="outlined"
                               />
                             </Box>

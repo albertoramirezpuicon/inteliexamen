@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
+interface CountResult { count: number; }
+
 // PUT - Update domain
 export async function PUT(
   request: NextRequest,
@@ -143,7 +145,7 @@ export async function DELETE(
     const skillsCount = await query(
       'SELECT COUNT(*) as count FROM inteli_skills WHERE domain_id = ?',
       [domainId]
-    ) as any[];
+    ) as CountResult[];
 
     if (skillsCount[0].count > 0) {
       return NextResponse.json(
@@ -160,7 +162,7 @@ export async function DELETE(
        JOIN inteli_skills s ON aas.skill_id = s.id
        WHERE s.domain_id = ?`,
       [domainId]
-    ) as any[];
+    ) as CountResult[];
 
     if (assessmentCount[0].count > 0) {
       return NextResponse.json(

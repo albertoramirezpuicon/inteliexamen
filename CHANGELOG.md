@@ -156,10 +156,62 @@ All notable changes to this project will be documented in this file.
   - **Student Dashboard**: Removed unused imports (`Divider`, `Accordion`, `AccordionSummary`, `AccordionDetails`, `List`, `ListItem`, `ListItemText`, `ListItemAvatar`, `TextField`, `FormControl`, `InputLabel`, `Select`, `MenuItem`, `AssignmentIcon`, `ExpandMoreIcon`, `SmartToyIcon`), removed unused function `truncateDescription`, fixed `any` type usage, and wrapped `loadStudentData` and `loadAssessments` in `useCallback`
   - **Teacher Assessments Page**: Removed unused import `SearchIcon`, fixed `any` type usage in Chip color props, fixed unescaped quotes in delete confirmation dialog, and wrapped `loadUserInfo` and `loadAssessments` in `useCallback`
   - **Teacher Attempts Page**: Removed unused imports (`HomeIcon`, `ViewIcon`), removed unused variables (`t`, `tCommon`, `handleViewDisputes`, `formatDate`), fixed `any` type usage, fixed unescaped apostrophe, removed unused error variables in catch blocks, and wrapped functions in `useCallback`
+- **Admin Attempts Page React Hook Dependency**: Fixed React Hook dependency warning by wrapping `loadUserInfo` in `useCallback` and adding it to the useEffect dependency array
+- **Student Assessment Results Page Unused Variable**: Removed unused `error` parameter in catch block of `formatConversationTime` function
+- **Teacher Attempts Page ESLint Fixes**: Fixed multiple ESLint errors:
+  - Removed unused `useTranslations` import
+  - Removed unused `handleViewDisputes` function
+  - Removed unused `error` parameter in `formatConversationTime` catch block
+  - Removed unused `err` parameter in `confirmDelete` catch block
+- **Teacher Dashboard ESLint Fixes**: Fixed multiple ESLint errors:
+  - Removed unused imports: `Grid`, `Link`, `ListItemText`, `SchoolIcon`, `TrendingUpIcon`, `ScheduleIcon`, `CheckCircleIcon`, `PendingIcon`
+  - Fixed `any` type usage in Chip color prop by replacing with proper union type
+- **Teacher Domains Page ESLint Fixes**: Fixed multiple ESLint errors:
+  - Removed unused `tCommon` variable
+  - Fixed React Hook dependency warnings by wrapping `fetchDomains` and `applyFiltersAndSorting` in `useCallback`
+  - Fixed unescaped quotes in delete confirmation dialog
+- **Teacher Groups Page ESLint Fixes**: Fixed multiple ESLint errors:
+  - Removed unused `tCommon` variable
+  - Fixed React Hook dependency warnings by wrapping `fetchGroups` and `applyFiltersAndSorting` in `useCallback`
+  - Fixed unescaped quotes in delete confirmation dialog
+- **Teacher Skills Page ESLint Fixes**: Fixed multiple ESLint errors:
+  - Removed unused imports: `Card`, `CardContent`, `DialogContentText`, `Grid`
+  - Added missing imports: `TextField`, `InputAdornment`, `TableContainer`, `Table`, `TableHead`, `TableRow`, `TableCell`, `TableSortLabel`, `TableBody`, `Chip`, `Paper`, `SearchIcon`
+  - Fixed React Hook dependency warnings by wrapping `fetchSkills` and `fetchDomains` in `useCallback`
+  - Fixed unescaped quotes in delete confirmation dialog
+  - Added missing `LEVELS` constant for AI helper modal
+- **Teacher Users Page ESLint Fixes**: Fixed multiple ESLint errors:
+  - Removed unused `tCommon` variable
+  - Fixed React Hook dependency warnings by wrapping `fetchStudents` and `applyFiltersAndSorting` in `useCallback`
+  - Fixed unused `event` parameter in `onRowsPerPageChange` handler
+- **Admin Assessments Groups API Type Fix**: Fixed `any` type usage in DELETE route by replacing with proper `{ affectedRows: number }` type for database result
+- **Admin Attempts Assessment API Type Fixes**: Fixed multiple `any` type usages by adding proper interfaces:
+  - Added `Assessment`, `Attempt`, and `CountResult` interfaces
+  - Replaced `any[]` types with proper typed arrays for database query results
+- **Admin Attempts API ESLint Fixes**: Fixed multiple ESLint errors:
+  - Changed `let` to `const` for `whereConditions` and `params` variables that are never reassigned
+  - Fixed `any` type usage by adding `CountResult` interface and replacing `any[]` with proper type
+- **Admin Institutions API Type Fixes**: Fixed multiple `any` type usages in DELETE route:
+  - Added `CountResult` interface for count query results
+  - Replaced all `any` types with proper `CountResult[]` types for database query results
+- **Admin Users API ESLint Fix**: Changed `let` to `const` for `updateFields` and `updateValues` variables that are never reassigned
   - **Teacher Dashboard**: Removed unused imports (`Grid`, `Link`, `ListItemText`) and fixed unescaped quotes
   - **Admin Components**: Fixed multiple issues across admin components including unused imports, variables, and React Hook dependency warnings
   - **Layout Components**: Removed unused imports and fixed React Hook dependencies
-  - **Internationalization**: Fixed `any` type usage in i18n request utility
+- **Admin Components ESLint Fixes**: Fixed multiple ESLint errors in admin components:
+  - **AssessmentForm**: Fixed missing React hook dependencies in useEffect, removed unused `err` variable, wrapped `loadInitialData` and `loadAssessment` in `useCallback`
+  - **AssessmentGroupsModal**: Removed unused variables (`userType`, `currentUserId`, `institutionId`, `parseError`), fixed missing React hook dependency, wrapped `loadGroupsData` in `useCallback`
+  - **AssessmentManagement**: Replaced `any` types with proper TypeScript interfaces (`Institution`, `Teacher`), fixed missing React hook dependency, fixed unescaped quotes in dialog content, wrapped `loadAssessments` in `useCallback`
+  - **AssessmentView**: Removed unused `Paper` import, fixed missing React hook dependency, wrapped `loadAssessment` in `useCallback`
+  - **DomainManagement**: Fixed missing React hook dependency, wrapped `applyFiltersAndSorting` in `useCallback`
+  - **GroupManagement**: Removed unused variables (`availableStudents`, `setAvailableStudents`), fixed missing React hook dependencies, removed unused `error` parameters in catch blocks, wrapped `applyFiltersAndSorting`, `fetchGroupData`, and `fetchAvailableStudents` in `useCallback`
+  - **GroupMembersDialog**: Fixed missing React hook dependency, removed unused `parseError` variable, fixed `any` type usage in Chip color prop, wrapped `loadGroupMembers` in `useCallback`
+  - **InstitutionManagement**: Fixed missing React hook dependency, wrapped `applyFiltersAndSorting` in `useCallback`
+  - **SkillManagement**: Removed unused imports (`useMemo`, `Snackbar`, `TableSortLabel`, `InputAdornment`, `Chip`, `Search`), removed unused state variables (`loading`, `error`, `snackbar`, `setSortField`, `setSortOrder`, `setFilters`), fixed missing React hook dependency, removed unused `error` parameter in catch block, wrapped `applyFiltersAndSorting` in `useCallback`
+  - **UserManagement**: Fixed missing React hook dependencies, removed unused `error` parameter in catch block, fixed `any` type usage in Chip color prop, removed unused `groups` parameter in UserDialog, wrapped `applyFiltersAndSorting` and `fetchUserGroups` in `useCallback`
+  - **Navbar**: Removed unused `Button` import
+  - **Teacher GroupMembersDialog**: Fixed missing React hook dependency, wrapped `fetchGroupData` in `useCallback`
+  - **Internationalization**: Fixed `any` type usage in i18n request utility by replacing with proper `string` type
 
 ### Added
 - **Landing Page Implementation**: Created a comprehensive landing page for the platform showcase

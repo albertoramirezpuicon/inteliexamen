@@ -5,14 +5,10 @@ import { useRouter } from 'next/navigation';
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Dialog,
   DialogActions,
   DialogContent,
-  DialogContentText,
   DialogTitle,
-  Grid,
   IconButton,
   Typography,
   Alert,
@@ -23,7 +19,18 @@ import {
   MenuItem,
   Breadcrumbs,
   Link,
-  CircularProgress
+  CircularProgress,
+  TextField,
+  InputAdornment,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableSortLabel,
+  TableBody,
+  Chip,
+  Paper
 } from '@mui/material';
 import { 
   Edit, 
@@ -31,7 +38,8 @@ import {
   Add, 
   Layers,
   HelpOutline,
-  Home as HomeIcon
+  Home as HomeIcon,
+  Search as SearchIcon
 } from '@mui/icons-material';
 import { useTranslations, useLocale } from 'next-intl';
 import Navbar from '@/components/layout/Navbar';
@@ -39,6 +47,15 @@ import Navbar from '@/components/layout/Navbar';
 const LANGUAGES = [
   { value: 'en', label: 'English' },
   { value: 'es', label: 'Spanish' },
+];
+
+const LEVELS = [
+  'Elementary',
+  'Middle School',
+  'High School',
+  'Undergraduate',
+  'Graduate',
+  'Professional'
 ];
 
 interface User {
@@ -158,7 +175,7 @@ export default function TeacherSkillsPage() {
     } else {
       console.log('User is not available yet');
     }
-  }, [user]);
+  }, [user, fetchSkills, fetchDomains]);
 
   const applyFiltersAndSorting = useCallback(() => {
     let filtered = [...skills];
@@ -217,7 +234,7 @@ export default function TeacherSkillsPage() {
     applyFiltersAndSorting();
   }, [skills, sortField, sortOrder, searchTerm, domainFilter, applyFiltersAndSorting]);
 
-  const fetchSkills = async () => {
+  const fetchSkills = useCallback(async () => {
     try {
       console.log('Fetching skills for user:', user);
       console.log('User institution ID:', user?.institution_id);
@@ -252,9 +269,9 @@ export default function TeacherSkillsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const fetchDomains = async () => {
+  const fetchDomains = useCallback(async () => {
     try {
       if (!user?.institution_id) return;
 
@@ -273,7 +290,7 @@ export default function TeacherSkillsPage() {
     } catch (error) {
       console.error('Error fetching domains:', error);
     }
-  };
+  }, [user]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -730,7 +747,7 @@ export default function TeacherSkillsPage() {
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete the skill "{skillToDelete?.name}"? 
+            Are you sure you want to delete the skill &quot;{skillToDelete?.name}&quot;? 
             {skillToDelete?.assessments_count > 0 && (
               <Alert severity="warning" sx={{ mt: 2 }}>
                 This skill is used in {skillToDelete.assessments_count} assessment(s). 

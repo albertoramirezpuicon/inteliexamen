@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Paper,
@@ -58,6 +58,17 @@ interface Assessment {
   teacher_id: number;
 }
 
+interface Institution {
+  id: number;
+  name: string;
+}
+
+interface Teacher {
+  id: number;
+  first_name: string;
+  last_name: string;
+}
+
 interface AssessmentManagementProps {
   userType: 'admin' | 'teacher';
   currentUserId?: number;
@@ -86,8 +97,8 @@ export default function AssessmentManagement({
   const [teacherFilter, setTeacherFilter] = useState('');
   
   // Institutions and teachers for filters
-  const [institutions, setInstitutions] = useState<any[]>([]);
-  const [teachers, setTeachers] = useState<any[]>([]);
+  const [institutions, setInstitutions] = useState<Institution[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   
   // Delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -98,7 +109,7 @@ export default function AssessmentManagement({
   const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null);
 
   // Load assessments
-  const loadAssessments = async () => {
+  const loadAssessments = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -152,7 +163,7 @@ export default function AssessmentManagement({
 
   useEffect(() => {
     loadAssessments();
-  }, [page, rowsPerPage, search, statusFilter, institutionFilter, teacherFilter, userType, currentUserId, currentInstitutionId]);
+  }, [page, rowsPerPage, search, statusFilter, institutionFilter, teacherFilter, userType, currentUserId, currentInstitutionId, loadAssessments]);
 
   const handleDelete = async () => {
     if (!assessmentToDelete) return;
@@ -355,7 +366,7 @@ export default function AssessmentManagement({
                   <TableCell>
                     <Chip 
                       label={assessment.difficulty_level} 
-                      color={getDifficultyColor(assessment.difficulty_level) as any}
+                      color={getDifficultyColor(assessment.difficulty_level) as 'success' | 'warning' | 'error' | 'default'}
                       size="small"
                     />
                   </TableCell>
@@ -363,7 +374,7 @@ export default function AssessmentManagement({
                   <TableCell>
                     <Chip 
                       label={assessment.status} 
-                      color={getStatusColor(assessment.status) as any}
+                      color={getStatusColor(assessment.status) as 'success' | 'default'}
                       size="small"
                     />
                   </TableCell>
@@ -457,7 +468,7 @@ export default function AssessmentManagement({
         <DialogTitle>Delete Assessment</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete the assessment "{assessmentToDelete?.name}"? 
+            Are you sure you want to delete the assessment &quot;{assessmentToDelete?.name}&quot;? 
             This action cannot be undone.
           </DialogContentText>
         </DialogContent>

@@ -4,17 +4,14 @@ import { useState, useEffect } from 'react';
 import { 
   Box, 
   Typography, 
-  Grid, 
   Card, 
   CardContent, 
   CardActionArea,
   Breadcrumbs, 
-  Link,
   Chip,
   Avatar,
   List,
   ListItem,
-  ListItemText,
   ListItemAvatar,
   Divider
 } from '@mui/material';
@@ -24,12 +21,7 @@ import {
   Category as CategoryIcon,
   Psychology as PsychologyIcon,
   Assignment as AssignmentIcon,
-  Assessment as AssessmentIcon,
-  School as SchoolIcon,
-  TrendingUp as TrendingUpIcon,
-  Schedule as ScheduleIcon,
-  CheckCircle as CheckCircleIcon,
-  Pending as PendingIcon
+  Assessment as AssessmentIcon
 } from '@mui/icons-material';
 import Navbar from '@/components/layout/Navbar';
 import { useRouter } from 'next/navigation';
@@ -290,7 +282,7 @@ export default function TeacherDashboard() {
                               <Chip 
                                 label={attempt.status} 
                                 size="small" 
-                                color={getStatusColor(attempt.status) as any}
+                                color={getStatusColor(attempt.status) as 'success' | 'warning' | 'info' | 'primary' | 'default'}
                               />
                               <Typography variant="caption" color="text.secondary">
                                 {formatDate(attempt.created_at)}

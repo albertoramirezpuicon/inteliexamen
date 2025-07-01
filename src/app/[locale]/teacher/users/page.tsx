@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Box, 
   Typography, 
@@ -57,7 +57,7 @@ export default function TeacherUsersPage() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('teacher');
-  const tCommon = useTranslations('common');
+
   
   const [students, setStudents] = useState<Student[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
@@ -111,13 +111,13 @@ export default function TeacherUsersPage() {
     } else {
       console.log('User is not available yet');
     }
-  }, [user]);
+  }, [user, fetchStudents]);
 
   useEffect(() => {
     applyFiltersAndSorting();
-  }, [students, sortField, sortOrder, searchTerm]);
+  }, [applyFiltersAndSorting]);
 
-  const fetchStudents = async () => {
+  const fetchStudents = useCallback(async () => {
     try {
       console.log('Fetching students for user:', user);
       console.log('User institution ID:', user?.institution_id);
@@ -152,9 +152,9 @@ export default function TeacherUsersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const applyFiltersAndSorting = () => {
+  const applyFiltersAndSorting = useCallback(() => {
     let filtered = [...students];
 
     if (searchTerm) {
@@ -197,7 +197,7 @@ export default function TeacherUsersPage() {
 
     setFilteredStudents(filtered);
     setPage(0);
-  };
+  }, [students, sortField, sortOrder, searchTerm]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -370,7 +370,7 @@ export default function TeacherUsersPage() {
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={(event, newPage) => setPage(newPage)}
-            onRowsPerPageChange={(event) => {
+            onRowsPerPageChange={() => {
               setPage(0);
             }}
           />

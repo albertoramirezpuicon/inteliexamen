@@ -103,7 +103,7 @@ export default function AdminAttemptsPage() {
   const [deleting, setDeleting] = useState(false);
 
   // Load user info
-  const loadUserInfo = async () => {
+  const loadUserInfo = useCallback(async () => {
     try {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
@@ -116,7 +116,7 @@ export default function AdminAttemptsPage() {
       console.error('Error loading user info:', err);
       router.push(`/${locale}/admin/login`);
     }
-  };
+  }, [locale, router]);
 
   // Load all institutions
   const loadInstitutions = async () => {
@@ -268,7 +268,7 @@ export default function AdminAttemptsPage() {
 
   useEffect(() => {
     loadUserInfo();
-  }, []);
+  }, [loadUserInfo]);
 
   useEffect(() => {
     if (user) {

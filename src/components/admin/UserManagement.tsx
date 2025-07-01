@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -104,7 +104,7 @@ export default function UserManagement() {
 
   useEffect(() => {
     applyFiltersAndSorting();
-  }, [users, sortField, sortOrder, filters]);
+  }, [users, sortField, sortOrder, filters, applyFiltersAndSorting]);
 
   const fetchUsers = async () => {
     try {
@@ -149,7 +149,7 @@ export default function UserManagement() {
     }
   };
 
-  const applyFiltersAndSorting = () => {
+  const applyFiltersAndSorting = useCallback(() => {
     let filtered = [...users];
 
     // Apply search filter
@@ -244,7 +244,7 @@ export default function UserManagement() {
       });
 
       fetchUsers();
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Failed to delete user',
@@ -481,7 +481,7 @@ export default function UserManagement() {
                 <TableCell>
                   <Chip
                     label={user.role}
-                    color={getRoleColor(user.role) as any}
+                    color={getRoleColor(user.role) as 'error' | 'warning' | 'info' | 'success' | 'default'}
                     size="small"
                   />
                 </TableCell>
@@ -572,7 +572,7 @@ interface UserDialogProps {
   onSave: (userData: Partial<User>) => void;
 }
 
-function UserDialog({ open, user, institutions, groups, onClose, onSave }: UserDialogProps) {
+function UserDialog({ open, user, institutions, onClose, onSave }: UserDialogProps) {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -725,9 +725,9 @@ function UserGroupsDialog({ open, user, onClose }: UserGroupsDialogProps) {
     if (open && user) {
       fetchUserGroups();
     }
-  }, [open, user]);
+  }, [open, user, fetchUserGroups]);
 
-  const fetchUserGroups = async () => {
+  const fetchUserGroups = useCallback(async () => {
     if (!user) return;
     
     try {

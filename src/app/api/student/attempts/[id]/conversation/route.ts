@@ -167,7 +167,6 @@ export async function POST(
       assessment: assessmentResult[0],
       skills: skillsWithLevels,
       conversationHistory: historyResult,
-      attemptId
     });
 
     // Save AI response
@@ -307,7 +306,6 @@ async function evaluateWithAI(params: {
     message_type: string;
     message_text: string;
   }>;
-  attemptId: number;
 }) {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
@@ -317,7 +315,7 @@ async function evaluateWithAI(params: {
     throw new Error('OpenAI API key not configured');
   }
 
-  const { studentReply, assessment, skills, conversationHistory, attemptId } = params;
+  const { studentReply, assessment, skills, conversationHistory } = params;
 
   // Count conversation turns
   const turnCount = conversationHistory.length / 2; // Each turn = student + AI message

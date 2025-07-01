@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
-  Paper,
   Card,
   CardContent,
   Chip,
@@ -55,9 +54,9 @@ export default function AssessmentView({ assessmentId }: AssessmentViewProps) {
 
   useEffect(() => {
     loadAssessment();
-  }, [assessmentId]);
+  }, [assessmentId, loadAssessment]);
 
-  const loadAssessment = async () => {
+  const loadAssessment = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/admin/assessments/${assessmentId}`);

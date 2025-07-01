@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -62,7 +62,7 @@ export default function TeacherDomainsPage() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('teacher');
-  const tCommon = useTranslations('common');
+
   
   const [user, setUser] = useState<User | null>(null);
   const [domains, setDomains] = useState<Domain[]>([]);
@@ -130,13 +130,13 @@ export default function TeacherDomainsPage() {
     } else {
       console.log('User is not available yet');
     }
-  }, [user]);
+  }, [user, fetchDomains]);
 
   useEffect(() => {
     applyFiltersAndSorting();
-  }, [domains, sortField, sortOrder, searchTerm]);
+  }, [applyFiltersAndSorting]);
 
-  const fetchDomains = async () => {
+  const fetchDomains = useCallback(async () => {
     try {
       console.log('Fetching domains for user:', user);
       console.log('User institution ID:', user?.institution_id);
@@ -171,9 +171,9 @@ export default function TeacherDomainsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const applyFiltersAndSorting = () => {
+  const applyFiltersAndSorting = useCallback(() => {
     let filtered = [...domains];
 
     if (searchTerm) {
@@ -215,7 +215,7 @@ export default function TeacherDomainsPage() {
 
     setFilteredDomains(filtered);
     setPage(0);
-  };
+  }, [domains, sortField, sortOrder, searchTerm]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -534,7 +534,7 @@ export default function TeacherDomainsPage() {
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete the domain "{domainToDelete?.name}"? 
+            Are you sure you want to delete the domain &quot;{domainToDelete?.name}&quot;? 
             {domainToDelete?.skills_count > 0 && (
               <Alert severity="warning" sx={{ mt: 2 }}>
                 This domain has {domainToDelete.skills_count} associated skills. 

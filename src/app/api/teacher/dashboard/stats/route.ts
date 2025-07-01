@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
+interface CountResult {
+  total: number;
+}
+
+interface RecentAttempt {
+  id: number;
+  student_name: string;
+  assessment_name: string;
+  status: string;
+  created_at: string;
+}
+
 // GET - Get dashboard statistics for teacher
 export async function GET(request: NextRequest) {
   try {
@@ -23,7 +35,7 @@ export async function GET(request: NextRequest) {
        FROM inteli_users
        WHERE institution_id = ? AND role = 'student'`,
       [teacherInstitutionId]
-    ) as any[];
+    ) as CountResult[];
 
     // Get total groups in teacher's institution
     const groupsResult = await query(
@@ -31,7 +43,7 @@ export async function GET(request: NextRequest) {
        FROM inteli_groups
        WHERE institution_id = ?`,
       [teacherInstitutionId]
-    ) as any[];
+    ) as CountResult[];
 
     // Get total domains in teacher's institution
     const domainsResult = await query(
@@ -39,7 +51,7 @@ export async function GET(request: NextRequest) {
        FROM inteli_domains
        WHERE institution_id = ?`,
       [teacherInstitutionId]
-    ) as any[];
+    ) as CountResult[];
 
     // Get total skills in teacher's institution
     const skillsResult = await query(
@@ -48,7 +60,7 @@ export async function GET(request: NextRequest) {
        JOIN inteli_domains d ON s.domain_id = d.id
        WHERE d.institution_id = ?`,
       [teacherInstitutionId]
-    ) as any[];
+    ) as CountResult[];
 
     // Get total assessments where teacher is responsible
     const assessmentsResult = await query(
@@ -56,7 +68,7 @@ export async function GET(request: NextRequest) {
        FROM inteli_assessments
        WHERE teacher_id = ?`,
       [teacherId]
-    ) as any[];
+    ) as CountResult[];
 
     // Get total attempts for teacher's assessments
     const attemptsResult = await query(
@@ -65,7 +77,7 @@ export async function GET(request: NextRequest) {
        JOIN inteli_assessments a ON att.assessment_id = a.id
        WHERE a.teacher_id = ?`,
       [teacherId]
-    ) as any[];
+    ) as CountResult[];
 
     // Get active assessments count
     const activeAssessmentsResult = await query(
@@ -73,7 +85,7 @@ export async function GET(request: NextRequest) {
        FROM inteli_assessments
        WHERE teacher_id = ? AND status = 'Active'`,
       [teacherId]
-    ) as any[];
+    ) as CountResult[];
 
     // Get completed assessments count
     const completedAssessmentsResult = await query(
@@ -81,7 +93,7 @@ export async function GET(request: NextRequest) {
        FROM inteli_assessments
        WHERE teacher_id = ? AND status = 'Inactive'`,
       [teacherId]
-    ) as any[];
+    ) as CountResult[];
 
     // Get recent attempts (last 5)
     const recentAttemptsResult = await query(
@@ -98,7 +110,7 @@ export async function GET(request: NextRequest) {
        ORDER BY att.created_at DESC
        LIMIT 5`,
       [teacherId]
-    ) as any[];
+    ) as RecentAttempt[];
 
     const stats = {
       totalStudents: studentsResult[0]?.total || 0,

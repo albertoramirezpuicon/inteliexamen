@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -67,7 +67,7 @@ export default function TeacherGroupsPage() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('teacher');
-  const tCommon = useTranslations('common');
+
   
   const [user, setUser] = useState<User | null>(null);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -139,13 +139,13 @@ export default function TeacherGroupsPage() {
     } else {
       console.log('User is not available yet');
     }
-  }, [user]);
+  }, [user, fetchGroups]);
 
   useEffect(() => {
     applyFiltersAndSorting();
-  }, [groups, sortField, sortOrder, searchTerm]);
+  }, [applyFiltersAndSorting]);
 
-  const fetchGroups = async () => {
+  const fetchGroups = useCallback(async () => {
     try {
       console.log('Fetching groups for user:', user);
       console.log('User institution ID:', user?.institution_id);
@@ -180,9 +180,9 @@ export default function TeacherGroupsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const applyFiltersAndSorting = () => {
+  const applyFiltersAndSorting = useCallback(() => {
     let filtered = [...groups];
 
     if (searchTerm) {
@@ -227,7 +227,7 @@ export default function TeacherGroupsPage() {
     });
 
     setFilteredGroups(filtered);
-  };
+  }, [groups, sortField, sortOrder, searchTerm]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -620,7 +620,7 @@ export default function TeacherGroupsPage() {
           <DialogTitle>Confirm Delete</DialogTitle>
           <DialogContent>
             <Typography>
-              Are you sure you want to delete the group "{groupToDelete?.name}"?
+              Are you sure you want to delete the group &quot;{groupToDelete?.name}&quot;?
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               This action cannot be undone. All members will be removed from this group.

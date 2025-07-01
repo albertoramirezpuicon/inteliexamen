@@ -38,7 +38,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     }
     
     return NextResponse.json({ skill });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch skill' }, { status: 500 });
   }
 }
@@ -141,7 +141,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       skill: updated, 
       message: 'Skill updated successfully' 
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to update skill' }, { status: 500 });
   }
 }
@@ -199,7 +199,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     await query('DELETE FROM inteli_skills WHERE id = ?', [id]);
     
     return NextResponse.json({ message: 'Skill deleted successfully' });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to delete skill' }, { status: 500 });
   }
 } 

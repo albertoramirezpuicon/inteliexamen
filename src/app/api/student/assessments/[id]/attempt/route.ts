@@ -79,7 +79,7 @@ export async function POST(
       ) VALUES (?, ?, 0.00, NOW(), NOW(), 'In progress')
     `;
 
-    const createResult = await query(createAttemptQuery, [assessmentId, userId]) as any;
+    const createResult = await query(createAttemptQuery, [assessmentId, userId]) as { insertId: number };
 
     if (!createResult || !createResult.insertId) {
       throw new Error('Failed to create attempt');

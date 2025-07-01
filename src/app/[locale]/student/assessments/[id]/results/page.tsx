@@ -309,7 +309,7 @@ export default function AssessmentResultsPage() {
         hour: '2-digit', 
         minute: '2-digit' 
       });
-    } catch (error) {
+    } catch {
       return 'Invalid Date';
     }
   };

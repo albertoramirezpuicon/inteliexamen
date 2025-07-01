@@ -1,6 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
+interface Assessment {
+  id: number;
+  name: string;
+  description: string;
+  difficulty_level: string;
+  educational_level: string;
+  status: string;
+  institution_name: string;
+}
+
+interface Attempt {
+  id: number;
+  user_id: number;
+  student_name: string;
+  student_email: string;
+  status: string;
+  final_grade: number | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
+interface CountResult {
+  total: number;
+}
+
 // GET - Get attempts for a specific assessment
 export async function GET(
   request: NextRequest,
@@ -27,7 +52,7 @@ export async function GET(
       LEFT JOIN inteli_institutions i ON a.institution_id = i.id
       WHERE a.id = ?`,
       [id]
-    ) as any[];
+    ) as Assessment[];
     
     if (!assessmentResult.length) {
       return NextResponse.json(
@@ -44,7 +69,7 @@ export async function GET(
        FROM inteli_assessments_attempts aa
        WHERE aa.assessment_id = ?`,
       [id]
-    ) as any[];
+    ) as CountResult[];
     
     const total = countResult[0].total;
     const totalPages = Math.ceil(total / limit);
@@ -66,7 +91,7 @@ export async function GET(
       ORDER BY aa.created_at DESC
       LIMIT ? OFFSET ?`,
       [id, String(limit), String(offset)]
-    ) as any[];
+    ) as Attempt[];
     
     return NextResponse.json({
       assessment,

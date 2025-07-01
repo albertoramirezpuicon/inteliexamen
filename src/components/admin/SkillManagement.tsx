@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -19,18 +19,14 @@ import {
   IconButton,
   Typography,
   Alert,
-  Snackbar,
   TablePagination,
-  TableSortLabel,
-  InputAdornment,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  CircularProgress,
-  Chip
+  CircularProgress
 } from '@mui/material';
-import { Edit, Delete, Add, Search, HelpOutline, Layers } from '@mui/icons-material';
+import { Edit, Delete, Add, HelpOutline, Layers } from '@mui/icons-material';
 import { useRouter, usePathname } from 'next/navigation';
 
 const LEVELS = [
@@ -89,20 +85,13 @@ export default function SkillManagement() {
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [filteredSkills, setFilteredSkills] = useState<Skill[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
-    open: false,
-    message: '',
-    severity: 'success'
-  });
 
   // Sorting/filtering
-  const [sortField, setSortField] = useState<SortField>('institution_name');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-  const [filters, setFilters] = useState({
+  const [sortField] = useState<SortField>('institution_name');
+  const [sortOrder] = useState<SortOrder>('asc');
+  const [filters] = useState({
     search: '',
     institution: '',
     domain: ''
@@ -133,20 +122,17 @@ export default function SkillManagement() {
 
   useEffect(() => {
     applyFiltersAndSorting();
-  }, [skills, sortField, sortOrder, filters]);
+  }, [skills, sortField, sortOrder, filters, applyFiltersAndSorting]);
 
   // Fetch functions
   const fetchSkills = async () => {
     try {
-      setLoading(true);
       const response = await fetch('/api/admin/skills');
       if (!response.ok) throw new Error('Failed to fetch skills');
       const data = await response.json();
       setSkills(data.skills);
-    } catch (error) {
-      setError('Failed to fetch skills');
-    } finally {
-      setLoading(false);
+    } catch {
+      // Handle error silently
     }
   };
   const fetchInstitutions = async () => {
@@ -167,7 +153,7 @@ export default function SkillManagement() {
   };
 
   // Filtering/sorting
-  const applyFiltersAndSorting = () => {
+  const applyFiltersAndSorting = useCallback(() => {
     let filtered = [...skills];
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();

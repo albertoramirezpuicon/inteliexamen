@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
+interface CountResult { count: number; }
+
 // PUT - Update group
 export async function PUT(
   request: NextRequest,
@@ -143,7 +145,7 @@ export async function DELETE(
     const memberCount = await query(
       'SELECT COUNT(*) as count FROM inteli_users_groups WHERE group_id = ?',
       [groupId]
-    ) as any[];
+    ) as CountResult[];
 
     if (memberCount[0].count > 0) {
       return NextResponse.json(
@@ -156,7 +158,7 @@ export async function DELETE(
     const assessmentCount = await query(
       'SELECT COUNT(*) as count FROM inteli_assessments_groups WHERE group_id = ?',
       [groupId]
-    ) as any[];
+    ) as CountResult[];
 
     if (assessmentCount[0].count > 0) {
       return NextResponse.json(

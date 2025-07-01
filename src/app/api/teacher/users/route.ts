@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
+interface CountResult { count: number; }
+
 // GET - Get students from teacher's institution
 export async function GET(request: NextRequest) {
   try {
@@ -29,7 +31,7 @@ export async function GET(request: NextRequest) {
        WHERE institution_id = ? AND role = 'student'
        ORDER BY given_name, family_name`,
       [teacherInstitutionId]
-    ) as any[];
+    ) as CountResult[];
 
     console.log('Found students:', studentsResult.length);
 

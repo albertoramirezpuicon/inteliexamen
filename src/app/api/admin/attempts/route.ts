@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
+interface CountResult {
+  total: number;
+}
+
 // GET - List assessment attempts with filtering and pagination
 export async function GET(request: NextRequest) {
   try {
@@ -16,8 +20,8 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
     
     // Build WHERE clause
-    let whereConditions = [];
-    let params = [];
+    const whereConditions = [];
+    const params = [];
     
     if (search) {
       whereConditions.push(`(
@@ -64,7 +68,7 @@ export async function GET(request: NextRequest) {
     `;
     
     const countResult = await query(countQuery, params);
-    const total = (countResult as any[])[0].total;
+    const total = (countResult as CountResult[])[0].total;
     const totalPages = Math.ceil(total / limit);
     
     // Get attempts with pagination

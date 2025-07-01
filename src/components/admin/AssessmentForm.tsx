@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Paper,
@@ -115,9 +115,9 @@ export default function AssessmentForm({
     if (assessmentId) {
       loadAssessment();
     }
-  }, [assessmentId]);
+  }, [assessmentId, loadInitialData, loadAssessment]);
 
-  const loadInitialData = async () => {
+  const loadInitialData = useCallback(async () => {
     try {
       // Load user data for teachers
       if (userType === 'teacher') {
@@ -161,12 +161,12 @@ export default function AssessmentForm({
           setTeachers(teacherUsers);
         }
       }
-    } catch (err) {
+    } catch {
       setError('Failed to load initial data');
     }
   };
 
-  const loadAssessment = async () => {
+  const loadAssessment = useCallback(async () => {
     if (!assessmentId) return;
 
     try {
