@@ -198,10 +198,15 @@ All notable changes to this project will be documented in this file.
   - **Teacher Dashboard**: Removed unused imports (`Grid`, `Link`, `ListItemText`) and fixed unescaped quotes
   - **Admin Components**: Fixed multiple issues across admin components including unused imports, variables, and React Hook dependency warnings
   - **Layout Components**: Removed unused imports and fixed React Hook dependencies
-- **InstitutionManagement Component Syntax Error**: Fixed missing dependency array in `useCallback` function
-  - Added proper dependency array `[institutions, sortField, sortOrder, filters]` to `applyFiltersAndSorting` useCallback
-  - This resolves the syntax error that was preventing the build from completing
-  - Ensures proper memoization and prevents unnecessary re-renders
+- **Multiple Admin Components Syntax Errors**: Fixed missing dependency arrays in `useCallback` functions across multiple components
+  - **InstitutionManagement**: Added dependency array `[institutions, sortField, sortOrder, filters]` to `applyFiltersAndSorting` useCallback
+  - **GroupManagement**: Added dependency arrays `[group]` to `fetchGroupData` and `fetchAvailableStudents` useCallback functions
+  - **GroupMembersDialog (Admin)**: Added dependency array `[groupId]` to `loadGroupMembers` useCallback
+  - **SkillManagement**: Added dependency array `[skills, sortField, sortOrder, filters]` to `applyFiltersAndSorting` useCallback
+  - **UserManagement**: Added dependency array `[users, sortField, sortOrder, filters]` to `applyFiltersAndSorting` useCallback
+  - **GroupMembersDialog (Teacher)**: Added dependency array `[group, userInstitutionId]` to `fetchGroupData` useCallback
+  - These fixes resolve syntax errors that were preventing the build from completing
+  - Ensures proper memoization and prevents unnecessary re-renders across all admin and teacher components
 - **Admin Components ESLint Fixes**: Fixed multiple ESLint errors in admin components:
   - **AssessmentForm**: Fixed missing React hook dependencies in useEffect, removed unused `err` variable, wrapped `loadInitialData` and `loadAssessment` in `useCallback`
   - **AssessmentGroupsModal**: Removed unused variables (`userType`, `currentUserId`, `institutionId`, `parseError`), fixed missing React hook dependency, wrapped `loadGroupsData` in `useCallback`

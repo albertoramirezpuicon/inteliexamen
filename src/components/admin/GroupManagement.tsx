@@ -695,7 +695,7 @@ function MembersDialog({ open, group, onClose, onAddMember, onRemoveMember }: Me
     } finally {
       setLoading(false);
     }
-  };
+  }, [group]);
 
   const fetchAvailableStudents = useCallback(async () => {
     if (!group) return;
@@ -709,7 +709,7 @@ function MembersDialog({ open, group, onClose, onAddMember, onRemoveMember }: Me
     } catch (error) {
       console.error('Error fetching available students:', error);
     }
-  };
+  }, [group]);
 
   const handleAddMember = async () => {
     if (selectedStudent && group) {

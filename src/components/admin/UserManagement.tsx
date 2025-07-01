@@ -194,7 +194,7 @@ export default function UserManagement() {
 
     setFilteredUsers(filtered);
     setPage(0); // Reset to first page when filters change
-  };
+  }, [users, sortField, sortOrder, filters]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {

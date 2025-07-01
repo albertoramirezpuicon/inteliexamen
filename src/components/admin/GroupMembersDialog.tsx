@@ -106,7 +106,7 @@ export default function GroupMembersDialog({
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupId]);
 
   const handleClose = () => {
     if (!loading) {

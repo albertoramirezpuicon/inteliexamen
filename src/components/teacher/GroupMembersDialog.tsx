@@ -128,7 +128,7 @@ export default function GroupMembersDialog({
     } finally {
       setLoading(false);
     }
-  };
+  }, [group, userInstitutionId]);
 
   const handleAddMember = async () => {
     if (!selectedStudent || !group) return;

@@ -180,7 +180,7 @@ export default function SkillManagement() {
     });
     setFilteredSkills(filtered);
     setPage(0);
-  };
+  }, [skills, sortField, sortOrder, filters]);
 
   // AI Helper logic
   const openAiModal = (type: 'name' | 'description') => {
