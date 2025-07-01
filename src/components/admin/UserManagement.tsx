@@ -742,7 +742,7 @@ function UserGroupsDialog({ open, user, onClose }: UserGroupsDialogProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   if (!user) return null;
 

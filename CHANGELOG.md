@@ -203,7 +203,7 @@ All notable changes to this project will be documented in this file.
   - **GroupManagement**: Added dependency arrays `[group]` to `fetchGroupData` and `fetchAvailableStudents` useCallback functions
   - **GroupMembersDialog (Admin)**: Added dependency array `[groupId]` to `loadGroupMembers` useCallback
   - **SkillManagement**: Added dependency array `[skills, sortField, sortOrder, filters]` to `applyFiltersAndSorting` useCallback
-  - **UserManagement**: Added dependency array `[users, sortField, sortOrder, filters]` to `applyFiltersAndSorting` useCallback
+  - **UserManagement**: Added dependency arrays `[users, sortField, sortOrder, filters]` to `applyFiltersAndSorting` useCallback and `[user]` to `fetchUserGroups` useCallback
   - **GroupMembersDialog (Teacher)**: Added dependency array `[group, userInstitutionId]` to `fetchGroupData` useCallback
   - These fixes resolve syntax errors that were preventing the build from completing
   - Ensures proper memoization and prevents unnecessary re-renders across all admin and teacher components
