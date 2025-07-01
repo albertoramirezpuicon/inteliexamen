@@ -106,7 +106,7 @@ export default function AssessmentGroupsModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, [assessmentId]);
 
   const handleGroupToggle = (groupId: number) => {
     setSelectedGroups(prev => {

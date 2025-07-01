@@ -156,7 +156,7 @@ export default function GroupManagement() {
 
     setFilteredGroups(filtered);
     setPage(0); // Reset to first page when filters change
-  };
+  }, [groups, sortField, sortOrder, filters]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {

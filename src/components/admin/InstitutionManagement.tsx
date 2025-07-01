@@ -119,7 +119,7 @@ export default function InstitutionManagement() {
 
     setFilteredInstitutions(filtered);
     setPage(0);
-  };
+  }, [institutions, sortField, sortOrder, filters]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {

@@ -134,7 +134,7 @@ export default function AssessmentManagement({
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, rowsPerPage, search, statusFilter, institutionFilter, teacherFilter, userType, currentUserId, currentInstitutionId]);
 
   // Load institutions and teachers for filters
   const loadFilterData = async () => {

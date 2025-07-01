@@ -141,7 +141,7 @@ export default function DomainManagement() {
 
     setFilteredDomains(filtered);
     setPage(0);
-  };
+  }, [domains, sortField, sortOrder, filters]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {

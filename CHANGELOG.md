@@ -198,6 +198,10 @@ All notable changes to this project will be documented in this file.
   - **Teacher Dashboard**: Removed unused imports (`Grid`, `Link`, `ListItemText`) and fixed unescaped quotes
   - **Admin Components**: Fixed multiple issues across admin components including unused imports, variables, and React Hook dependency warnings
   - **Layout Components**: Removed unused imports and fixed React Hook dependencies
+- **InstitutionManagement Component Syntax Error**: Fixed missing dependency array in `useCallback` function
+  - Added proper dependency array `[institutions, sortField, sortOrder, filters]` to `applyFiltersAndSorting` useCallback
+  - This resolves the syntax error that was preventing the build from completing
+  - Ensures proper memoization and prevents unnecessary re-renders
 - **Admin Components ESLint Fixes**: Fixed multiple ESLint errors in admin components:
   - **AssessmentForm**: Fixed missing React hook dependencies in useEffect, removed unused `err` variable, wrapped `loadInitialData` and `loadAssessment` in `useCallback`
   - **AssessmentGroupsModal**: Removed unused variables (`userType`, `currentUserId`, `institutionId`, `parseError`), fixed missing React hook dependency, wrapped `loadGroupsData` in `useCallback`
