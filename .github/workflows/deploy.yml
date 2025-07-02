@@ -1,0 +1,41 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/inteliexamen-web
+            git fetch origin master
+            git reset --hard origin/master
+            docker build -t inteliexamen-web .
+            docker stop inteliexamen-web || true
+            docker rm inteliexamen-web || true
+            docker container prune -f || true # Prune stopped containers
+            docker image prune -f || true # Prune unused images
+            docker builder prune -f || true # Prune build cache
+            docker run -d \
+              --name inteliexamen-web \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              inteliexamen-web
+            docker ps | grep scoolter-chatbot
