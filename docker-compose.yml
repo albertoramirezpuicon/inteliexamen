@@ -27,7 +27,7 @@ services:
     container_name: inteliexamen-app
     restart: unless-stopped
     ports:
-      - "3006:3000"
+      - "3006:3006"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=${DATABASE_URL}

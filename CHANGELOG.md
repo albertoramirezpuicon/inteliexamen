@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **Deployment Port Configuration Issue**: Fixed 404 error when accessing deployed application
+  - **GitHub Actions Workflow**: Updated port mapping from `-p 80:3006 -p 443:3006` to `-p 3006:3006` to match Dockerfile configuration
+  - **Environment Variables**: Added `--env-file .env` to container run command to ensure proper environment variable loading
+  - **Documentation**: Updated `env.example` to reflect correct port configuration (PORT=3006)
+  - **Root Cause**: The workflow was incorrectly mapping container port 3006 to host ports 80/443, causing port mismatch issues
+  - **Solution**: Container now properly exposes port 3006 and can be accessed at `http://your-domain.com:3006`
+  - **Note**: For production with nginx reverse proxy, the nginx configuration should proxy to `app:3006` instead of `app:3000`
+  - **Nginx Configuration**: Updated `nginx.conf` to proxy to `app:3006` instead of `app:3000`
+  - **Docker Compose**: Updated port mapping from `3006:3000` to `3006:3006` for consistency
+
 ### Added
 - **Deployment Infrastructure**: Complete CI/CD and deployment setup
   - **Docker Configuration**: Multi-stage Dockerfile with Node.js 18 Alpine base for production optimization

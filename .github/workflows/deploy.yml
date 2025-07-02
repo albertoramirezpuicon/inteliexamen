@@ -34,7 +34,7 @@ jobs:
             docker run -d \
               --name inteliexamen-web-container \
               --restart unless-stopped \
-              -p 80:3006 \
-              -p 443:3006 \
+              -p 3006:3006 \
+              --env-file .env \
               inteliexamen-web
             docker system prune -f || true

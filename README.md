@@ -72,7 +72,7 @@ An AI-powered educational assessment platform with multi-role support (Admin, Te
    ```
 
 6. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+   Navigate to [http://localhost:3000](http://localhost:3000) (development server)
 
 ### Production Deployment
 
@@ -84,7 +84,7 @@ An AI-powered educational assessment platform with multi-role support (Admin, Te
    ```
 
 2. **Access the application**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+   Navigate to [http://localhost:3006](http://localhost:3006)
 
 #### Option 2: EC2 Deployment
 
