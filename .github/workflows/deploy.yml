@@ -28,11 +28,12 @@ jobs:
             git fetch origin master
             git reset --hard origin/master
             docker build -t inteliexamen-web .
-            docker stop inteliexamen-web || true
-            docker rm inteliexamen-web || true
+            docker stop inteliexamen-web-container || true
+            docker rm inteliexamen-web-container || true
             docker run -d \
               --name inteliexamen-web-container \
               --restart unless-stopped \
-              -p 3006:3006 \
+              -p 80:3006 \
+              -p 443:3006 \
               inteliexamen-web
             docker system prune -f || true
