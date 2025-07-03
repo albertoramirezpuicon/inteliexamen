@@ -2,21 +2,21 @@
 FROM node:20.9.0-alpine AS deps
 WORKDIR /app
 RUN apk add --no-cache libc6-compat
-#COPY package*.json ./
+COPY package*.json ./
 #RUN npm ci --prefer-offline --no-audit --production=false
 
 FROM node:20.9.0-alpine AS builder
 WORKDIR /app
-#COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 RUN npm run build:fast
 
-#FROM node:20.9.0-alpine AS runner
-#WORKDIR /app
-#ENV NODE_ENV=production
-#ENV NEXT_TELEMETRY_DISABLED=1
+FROM node:20.9.0-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs && \

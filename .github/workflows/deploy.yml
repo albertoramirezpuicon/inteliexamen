@@ -29,7 +29,14 @@ jobs:
             git fetch origin master
             git reset --hard origin/master
             npm install
-            docker build -t inteliexamen-web .
+            docker build -t inteliexamen-web . --progress=plain
+            # Check if build succeeded
+            if [ $? -eq 0 ]; then
+              echo "Build successful"
+            else
+              echo "Build failed"
+              exit 1
+            fi
             docker stop inteliexamen-web-container || true
             docker rm inteliexamen-web-container || true
             docker run -d \
