@@ -401,7 +401,7 @@ export default function LandingPage() {
                   {/* Image */}
                   <Box
                     component="img"
-                    src="http://localhost:3000/hombre-con-celular.png"
+                    src="/hombre-con-celular.png"
                     alt="Person with mobile phone"
                     sx={{
                       width: '100%',

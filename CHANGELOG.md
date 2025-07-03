@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file.
   - **Note**: For production with nginx reverse proxy, the nginx configuration should proxy to `app:3006` instead of `app:3000`
   - **Nginx Configuration**: Updated `nginx.conf` to proxy to `app:3006` instead of `app:3000`
   - **Docker Compose**: Updated port mapping from `3006:3000` to `3006:3006` for consistency
+  - **Deployment Debugging**: Added container status checks and connectivity testing to GitHub Actions workflow for better troubleshooting
+  - **Landing Page Image Fix**: Fixed hardcoded localhost URL in landing page image to use relative path for proper server deployment
 
 ### Added
 - **Deployment Infrastructure**: Complete CI/CD and deployment setup

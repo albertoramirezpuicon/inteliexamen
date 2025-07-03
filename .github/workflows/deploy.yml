@@ -28,6 +28,7 @@ jobs:
             cd /home/ubuntu/inteliexamen-web
             git fetch origin master
             git reset --hard origin/master
+            npm install
             docker build -t inteliexamen-web .
             docker stop inteliexamen-web-container || true
             docker rm inteliexamen-web-container || true
