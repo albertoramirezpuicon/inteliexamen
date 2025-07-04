@@ -114,44 +114,6 @@ export default function SkillManagement() {
     description: ''
   });
 
-  useEffect(() => {
-    fetchSkills();
-    fetchInstitutions();
-    fetchDomains();
-  }, []);
-
-  useEffect(() => {
-    applyFiltersAndSorting();
-  }, [skills, sortField, sortOrder, filters, applyFiltersAndSorting]);
-
-  // Fetch functions
-  const fetchSkills = async () => {
-    try {
-      const response = await fetch('/api/admin/skills');
-      if (!response.ok) throw new Error('Failed to fetch skills');
-      const data = await response.json();
-      setSkills(data.skills);
-    } catch {
-      // Handle error silently
-    }
-  };
-  const fetchInstitutions = async () => {
-    try {
-      const response = await fetch('/api/admin/institutions/list');
-      if (!response.ok) throw new Error('Failed to fetch institutions');
-      const data = await response.json();
-      setInstitutions(data.institutions);
-    } catch {}
-  };
-  const fetchDomains = async () => {
-    try {
-      const response = await fetch('/api/admin/domains');
-      if (!response.ok) throw new Error('Failed to fetch domains');
-      const data = await response.json();
-      setDomains(data.domains);
-    } catch {}
-  };
-
   // Filtering/sorting
   const applyFiltersAndSorting = useCallback(() => {
     let filtered = [...skills];
@@ -181,6 +143,44 @@ export default function SkillManagement() {
     setFilteredSkills(filtered);
     setPage(0);
   }, [skills, sortField, sortOrder, filters]);
+
+  useEffect(() => {
+    fetchSkills();
+    fetchInstitutions();
+    fetchDomains();
+  }, []);
+
+  useEffect(() => {
+    applyFiltersAndSorting();
+  }, [applyFiltersAndSorting]);
+
+  // Fetch functions
+  const fetchSkills = async () => {
+    try {
+      const response = await fetch('/api/admin/skills');
+      if (!response.ok) throw new Error('Failed to fetch skills');
+      const data = await response.json();
+      setSkills(data.skills);
+    } catch {
+      // Handle error silently
+    }
+  };
+  const fetchInstitutions = async () => {
+    try {
+      const response = await fetch('/api/admin/institutions/list');
+      if (!response.ok) throw new Error('Failed to fetch institutions');
+      const data = await response.json();
+      setInstitutions(data.institutions);
+    } catch {}
+  };
+  const fetchDomains = async () => {
+    try {
+      const response = await fetch('/api/admin/domains');
+      if (!response.ok) throw new Error('Failed to fetch domains');
+      const data = await response.json();
+      setDomains(data.domains);
+    } catch {}
+  };
 
   // AI Helper logic
   const openAiModal = (type: 'name' | 'description') => {

@@ -124,6 +124,9 @@ export default function AssessmentForm({
             institution_id: user.institution_id.toString(),
             teacher_id: user.id.toString()
           }));
+          
+          // Load domains for teacher's institution
+          await loadDomains(user.institution_id);
         }
       }
 

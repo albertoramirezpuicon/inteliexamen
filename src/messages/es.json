@@ -63,7 +63,8 @@
     "settings": "Configuración",
     "profile": "Perfil",
     "logout": "Cerrar sesión",
-    "language": "Idioma"
+    "language": "Idioma",
+    "clear": "Limpiar"
   },
   "home": {
     "welcomeTitle": "Hola en Inteliexamen",
@@ -178,6 +179,9 @@
     "skillLevelsDescription": "Define niveles de dominio y progresión para habilidades",
     "assessments": "Evaluaciones",
     "assessmentsDescription": "Crea, edita y gestiona exámenes y evaluaciones",
+    "createAssessment": "Crear Evaluación",
+    "createAssessmentDescription": "Crear una nueva evaluación con generación de casos impulsada por IA",
+    "viewAssessment": "Ver Evaluación",
     "attempts": "Intentos",
     "attemptsDescription": "Ver y gestionar intentos de evaluación de estudiantes y resultados",
     "analyticsDescription": "Ver analíticas detalladas y métricas de rendimiento",

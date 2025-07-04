@@ -26,7 +26,7 @@ export async function GET(
         ar.skill_level_id
       FROM inteli_assessments_results ar
       JOIN inteli_skills s ON ar.skill_id = s.id
-      JOIN inteli_skill_levels sl ON ar.skill_level_id = sl.id
+      JOIN inteli_skills_levels sl ON ar.skill_level_id = sl.id
       WHERE ar.attempt_id = ?
       ORDER BY s.name
     `;

@@ -28,7 +28,7 @@ export async function GET(
       SELECT d.id 
       FROM inteli_disputes d
       JOIN inteli_assessments_results r ON d.result_id = r.id
-      JOIN inteli_assessment_attempts a ON r.attempt_id = a.id
+      JOIN inteli_assessments_attempts a ON r.attempt_id = a.id
       JOIN inteli_assessments ass ON a.assessment_id = ass.id
       WHERE d.id = ? AND ass.teacher_id = ? AND ass.institution_id = ?
     `, [disputeIdNum, teacherId, institutionId]);

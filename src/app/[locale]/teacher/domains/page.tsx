@@ -121,21 +121,6 @@ export default function TeacherDomainsPage() {
     initializeData();
   }, [router, locale]);
 
-  // Fetch domains after user data is loaded
-  useEffect(() => {
-    console.log('useEffect triggered - user state:', user);
-    if (user) {
-      console.log('User is available, calling fetchDomains');
-      fetchDomains();
-    } else {
-      console.log('User is not available yet');
-    }
-  }, [user, fetchDomains]);
-
-  useEffect(() => {
-    applyFiltersAndSorting();
-  }, [applyFiltersAndSorting]);
-
   const fetchDomains = useCallback(async () => {
     try {
       console.log('Fetching domains for user:', user);
@@ -216,6 +201,21 @@ export default function TeacherDomainsPage() {
     setFilteredDomains(filtered);
     setPage(0);
   }, [domains, sortField, sortOrder, searchTerm]);
+
+  // Fetch domains after user data is loaded
+  useEffect(() => {
+    console.log('useEffect triggered - user state:', user);
+    if (user) {
+      console.log('User is available, calling fetchDomains');
+      fetchDomains();
+    } else {
+      console.log('User is not available yet');
+    }
+  }, [user, fetchDomains]);
+
+  useEffect(() => {
+    applyFiltersAndSorting();
+  }, [applyFiltersAndSorting]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -533,7 +533,7 @@ export default function TeacherDomainsPage() {
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
-          <Typography>
+          <Typography component="span">
             Are you sure you want to delete the domain &quot;{domainToDelete?.name}&quot;? 
             {domainToDelete?.skills_count > 0 && (
               <Alert severity="warning" sx={{ mt: 2 }}>

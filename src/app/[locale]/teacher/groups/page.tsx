@@ -130,21 +130,6 @@ export default function TeacherGroupsPage() {
     initializeData();
   }, [router, locale]);
 
-  // Fetch groups after user data is loaded
-  useEffect(() => {
-    console.log('useEffect triggered - user state:', user);
-    if (user) {
-      console.log('User is available, calling fetchGroups');
-      fetchGroups();
-    } else {
-      console.log('User is not available yet');
-    }
-  }, [user, fetchGroups]);
-
-  useEffect(() => {
-    applyFiltersAndSorting();
-  }, [applyFiltersAndSorting]);
-
   const fetchGroups = useCallback(async () => {
     try {
       console.log('Fetching groups for user:', user);
@@ -228,6 +213,21 @@ export default function TeacherGroupsPage() {
 
     setFilteredGroups(filtered);
   }, [groups, sortField, sortOrder, searchTerm]);
+
+  // Fetch groups after user data is loaded
+  useEffect(() => {
+    console.log('useEffect triggered - user state:', user);
+    if (user) {
+      console.log('User is available, calling fetchGroups');
+      fetchGroups();
+    } else {
+      console.log('User is not available yet');
+    }
+  }, [user, fetchGroups]);
+
+  useEffect(() => {
+    applyFiltersAndSorting();
+  }, [applyFiltersAndSorting]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {

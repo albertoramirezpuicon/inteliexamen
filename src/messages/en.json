@@ -63,7 +63,8 @@
     "settings": "Settings",
     "profile": "Profile",
     "logout": "Logout",
-    "language": "Language"
+    "language": "Language",
+    "clear": "Clear"
   },
   "home": {
     "welcomeTitle": "Welcome to Inteliexamen",
@@ -178,6 +179,9 @@
     "skillLevelsDescription": "Define mastery levels and progression for skills",
     "assessments": "Assessments",
     "assessmentsDescription": "Create, edit, and manage exams and assessments",
+    "createAssessment": "Create Assessment",
+    "createAssessmentDescription": "Create a new assessment with AI-powered case generation",
+    "viewAssessment": "View Assessment",
     "attempts": "Attempts",
     "attemptsDescription": "View and manage student assessment attempts and results",
     "analyticsDescription": "View detailed analytics and performance metrics",

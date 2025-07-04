@@ -4,7 +4,234 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Enhanced
+- **Student Assessment Evaluation System**: Implemented three-tier evaluation system for improved student feedback
+  - **Three-Tier System**: 
+    - **Incomplete**: Identifies missing aspects and asks for more information
+    - **Improvable**: Acknowledges complete responses but suggests improvements
+    - **Final**: Provides final evaluation with skill level assignments
+  - **AI Prompt Enhancement**: Updated AI evaluation prompts to use the new three-tier system with specific instructions for each evaluation type
+  - **API Response Structure**: Enhanced conversation API to return evaluation type, missing aspects, and improvement suggestions
+  - **Frontend Indicators**: Added visual indicators in conversation showing evaluation type with colored chips and detailed feedback
+  - **Turn Limit Handling**: Automatically forces final evaluation when maximum turns are reached
+  - **User Experience**: Students now receive clearer guidance on what's missing or how to improve their responses
+  - **Files Modified**: 
+    - `src/app/api/student/attempts/[id]/conversation/route.ts` (AI evaluation logic)
+    - `src/app/[locale]/student/assessments/[id]/attempt/page.tsx` (frontend display)
+  - **Result**: More nuanced and helpful evaluation system that guides students toward better responses without prematurely ending conversations
+
 ### Fixed
+- **Student Attempt Record Flow**: Fixed attempt record updating to follow correct lifecycle
+  - **Root Cause**: The `updated_at` field was only being updated when attempts were completed, not on every student reply
+  - **Solution**: Added `updated_at` field update every time a student sends a reply in the conversation
+  - **Correct Flow**: 
+    1. Create attempt with status 'In progress' when student enters assessment page
+    2. Update `updated_at` field on every student reply
+    3. Set status to 'Completed' and `completed_at` when final evaluation is determined
+  - **File Modified**: `src/app/api/student/attempts/[id]/conversation/route.ts`
+  - **Result**: Attempt records now properly track activity and follow the intended lifecycle
+
+- **Admin Assessment Create Route 404 Error**: Fixed 404 error when accessing admin assessment creation page
+  - **Missing Route**: Created `/admin/assessments/create` page that was missing from the routing structure
+  - **AssessmentForm Integration**: New create page uses the existing AssessmentForm component with `userType="admin"`
+  - **Translation Support**: Added missing translation keys `createAssessment` and `createAssessmentDescription` to both English and Spanish
+  - **Breadcrumb Navigation**: Added proper breadcrumb navigation from Dashboard > Assessments > Create Assessment
+  - **Consistent Layout**: Follows the same layout pattern as other admin pages with Navbar and proper styling
+  - **Root Cause**: The AssessmentManagement component had a "Create Assessment" button that navigated to `/admin/assessments/create`, but this route didn't exist
+  - **Solution**: Created the missing route and integrated it with the existing AssessmentForm component for seamless assessment creation
+
+- **Admin Assessment View Route 404 Error**: Fixed 404 error when accessing admin assessment view page
+  - **Missing Route**: Created `/admin/assessments/[id]` page that was missing from the routing structure
+  - **AssessmentView Integration**: New view page uses the existing AssessmentView component to display assessment details
+  - **Translation Support**: Added missing translation key `viewAssessment` to both English and Spanish
+  - **Breadcrumb Navigation**: Added proper breadcrumb navigation from Dashboard > Assessments > View Assessment
+  - **Dynamic Route Support**: Properly handles assessment ID parameter from URL
+  - **Root Cause**: The AssessmentManagement component had a "View" button that navigated to `/admin/assessments/[id]`, but this dynamic route didn't exist
+  - **Solution**: Created the missing dynamic route and integrated it with the existing AssessmentView component for seamless assessment viewing
+  - **Material-UI Import Fix**: Fixed import error by replacing `@mui/material/Grid2` with `@mui/material/Grid` to use the standard Grid component
+
+- **SkillManagement Component Hoisting Error**: Fixed JavaScript hoisting issue in SkillManagement component
+  - **Root Cause**: `applyFiltersAndSorting` function was being used in a `useEffect` dependency array before it was declared
+  - **Solution**: Moved the `applyFiltersAndSorting` function definition before the `useEffect` that uses it
+  - **Dependency Optimization**: Simplified the `useEffect` dependency array to only include `applyFiltersAndSorting` since the function already includes all necessary dependencies in its own `useCallback`
+  - **Result**: Eliminates the "Cannot access 'applyFiltersAndSorting' before initialization" error
+
+- **GroupManagement Component Hoisting Error**: Fixed JavaScript hoisting issue in GroupManagement component
+  - **Root Cause**: `fetchGroupData` and `fetchAvailableStudents` functions were being used in a `useEffect` dependency array before they were declared
+  - **Solution**: Moved both function definitions before the `useEffect` that uses them
+  - **Component**: Fixed the `MembersDialog` component within GroupManagement
+  - **Result**: Eliminates the "Cannot access 'fetchGroupData' before initialization" error
+
+- **UserManagement Component Hoisting Error**: Fixed JavaScript hoisting issue in UserManagement component
+  - **Root Cause**: `applyFiltersAndSorting` function was being used in a `useEffect` dependency array before it was declared
+  - **Solution**: Moved the `applyFiltersAndSorting` function definition before the `useEffect` that uses it
+  - **Dependency Optimization**: Simplified the `useEffect` dependency array to only include `applyFiltersAndSorting` since the function already includes all necessary dependencies in its own `useCallback`
+  - **Result**: Eliminates the "Cannot access 'applyFiltersAndSorting' before initialization" error
+
+- **UserManagement UserGroupsDialog Hoisting Error**: Fixed JavaScript hoisting issue in UserGroupsDialog component
+  - **Root Cause**: `fetchUserGroups` function was being used in a `useEffect` dependency array before it was declared
+  - **Solution**: Moved the `fetchUserGroups` function definition before the `useEffect` that uses it
+  - **Component**: Fixed the `UserGroupsDialog` component within UserManagement
+  - **Result**: Eliminates the "Cannot access 'fetchUserGroups' before initialization" error
+
+- **Admin Attempts Page Material-UI Import Error**: Fixed missing Grid import in admin attempts page
+  - **Root Cause**: `Grid` component was being used in the component but not imported from `@mui/material`
+  - **Solution**: Added `Grid` to the Material-UI imports
+  - **Result**: Eliminates the "Grid is not defined" error
+
+- **Database Table Name Error**: Fixed incorrect table name in admin attempts results API
+  - **Root Cause**: SQL query was using `inteli_skill_levels` but the correct table name is `inteli_skills_levels` (with 's' in 'skills')
+  - **Solution**: Updated the JOIN clause in the SQL query to use the correct table name
+  - **File**: `src/app/api/admin/attempts/[id]/results/route.ts`
+  - **Result**: Eliminates the "Table 'inteli_skill_levels' doesn't exist" error
+
+- **Admin Attempts Page Hydration Error**: Fixed nested paragraph tags causing hydration error
+  - **Root Cause**: `ListItemText` secondary prop contained a `Typography` component that rendered as `<p>`, but `ListItemText` already renders secondary content as `<p>`, creating invalid nested `<p>` tags
+  - **Solution**: Changed the `Typography` component in the secondary prop to use `component="span"` instead of the default `p` element
+  - **File**: `src/app/[locale]/admin/attempts/page.tsx`
+  - **Result**: Eliminates the "In HTML, <p> cannot be a descendant of <p>" hydration error
+
+- **Missing Translation Key Error**: Fixed missing `common.clear` translation key
+  - **Root Cause**: Teacher assessments page was using `tCommon('clear')` but the translation key didn't exist in the locale files
+  - **Solution**: Added `clear` key to the `common` section in both English and Spanish translation files
+  - **English**: "Clear"
+  - **Spanish**: "Limpiar"
+  - **Result**: Eliminates the "MISSING_MESSAGE: Could not resolve `common.clear`" error
+
+- **Teacher Assessment Create Route 404 Error**: Fixed 404 error when accessing teacher assessment creation page
+  - **Missing Route**: Created `/teacher/assessments/create` page that was missing from the routing structure
+  - **AssessmentForm Integration**: New create page uses the existing AssessmentForm component with `userType="teacher"`
+  - **Translation Support**: Uses existing translation keys from teacher section
+  - **Breadcrumb Navigation**: Added proper breadcrumb navigation from Dashboard > Assessments > Create Assessment
+  - **Consistent Layout**: Follows the same layout pattern as other teacher pages with Navbar and proper styling
+  - **Root Cause**: The teacher assessments page had a "Create Assessment" button that navigated to `/teacher/assessments/create`, but this route didn't exist
+  - **Solution**: Created the missing route and integrated it with the existing AssessmentForm component for seamless assessment creation
+
+- **Teacher Groups Page Hoisting Error**: Fixed JavaScript hoisting issue in teacher groups page
+  - **Root Cause**: `fetchGroups` function was being used in a `useEffect` dependency array before it was declared
+  - **Solution**: Moved the `fetchGroups` function definition before the `useEffect` that uses it
+  - **Component**: Fixed the `TeacherGroupsPage` component
+  - **Result**: Eliminates the "Cannot access 'fetchGroups' before initialization" error
+
+- **Teacher Groups Page Second Hoisting Error**: Fixed additional JavaScript hoisting issue in teacher groups page
+  - **Root Cause**: `applyFiltersAndSorting` function was being used in a `useEffect` dependency array before it was declared
+  - **Solution**: Moved the `applyFiltersAndSorting` function definition before the `useEffect` that uses it
+  - **Component**: Fixed the `TeacherGroupsPage` component (second function)
+  - **Result**: Eliminates the "Cannot access 'applyFiltersAndSorting' before initialization" error
+
+- **GroupMembersDialog Component Hoisting Error**: Fixed JavaScript hoisting issue in GroupMembersDialog component
+  - **Root Cause**: `fetchGroupData` function was being used in a `useEffect` dependency array before it was declared
+  - **Solution**: Moved the `fetchGroupData` function definition before the `useEffect` that uses it
+  - **Component**: Fixed the `GroupMembersDialog` component within teacher groups functionality
+  - **Result**: Eliminates the "Cannot access 'fetchGroupData' before initialization" error
+
+- **Teacher Users Page Hoisting Error**: Fixed JavaScript hoisting issue in teacher users page
+  - **Root Cause**: `fetchStudents` function was being used in a `useEffect` dependency array before it was declared
+  - **Solution**: Moved the `fetchStudents` function definition before the `useEffect` that uses it
+  - **Component**: Fixed the `TeacherUsersPage` component
+  - **Result**: Eliminates the "Cannot access 'fetchStudents' before initialization" error
+
+- **Teacher Domains Page Hoisting Error**: Fixed JavaScript hoisting issue in teacher domains page
+  - **Root Cause**: `fetchDomains` function was being used in a `useEffect` dependency array before it was declared
+  - **Solution**: Moved the `fetchDomains` function definition before the `useEffect` that uses it
+  - **Component**: Fixed the `TeacherDomainsPage` component
+  - **Result**: Eliminates the "Cannot access 'fetchDomains' before initialization" error
+
+- **Teacher Skills Page Hoisting Error**: Fixed JavaScript hoisting issue in teacher skills page
+  - **Root Cause**: `fetchSkills` and `fetchDomains` functions were being used in a `useEffect` dependency array before they were declared
+  - **Solution**: Moved both function definitions before the `useEffect` that uses them
+  - **Component**: Fixed the `TeacherSkillsPage` component
+  - **Result**: Eliminates the "Cannot access 'fetchSkills' before initialization" error
+
+- **Teacher Skills Page Search Icon Error**: Fixed undefined Search component error
+  - **Root Cause**: Used `<Search />` instead of `<SearchIcon />` in the search input field
+  - **Solution**: Changed `<Search />` to `<SearchIcon />` to match the import alias
+  - **Component**: Fixed the `TeacherSkillsPage` component search functionality
+  - **Result**: Eliminates the "Search is not defined" error
+
+- **Teacher Domains Page Hydration Error**: Fixed nested div inside p tag causing hydration error
+  - **Root Cause**: `Typography` component (renders as `<p>`) contained an `Alert` component (renders as `<div>`), creating invalid HTML nesting
+  - **Solution**: Changed `Typography` component to render as `span` instead of `p` using `component="span"`
+  - **Component**: Fixed the delete confirmation dialog in `TeacherDomainsPage`
+  - **Result**: Eliminates the "In HTML, <div> cannot be a descendant of <p>" hydration error
+
+- **Teacher Skills Delete Restriction**: Removed skill levels restriction from skill deletion
+  - **Root Cause**: API was preventing skill deletion when skill levels existed, even though database has cascade delete configured
+  - **Solution**: Removed the skill levels check from the DELETE endpoint in teacher skills API
+  - **File**: `src/app/api/teacher/skills/[id]/route.ts`
+  - **Result**: Skills can now be deleted even if they have associated skill levels, as the database will handle cascade deletion
+
+- **Teacher Skills Success Message UX**: Added continue button for successful operations
+  - **Root Cause**: After successful skill deletion, users were stuck on the success message with no way to return to the skills page
+  - **Solution**: Enhanced error/success state to show success alerts with a "Continue" button when the message contains "successfully"
+  - **Component**: Fixed the `TeacherSkillsPage` component error handling
+  - **Result**: Users can now easily return to the skills page after successful operations
+
+- **Teacher Skills Skill Levels Indicator**: Added skill levels count display to teacher skills page
+  - **Root Cause**: Teachers had no way to know which skills had skill levels configured
+  - **Solution**: Enhanced teacher skills API to include skill levels count and added a new "Skill Levels" column to the skills table
+  - **API Changes**: Updated `/api/teacher/skills` to include `skill_levels_count` in the response
+  - **Frontend Changes**: Added new column with colored chips showing skill levels count (green for configured, gray for none)
+  - **Sorting**: Added ability to sort by skill levels count
+  - **Result**: Teachers can now easily identify which skills have skill levels configured and which need setup
+
+- **Teacher Skill Levels Management Page**: Created missing skill levels management page
+  - **Root Cause**: "Manage Skill Levels" button was navigating to a non-existent route `/teacher/skills/[id]/levels`
+  - **Solution**: Created comprehensive skill levels management page with full CRUD functionality
+  - **Features**: Add, edit, delete skill levels with level name, description, and score ranges
+  - **UI**: Clean table interface with colored chips for levels, proper breadcrumb navigation, and back button
+  - **Validation**: Score range validation (0-100) and proper form handling
+  - **Result**: Teachers can now properly manage skill levels for each skill, completing the skill management workflow
+
+- **Teacher Skill Levels Page Map Error**: Fixed undefined skillLevels array error
+  - **Root Cause**: `skillLevels` could be undefined when trying to call `.map()` on it, causing a TypeError
+  - **Solution**: Added safety checks using `(skillLevels || []).map()` and `(!skillLevels || skillLevels.length === 0)` to handle undefined/null cases
+  - **Component**: Fixed the `TeacherSkillLevelsPage` component table rendering
+  - **Result**: Eliminates the "Cannot read properties of undefined (reading 'map')" error
+
+- **Teacher Skill Levels Page Implementation**: Corrected to use original template-based approach
+  - **Root Cause**: The skill levels page was implemented with individual CRUD operations instead of the original template-based approach
+  - **Solution**: Replaced with the original implementation that uses predefined level settings and inline editing
+  - **Features**: Template-based levels (Beginner, Intermediate, Advanced), inline description editing, bulk save functionality
+  - **UI**: Card-based skill info display, table with inline text fields, snackbar notifications
+  - **Data Structure**: Uses `order`, `label`, `description` instead of `level`, `min_score`, `max_score`
+  - **Result**: Restored the original working implementation that matches the API expectations
+
+- **Teacher Skill Levels AI Assistance**: Added AI-powered description generation
+  - **Feature**: "Generate with AI" button that creates comprehensive skill level descriptions
+  - **API Integration**: Uses existing `/api/ai/skill-levels-suggest` endpoint
+  - **Functionality**: Generates descriptions for all levels at once based on skill information
+  - **UI**: Modal dialog with preview of generated descriptions and apply functionality
+  - **User Experience**: Teachers can review AI suggestions before applying them to skill levels
+  - **Language Support**: Respects current locale (Spanish/English) for AI generation
+  - **Data Source**: Labels and descriptions are fetched from `inteli_skills_levels_settings` based on user's institution
+  - **Student-Focused Design**: AI generates independent descriptions without cross-level references since students only see their specific level
+  - **Result**: Enhanced teacher productivity with AI-assisted skill level creation
+
+- **Teacher Skill Levels Template Display**: Enhanced to show institution template descriptions
+  - **Feature**: Display template descriptions from `inteli_skills_levels_settings` below each level label
+  - **UI**: Shows institution's template description as guidance, followed by teacher's custom description field
+  - **User Experience**: Teachers can see the institution's framework and add skill-specific descriptions
+  - **Layout**: Template description (small gray text) → "Your Description:" label → Input field
+  - **Result**: Better guidance for teachers when creating skill-specific level descriptions
+
+- **Teacher Groups API Fix**: Fixed validation error when creating/updating groups
+  - **Root Cause**: API was expecting `institution_id` in request body, but frontend only sends `name` and `description`
+  - **Solution**: Modified API to use `institution_id` from request header instead of requiring it in body
+  - **Endpoints Fixed**: `/api/teacher/groups` (POST) and `/api/teacher/groups/[id]` (PUT)
+  - **Security**: Teachers can only create/update groups for their own institution (enforced by header)
+  - **Result**: Eliminates "Name and institution_id are required" error when creating/editing groups
+
+- **Teacher Assessment Creation Fix**: Fixed domains not showing in skill selection step
+  - **Root Cause**: For teachers creating new assessments, domains were not being loaded after setting institution_id
+  - **Solution**: Added `loadDomains(user.institution_id)` call in `loadInitialData` for teachers
+  - **Component**: Fixed `AssessmentForm` component initialization for teacher users
+  - **Result**: Domains now properly load and display in step 2 (skill selection) for teacher assessment creation
+
+- **Teacher Assessments UI Cleanup**: Removed redundant "Groups" text from groups column
+  - **Change**: Removed the word "Groups" that appeared after the group count in the assessments table
+  - **Location**: Teacher assessments page (`/teacher/assessments`)
+  - **Result**: Cleaner display showing only the number of associated groups without redundant text
 - **Deployment Port Configuration Issue**: Fixed 404 error when accessing deployed application
   - **GitHub Actions Workflow**: Updated port mapping from `-p 80:3006 -p 443:3006` to `-p 3006:3006` to match Dockerfile configuration
   - **Environment Variables**: Added `--env-file .env` to container run command to ensure proper environment variable loading

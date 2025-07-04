@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const teacherInstitutionId = request.headers.get('x-institution-id');
-    const { name, description, institution_id } = await request.json();
+    const { name, description } = await request.json();
 
     if (!teacherInstitutionId) {
       return NextResponse.json(
@@ -65,25 +65,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate required fields
-    if (!name || !institution_id) {
+    if (!name) {
       return NextResponse.json(
-        { error: 'Name and institution_id are required' },
+        { error: 'Name is required' },
         { status: 400 }
-      );
-    }
-
-    // Ensure teacher can only create groups for their institution
-    if (parseInt(institution_id) !== parseInt(teacherInstitutionId)) {
-      return NextResponse.json(
-        { error: 'You can only create groups for your institution' },
-        { status: 403 }
       );
     }
 
     // Check if group name already exists for this institution
     const existingGroups = await query(
       'SELECT id FROM inteli_groups WHERE name = ? AND institution_id = ?',
-      [name.trim(), institution_id]
+      [name.trim(), teacherInstitutionId]
     );
 
     if (existingGroups.length > 0) {
@@ -96,7 +88,7 @@ export async function POST(request: NextRequest) {
     // Insert new group
     const result = await insertQuery(
       `INSERT INTO inteli_groups (name, description, institution_id) VALUES (?, ?, ?)`,
-      [name.trim(), description || '', institution_id]
+      [name.trim(), description || '', teacherInstitutionId]
     );
 
     // Get the created group with member count

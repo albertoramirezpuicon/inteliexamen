@@ -357,11 +357,11 @@ export default function TeacherAssessmentsPage() {
                           startIcon={<GroupIcon />}
                           onClick={() => handleOpenGroupsModal(assessment)}
                         >
-                          {assessment.associated_groups || '0'} Groups
+                          {assessment.associated_groups || '0'}
                         </Button>
                       ) : (
                         <Typography variant="body2">
-                          {assessment.associated_groups || '0'} Groups
+                          {assessment.associated_groups || '0'}
                         </Typography>
                       )}
                     </TableCell>

@@ -17,7 +17,7 @@ export async function PUT(
     }
 
     const teacherInstitutionId = request.headers.get('x-institution-id');
-    const { name, description, institution_id } = await request.json();
+    const { name, description } = await request.json();
 
     if (!teacherInstitutionId) {
       return NextResponse.json(
@@ -27,18 +27,10 @@ export async function PUT(
     }
 
     // Validate required fields
-    if (!name || !institution_id) {
+    if (!name) {
       return NextResponse.json(
-        { error: 'Name and institution_id are required' },
+        { error: 'Name is required' },
         { status: 400 }
-      );
-    }
-
-    // Ensure teacher can only update groups from their institution
-    if (parseInt(institution_id) !== parseInt(teacherInstitutionId)) {
-      return NextResponse.json(
-        { error: 'You can only update groups from your institution' },
-        { status: 403 }
       );
     }
 
@@ -58,7 +50,7 @@ export async function PUT(
     // Check if group name already exists for this institution (excluding current group)
     const duplicateGroups = await query(
       'SELECT id FROM inteli_groups WHERE name = ? AND institution_id = ? AND id != ?',
-      [name.trim(), institution_id, groupId]
+      [name.trim(), teacherInstitutionId, groupId]
     );
 
     if (duplicateGroups.length > 0) {

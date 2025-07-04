@@ -103,6 +103,15 @@ export async function POST(
       throw new Error('Failed to save message');
     }
 
+    // Update attempt's updated_at field (every time there's a new reply)
+    const updateAttemptQuery = `
+      UPDATE inteli_assessments_attempts
+      SET updated_at = NOW()
+      WHERE id = ?
+    `;
+
+    await query(updateAttemptQuery, [attemptId]);
+
     // Get assessment details for AI evaluation
     const assessmentQuery = `
       SELECT 
@@ -161,6 +170,11 @@ export async function POST(
       })
     );
 
+    // Count conversation turns to check if this is the last turn
+    const turnCount = historyResult.length / 2; // Each turn = student + AI message
+    const maxTurns = assessmentResult.length * assessmentResult[0].questions_per_skill;
+    const isLastTurn = turnCount >= maxTurns;
+
     // Call AI evaluation
     const aiResponse = await evaluateWithAI({
       studentReply: message,
@@ -168,6 +182,16 @@ export async function POST(
       skills: skillsWithLevels,
       conversationHistory: historyResult,
     });
+
+    // Force final evaluation if it's the last turn and AI didn't evaluate as final
+    if (isLastTurn && aiResponse.evaluationType !== 'final') {
+      console.log('Last turn reached, forcing final evaluation');
+      aiResponse.evaluationType = 'final';
+      aiResponse.canDetermineLevel = true;
+      aiResponse.message = assessmentResult[0].output_language === 'es'
+        ? 'Has alcanzado el límite máximo de turnos. Procederé a evaluar tu respuesta final.'
+        : 'You have reached the maximum number of turns. I will now evaluate your final response.';
+    }
 
     // Save AI response
     if (aiResponse.message) {
@@ -184,7 +208,7 @@ export async function POST(
     }
 
     // If level can be determined, save results and complete attempt
-    if (aiResponse.canDetermineLevel && aiResponse.skillResults) {
+    if (aiResponse.evaluationType === 'final' && aiResponse.canDetermineLevel && aiResponse.skillResults) {
       console.log('AI Response:', JSON.stringify(aiResponse, null, 2));
       console.log('Available skill levels:', skillsWithLevels.map(skill => ({
         skillId: skill.skill_id,
@@ -249,8 +273,14 @@ export async function POST(
     }
 
     return NextResponse.json({
-      aiResponse,
-      results: aiResponse.skillResults || []
+      success: true,
+      message: aiResponse.message,
+      evaluationType: aiResponse.evaluationType,
+      canDetermineLevel: aiResponse.canDetermineLevel,
+      skillResults: aiResponse.skillResults || [],
+      missingAspects: aiResponse.missingAspects || [],
+      improvementSuggestions: aiResponse.improvementSuggestions || [],
+      attemptCompleted: aiResponse.evaluationType === 'final'
     });
 
   } catch (error) {
@@ -384,12 +414,41 @@ async function evaluateWithAI(params: {
       throw new Error('AI response is not a valid object');
     }
     
-    if (typeof parsedResponse.canDetermineLevel !== 'boolean') {
-      throw new Error('AI response missing canDetermineLevel field');
+    if (typeof parsedResponse.evaluationType !== 'string') {
+      throw new Error('AI response missing evaluationType field');
+    }
+    
+    if (!['incomplete', 'improvable', 'final'].includes(parsedResponse.evaluationType)) {
+      throw new Error('AI response evaluationType must be incomplete, improvable, or final');
     }
     
     if (typeof parsedResponse.message !== 'string') {
       throw new Error('AI response missing message field');
+    }
+    
+    // Validate based on evaluation type
+    if (parsedResponse.evaluationType === 'incomplete') {
+      if (!Array.isArray(parsedResponse.missingAspects)) {
+        throw new Error('AI response missing missingAspects array for incomplete evaluation');
+      }
+      parsedResponse.canDetermineLevel = false;
+      parsedResponse.skillResults = [];
+    } else if (parsedResponse.evaluationType === 'improvable') {
+      if (!Array.isArray(parsedResponse.improvementSuggestions)) {
+        throw new Error('AI response missing improvementSuggestions array for improvable evaluation');
+      }
+      parsedResponse.canDetermineLevel = false;
+      parsedResponse.skillResults = [];
+    } else if (parsedResponse.evaluationType === 'final') {
+      if (typeof parsedResponse.canDetermineLevel !== 'boolean') {
+        throw new Error('AI response missing canDetermineLevel field for final evaluation');
+      }
+      if (!parsedResponse.canDetermineLevel) {
+        throw new Error('AI response canDetermineLevel must be true for final evaluation');
+      }
+      if (!Array.isArray(parsedResponse.skillResults)) {
+        throw new Error('AI response missing skillResults array for final evaluation');
+      }
     }
     
     return parsedResponse;
@@ -399,10 +458,14 @@ async function evaluateWithAI(params: {
     
     // Return a fallback response
     return {
+      evaluationType: 'incomplete',
       canDetermineLevel: false,
       message: assessment.output_language === 'es' 
         ? 'Lo siento, hubo un error al procesar tu respuesta. Por favor, intenta de nuevo.'
-        : 'Sorry, there was an error processing your response. Please try again.'
+        : 'Sorry, there was an error processing your response. Please try again.',
+      missingAspects: [],
+      improvementSuggestions: [],
+      skillResults: []
     };
   }
 }
@@ -449,7 +512,7 @@ ${levelsText}`;
   }).join('\n\n');
 
   if (outputLanguage === 'es') {
-    return `Evalúa la respuesta del estudiante y determina si se puede establecer su nivel de competencia.
+    return `Evalúa la respuesta del estudiante usando un sistema de tres niveles para determinar la mejor acción.
 
 CONTEXTO DE LA EVALUACIÓN:
 - Caso: ${assessment.case_text}
@@ -462,34 +525,58 @@ ${skillsText}
 HISTORIAL DE CONVERSACIÓN:
 ${conversationText}
 
-INSTRUCCIONES:
-1. Analiza si la respuesta del estudiante es suficiente para determinar su nivel de competencia
-2. Si NO se puede determinar el nivel, pide más información o aclare la respuesta
-3. Si SÍ se puede determinar, asigna el nivel más apropiado para cada habilidad
-4. Considera que el número máximo de turnos es: ${maxTurns}
-5. IMPORTANTE: Usa ÚNICAMENTE los IDs exactos proporcionados arriba para skillId y skillLevelId
+SISTEMA DE EVALUACIÓN DE TRES NIVELES:
+
+1. INCOMPLETA: La respuesta no cubre todas las preguntas del caso o aspectos de las habilidades
+   - Identifica qué preguntas o aspectos faltan
+   - Pide al estudiante que aborde elementos específicos faltantes
+   - NO muestres puntuación aún
+
+2. COMPLETA PERO MEJORABLE: La respuesta cubre todos los aspectos pero no con calidad suficiente para el nivel más alto
+   - Reconoce que la respuesta es completa
+   - Proporciona sugerencias específicas de mejora
+   - Anima a elaborar aspectos específicos de las habilidades
+   - NO muestres puntuación aún
+
+3. FINAL: Alta calidad O se alcanzó el límite de turnos
+   - Determina los niveles de habilidad
+   - Muestra resultados finales
+   - Completa la evaluación
+
+INSTRUCCIONES ESPECÍFICAS:
+- Analiza si la respuesta aborda TODAS las preguntas del caso
+- Verifica si cubre TODOS los aspectos mencionados en las descripciones de habilidades
+- Considera la calidad y profundidad de la respuesta
+- Si es el último turno disponible, evalúa como FINAL
+- IMPORTANTE: Usa ÚNICAMENTE los IDs exactos proporcionados arriba para skillId y skillLevelId
 
 IMPORTANTE: Responde ÚNICAMENTE con JSON válido, sin markdown, sin explicaciones adicionales.
 
 RESPONDE EN FORMATO JSON:
 {
-  "canDetermineLevel": true/false,
+  "evaluationType": "incomplete" | "improvable" | "final",
   "message": "Mensaje para el estudiante",
+  "canDetermineLevel": true/false,
   "skillResults": [
     {
       "skillId": número_exacto_del_skill,
       "skillLevelId": número_exacto_del_nivel,
       "feedback": "Feedback específico para esta habilidad"
     }
-  ]
+  ],
+  "missingAspects": ["aspecto1", "aspecto2"],
+  "improvementSuggestions": ["sugerencia1", "sugerencia2"]
 }
 
-Si canDetermineLevel es false, skillResults debe estar vacío o no incluido.
-Si canDetermineLevel es true, debe incluir un resultado para cada habilidad.
-NO uses markdown, NO uses \`\`\`json, responde SOLO el JSON.
-USA ÚNICAMENTE los IDs exactos proporcionados en la lista de habilidades.`;
+REGLAS:
+- evaluationType "incomplete": missingAspects requerido, skillResults vacío
+- evaluationType "improvable": improvementSuggestions requerido, skillResults vacío
+- evaluationType "final": skillResults requerido, canDetermineLevel = true
+- canDetermineLevel solo true para "final"
+- NO uses markdown, NO uses \`\`\`json, responde SOLO el JSON
+- USA ÚNICAMENTE los IDs exactos proporcionados en la lista de habilidades`;
   } else {
-    return `Evaluate the student's response and determine if their competency level can be established.
+    return `Evaluate the student's response using a three-tier system to determine the best action.
 
 EVALUATION CONTEXT:
 - Case: ${assessment.case_text}
@@ -502,31 +589,55 @@ ${skillsText}
 CONVERSATION HISTORY:
 ${conversationText}
 
-INSTRUCTIONS:
-1. Analyze if the student's response is sufficient to determine their competency level
-2. If the level CANNOT be determined, ask for more information or clarify the response
-3. If the level CAN be determined, assign the most appropriate level for each skill
-4. Consider that the maximum number of turns is: ${maxTurns}
-5. IMPORTANT: Use ONLY the exact IDs provided above for skillId and skillLevelId
+THREE-TIER EVALUATION SYSTEM:
+
+1. INCOMPLETE: The response doesn't cover all case questions or skill aspects
+   - Identify which questions or aspects are missing
+   - Ask the student to address specific missing elements
+   - DO NOT show score yet
+
+2. IMPROVABLE: The response covers all aspects but not with sufficient quality for the highest level
+   - Acknowledge that the response is complete
+   - Provide specific improvement suggestions
+   - Encourage elaboration on specific skill aspects
+   - DO NOT show score yet
+
+3. FINAL: High quality OR turn limit reached
+   - Determine skill levels
+   - Show final results
+   - Complete evaluation
+
+SPECIFIC INSTRUCTIONS:
+- Analyze if the response addresses ALL case questions
+- Verify if it covers ALL aspects mentioned in skill descriptions
+- Consider the quality and depth of the response
+- If it's the last available turn, evaluate as FINAL
+- IMPORTANT: Use ONLY the exact IDs provided above for skillId and skillLevelId
 
 IMPORTANT: Respond ONLY with valid JSON, no markdown, no additional explanations.
 
 RESPOND IN JSON FORMAT:
 {
-  "canDetermineLevel": true/false,
+  "evaluationType": "incomplete" | "improvable" | "final",
   "message": "Message for the student",
+  "canDetermineLevel": true/false,
   "skillResults": [
     {
       "skillId": exact_skill_number,
       "skillLevelId": exact_level_number,
       "feedback": "Specific feedback for this skill"
     }
-  ]
+  ],
+  "missingAspects": ["aspect1", "aspect2"],
+  "improvementSuggestions": ["suggestion1", "suggestion2"]
 }
 
-If canDetermineLevel is false, skillResults should be empty or not included.
-If canDetermineLevel is true, must include a result for each skill.
-DO NOT use markdown, DO NOT use \`\`\`json, respond ONLY the JSON.
-USE ONLY the exact IDs provided in the skills list.`;
+RULES:
+- evaluationType "incomplete": missingAspects required, skillResults empty
+- evaluationType "improvable": improvementSuggestions required, skillResults empty
+- evaluationType "final": skillResults required, canDetermineLevel = true
+- canDetermineLevel only true for "final"
+- DO NOT use markdown, DO NOT use \`\`\`json, respond ONLY the JSON
+- USE ONLY the exact IDs provided in the skills list`;
   }
 }

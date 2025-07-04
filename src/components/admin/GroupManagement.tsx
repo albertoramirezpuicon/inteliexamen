@@ -668,13 +668,6 @@ function MembersDialog({ open, group, onClose, onAddMember, onRemoveMember }: Me
   const [currentGroup, setCurrentGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (open && group) {
-      fetchGroupData();
-      fetchAvailableStudents();
-    }
-  }, [open, group, fetchGroupData, fetchAvailableStudents]);
-
   const fetchGroupData = useCallback(async () => {
     if (!group) return;
     
@@ -710,6 +703,13 @@ function MembersDialog({ open, group, onClose, onAddMember, onRemoveMember }: Me
       console.error('Error fetching available students:', error);
     }
   }, [group]);
+
+  useEffect(() => {
+    if (open && group) {
+      fetchGroupData();
+      fetchAvailableStudents();
+    }
+  }, [open, group, fetchGroupData, fetchAvailableStudents]);
 
   const handleAddMember = async () => {
     if (selectedStudent && group) {

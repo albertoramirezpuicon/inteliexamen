@@ -30,7 +30,8 @@ import {
   ListItem,
   ListItemText,
   Divider,
-  Avatar
+  Avatar,
+  Grid
 } from '@mui/material';
 
 import {
@@ -549,7 +550,7 @@ export default function AdminAttemptsPage() {
                         }
                         secondary={
                           <Box sx={{ mt: 1 }}>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" color="text.secondary" component="span">
                               {result.feedback}
                             </Typography>
                           </Box>

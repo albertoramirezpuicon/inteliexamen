@@ -83,22 +83,23 @@ ${levelInfo}
 
 INSTRUCCIONES CRÍTICAS:
 1. Genera EXACTAMENTE ${levelSettings.length} descripciones, una para cada nivel
-2. Cada nivel debe construir EXPLÍCITAMENTE sobre el anterior y preparar para el siguiente
-3. Usa referencias explícitas entre niveles (ej: "Avanzando desde el nivel anterior...", "Preparándose para el siguiente nivel...")
+2. Cada descripción debe ser COMPLETAMENTE INDEPENDIENTE y autocontenida
+3. EVITA CUALQUIER referencia a otros niveles (ej: "Avanzando desde el nivel anterior...", "Preparándose para el siguiente nivel...", "Building upon...")
 4. EVITA repeticiones, superposiciones o brechas entre niveles
 5. Mantén terminología consistente en todos los niveles
 6. Cada descripción debe ser específica para esta habilidad, no genérica
-7. Incluye: comportamientos específicos, evidencias de aprendizaje, limitaciones típicas, y tipo de apoyo necesario, para eso puedes consultar la literatura vigente y especializada de la habilidad ${skillName}
+7. Incluye: comportamientos específicos, evidencias de aprendizaje, limitaciones típicas, y tipo de apoyo necesario
+8. IMPORTANTE: Los estudiantes solo verán su nivel específico, por lo que las referencias a otros niveles serán confusas
 
 FORMATO DE RESPUESTA:
 Responde con exactamente ${levelSettings.length} descripciones, separadas por "---NIVEL---". Cada descripción debe ser completa y contextual.
 
 Ejemplo de estructura:
-NIVEL 1: [descripción completa]
+NIVEL 1: [descripción completa e independiente]
 ---NIVEL---
-NIVEL 2: [descripción que referencia al nivel 1 y prepara para el nivel 3]
+NIVEL 2: [descripción completa e independiente]
 ---NIVEL---
-NIVEL 3: [descripción que referencia al nivel 2 y prepara para el nivel 4]
+NIVEL 3: [descripción completa e independiente]
 ...`;
   } else {
     return `You are an expert educational designer specialized in creating skill mastery level descriptions. Your task is to generate specific student behavior descriptions for ALL levels of a skill, considering the complete progression.
@@ -111,22 +112,23 @@ ${levelInfo}
 
 CRITICAL INSTRUCTIONS:
 1. Generate EXACTLY ${levelSettings.length} descriptions, one for each level
-2. Each level must EXPLICITLY build upon the previous and prepare for the next
-3. Use explicit references between levels (e.g., "Building on the previous level...", "Preparing for the next level...")
+2. Each description must be COMPLETELY INDEPENDENT and self-contained
+3. AVOID ANY references to other levels (e.g., "Building on the previous level...", "Preparing for the next level...", "Advancing from...")
 4. AVOID repetitions, overlaps, or gaps between levels
 5. Maintain consistent terminology across all levels
 6. Each description must be specific to this skill, not generic
-7. Include: specific behaviors, evidence of learning, typical limitations, and type of support needed, for that you can consult the literature of the skill ${skillName}
+7. Include: specific behaviors, evidence of learning, typical limitations, and type of support needed
+8. IMPORTANT: Students will only see their specific level, so references to other levels will be confusing
 
 RESPONSE FORMAT:
 Respond with exactly ${levelSettings.length} descriptions, separated by "---LEVEL---". Each description must be complete and contextual.
 
 Example structure:
-LEVEL 1: [complete description]
+LEVEL 1: [complete and independent description]
 ---LEVEL---
-LEVEL 2: [description that references level 1 and prepares for level 3]
+LEVEL 2: [complete and independent description]
 ---LEVEL---
-LEVEL 3: [description that references level 2 and prepares for level 4]
+LEVEL 3: [complete and independent description]
 ...`;
   }
 }

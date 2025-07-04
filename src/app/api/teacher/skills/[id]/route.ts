@@ -169,18 +169,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       return NextResponse.json({ error: 'Skill not found.' }, { status: 404 });
     }
 
-    // Check for related skill levels
-    const [{ count: levelsCount }] = await query(
-      'SELECT COUNT(*) as count FROM inteli_skills_levels WHERE skill_id = ?', 
-      [id]
-    );
-    
-    if (levelsCount > 0) {
-      return NextResponse.json(
-        { error: 'Cannot delete skill with associated skill levels.' }, 
-        { status: 409 }
-      );
-    }
+
 
     // Check for related assessments
     const [{ count: assessCount }] = await query(

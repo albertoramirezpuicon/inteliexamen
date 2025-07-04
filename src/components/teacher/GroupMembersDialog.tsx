@@ -70,12 +70,6 @@ export default function GroupMembersDialog({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (open && group) {
-      fetchGroupData();
-    }
-  }, [open, group, fetchGroupData]);
-
   const fetchGroupData = useCallback(async () => {
     if (!group || !userInstitutionId) return;
 
@@ -129,6 +123,12 @@ export default function GroupMembersDialog({
       setLoading(false);
     }
   }, [group, userInstitutionId]);
+
+  useEffect(() => {
+    if (open && group) {
+      fetchGroupData();
+    }
+  }, [open, group, fetchGroupData]);
 
   const handleAddMember = async () => {
     if (!selectedStudent || !group) return;

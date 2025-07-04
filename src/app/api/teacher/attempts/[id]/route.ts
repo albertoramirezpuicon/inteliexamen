@@ -20,7 +20,7 @@ export async function DELETE(
     // Verify the attempt belongs to a teacher's assessment
     const attemptCheck = await query(`
       SELECT a.id 
-      FROM inteli_assessment_attempts a
+      FROM inteli_assessments_attempts a
       JOIN inteli_assessments ass ON a.assessment_id = ass.id
       WHERE a.id = ? AND ass.teacher_id = ? AND ass.institution_id = ?
     `, [attemptId, teacherId, institutionId]);
@@ -33,7 +33,7 @@ export async function DELETE(
     }
 
     // Delete the attempt and all related data
-    await query('DELETE FROM inteli_assessment_attempts WHERE id = ?', [attemptId]);
+    await query('DELETE FROM inteli_assessments_attempts WHERE id = ?', [attemptId]);
 
     return NextResponse.json(
       { message: 'Attempt deleted successfully' },

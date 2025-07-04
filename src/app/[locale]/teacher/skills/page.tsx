@@ -77,6 +77,7 @@ interface Skill {
   institution_name: string;
   domain_name: string;
   assessments_count: number;
+  skill_levels_count: number;
 }
 
 interface Domain {
@@ -85,7 +86,7 @@ interface Domain {
   institution_id: number;
 }
 
-type SortField = 'name' | 'description' | 'domain_name' | 'assessments_count';
+type SortField = 'name' | 'description' | 'domain_name' | 'assessments_count' | 'skill_levels_count';
 type SortOrder = 'asc' | 'desc';
 
 export default function TeacherSkillsPage() {
@@ -165,75 +166,6 @@ export default function TeacherSkillsPage() {
     initializeData();
   }, [router, locale]);
 
-  // Fetch skills and domains after user data is loaded
-  useEffect(() => {
-    console.log('useEffect triggered - user state:', user);
-    if (user) {
-      console.log('User is available, calling fetchSkills and fetchDomains');
-      fetchSkills();
-      fetchDomains();
-    } else {
-      console.log('User is not available yet');
-    }
-  }, [user, fetchSkills, fetchDomains]);
-
-  const applyFiltersAndSorting = useCallback(() => {
-    let filtered = [...skills];
-
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(skill =>
-        skill.name.toLowerCase().includes(searchLower) ||
-        skill.description.toLowerCase().includes(searchLower) ||
-        skill.domain_name.toLowerCase().includes(searchLower)
-      );
-    }
-
-    if (domainFilter) {
-      filtered = filtered.filter(skill => skill.domain_id.toString() === domainFilter);
-    }
-
-    filtered.sort((a, b) => {
-      let aValue: string | number;
-      let bValue: string | number;
-
-      switch (sortField) {
-        case 'name':
-          aValue = a.name.toLowerCase();
-          bValue = b.name.toLowerCase();
-          break;
-        case 'description':
-          aValue = a.description.toLowerCase();
-          bValue = b.description.toLowerCase();
-          break;
-        case 'domain_name':
-          aValue = a.domain_name.toLowerCase();
-          bValue = b.domain_name.toLowerCase();
-          break;
-        case 'assessments_count':
-          aValue = a.assessments_count;
-          bValue = b.assessments_count;
-          break;
-        default:
-          aValue = '';
-          bValue = '';
-      }
-
-      if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
-    });
-
-    setFilteredSkills(filtered);
-    setPage(0);
-  }, [skills, sortField, sortOrder, searchTerm, domainFilter]);
-
-  useEffect(() => {
-    applyFiltersAndSorting();
-  }, [skills, sortField, sortOrder, searchTerm, domainFilter, applyFiltersAndSorting]);
-
   const fetchSkills = useCallback(async () => {
     try {
       console.log('Fetching skills for user:', user);
@@ -291,6 +223,79 @@ export default function TeacherSkillsPage() {
       console.error('Error fetching domains:', error);
     }
   }, [user]);
+
+  const applyFiltersAndSorting = useCallback(() => {
+    let filtered = [...skills];
+
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(skill =>
+        skill.name.toLowerCase().includes(searchLower) ||
+        skill.description.toLowerCase().includes(searchLower) ||
+        skill.domain_name.toLowerCase().includes(searchLower)
+      );
+    }
+
+    if (domainFilter) {
+      filtered = filtered.filter(skill => skill.domain_id.toString() === domainFilter);
+    }
+
+    filtered.sort((a, b) => {
+      let aValue: string | number;
+      let bValue: string | number;
+
+      switch (sortField) {
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'description':
+          aValue = a.description.toLowerCase();
+          bValue = b.description.toLowerCase();
+          break;
+        case 'domain_name':
+          aValue = a.domain_name.toLowerCase();
+          bValue = b.domain_name.toLowerCase();
+          break;
+        case 'assessments_count':
+          aValue = a.assessments_count;
+          bValue = b.assessments_count;
+          break;
+        case 'skill_levels_count':
+          aValue = a.skill_levels_count;
+          bValue = b.skill_levels_count;
+          break;
+        default:
+          aValue = '';
+          bValue = '';
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    setFilteredSkills(filtered);
+    setPage(0);
+  }, [skills, sortField, sortOrder, searchTerm, domainFilter]);
+
+  // Fetch skills and domains after user data is loaded
+  useEffect(() => {
+    console.log('useEffect triggered - user state:', user);
+    if (user) {
+      console.log('User is available, calling fetchSkills and fetchDomains');
+      fetchSkills();
+      fetchDomains();
+    } else {
+      console.log('User is not available yet');
+    }
+  }, [user, fetchSkills, fetchDomains]);
+
+  useEffect(() => {
+    applyFiltersAndSorting();
+  }, [skills, sortField, sortOrder, searchTerm, domainFilter, applyFiltersAndSorting]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -483,7 +488,22 @@ export default function TeacherSkillsPage() {
       <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
         <Navbar userType="teacher" userName={getUserDisplayName()} />
         <Box sx={{ p: 3 }}>
-          <Alert severity="error">{error}</Alert>
+          <Alert 
+            severity={error.includes('successfully') ? 'success' : 'error'}
+            action={
+              error.includes('successfully') ? (
+                <Button 
+                  color="inherit" 
+                  size="small" 
+                  onClick={() => setError(null)}
+                >
+                  Continue
+                </Button>
+              ) : undefined
+            }
+          >
+            {error}
+          </Alert>
         </Box>
       </Box>
     );
@@ -528,7 +548,7 @@ export default function TeacherSkillsPage() {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <Search />
+                    <SearchIcon />
                   </InputAdornment>
                 ),
               }}
@@ -618,6 +638,18 @@ export default function TeacherSkillsPage() {
                     Assessments
                   </TableSortLabel>
                 </TableCell>
+                <TableCell 
+                  onClick={() => handleSort('skill_levels_count')}
+                  sx={{ cursor: 'pointer', '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
+                >
+                  <TableSortLabel
+                    active={sortField === 'skill_levels_count'}
+                    direction={sortField === 'skill_levels_count' ? sortOrder : 'asc'}
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    Skill Levels
+                  </TableSortLabel>
+                </TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -632,6 +664,14 @@ export default function TeacherSkillsPage() {
                       label={skill.assessments_count} 
                       size="small"
                       color={skill.assessments_count > 0 ? "warning" : "default"}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={skill.skill_levels_count} 
+                      size="small"
+                      color={skill.skill_levels_count > 0 ? "success" : "default"}
+                      title={skill.skill_levels_count > 0 ? "Skill levels configured" : "No skill levels configured"}
                     />
                   </TableCell>
                   <TableCell>

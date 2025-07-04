@@ -96,59 +96,6 @@ export default function UserManagement() {
   const [page, setPage] = useState(0);
   const [rowsPerPage] = useState(20);
 
-  useEffect(() => {
-    fetchUsers();
-    fetchInstitutions();
-    fetchGroups();
-  }, []);
-
-  useEffect(() => {
-    applyFiltersAndSorting();
-  }, [users, sortField, sortOrder, filters, applyFiltersAndSorting]);
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/admin/users');
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
-      }
-      const data = await response.json();
-      setUsers(data.users);
-    } catch (error) {
-      setError('Failed to fetch users');
-      console.error('Error fetching users:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchInstitutions = async () => {
-    try {
-      const response = await fetch('/api/admin/institutions');
-      if (!response.ok) {
-        throw new Error('Failed to fetch institutions');
-      }
-      const data = await response.json();
-      setInstitutions(data.institutions);
-    } catch (error) {
-      console.error('Error fetching institutions:', error);
-    }
-  };
-
-  const fetchGroups = async () => {
-    try {
-      const response = await fetch('/api/admin/groups');
-      if (!response.ok) {
-        throw new Error('Failed to fetch groups');
-      }
-      const data = await response.json();
-      setGroups(data.groups);
-    } catch (error) {
-      console.error('Error fetching groups:', error);
-    }
-  };
-
   const applyFiltersAndSorting = useCallback(() => {
     let filtered = [...users];
 
@@ -195,6 +142,59 @@ export default function UserManagement() {
     setFilteredUsers(filtered);
     setPage(0); // Reset to first page when filters change
   }, [users, sortField, sortOrder, filters]);
+
+  useEffect(() => {
+    fetchUsers();
+    fetchInstitutions();
+    fetchGroups();
+  }, []);
+
+  useEffect(() => {
+    applyFiltersAndSorting();
+  }, [applyFiltersAndSorting]);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/users');
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+      const data = await response.json();
+      setUsers(data.users);
+    } catch (error) {
+      setError('Failed to fetch users');
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchInstitutions = async () => {
+    try {
+      const response = await fetch('/api/admin/institutions');
+      if (!response.ok) {
+        throw new Error('Failed to fetch institutions');
+      }
+      const data = await response.json();
+      setInstitutions(data.institutions);
+    } catch (error) {
+      console.error('Error fetching institutions:', error);
+    }
+  };
+
+  const fetchGroups = async () => {
+    try {
+      const response = await fetch('/api/admin/groups');
+      if (!response.ok) {
+        throw new Error('Failed to fetch groups');
+      }
+      const data = await response.json();
+      setGroups(data.groups);
+    } catch (error) {
+      console.error('Error fetching groups:', error);
+    }
+  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -721,12 +721,6 @@ function UserGroupsDialog({ open, user, onClose }: UserGroupsDialogProps) {
   const [userGroups, setUserGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (open && user) {
-      fetchUserGroups();
-    }
-  }, [open, user, fetchUserGroups]);
-
   const fetchUserGroups = useCallback(async () => {
     if (!user) return;
     
@@ -743,6 +737,12 @@ function UserGroupsDialog({ open, user, onClose }: UserGroupsDialogProps) {
       setLoading(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (open && user) {
+      fetchUserGroups();
+    }
+  }, [open, user, fetchUserGroups]);
 
   if (!user) return null;
 

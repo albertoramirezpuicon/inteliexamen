@@ -35,6 +35,9 @@ interface Assessment {
   case_text: string;
   questions_per_skill: number;
   output_language: string;
+  show_teacher_name: number;
+  teacher_given_name?: string;
+  teacher_family_name?: string;
   skills: Skill[];
 }
 
@@ -91,6 +94,9 @@ export default function AssessmentAttemptPage() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [results, setResults] = useState<AssessmentResult[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [currentEvaluationType, setCurrentEvaluationType] = useState<'incomplete' | 'improvable' | 'final' | null>(null);
+  const [missingAspects, setMissingAspects] = useState<string[]>([]);
+  const [improvementSuggestions, setImprovementSuggestions] = useState<string[]>([]);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -220,22 +226,27 @@ export default function AssessmentAttemptPage() {
       setStudentReply('');
 
       // Add AI response to conversation
-      if (data.aiResponse) {
+      if (data.message) {
         const newAIMessage: ConversationMessage = {
           id: Date.now() + 1,
           message_type: 'ai',
-          message_text: data.aiResponse.message,
+          message_text: data.message,
           created_at: new Date().toISOString()
         };
         
         setConversation(prev => [...prev, newAIMessage]);
 
+        // Set evaluation type and related data
+        setCurrentEvaluationType(data.evaluationType);
+        setMissingAspects(data.missingAspects || []);
+        setImprovementSuggestions(data.improvementSuggestions || []);
+
         // Check if assessment is completed
-        if (data.aiResponse.canDetermineLevel) {
+        if (data.attemptCompleted) {
           setIsCompleted(true);
           setAttempt(prev => prev ? { ...prev, status: 'Completed' } : null);
-          if (data.results) {
-            setResults(data.results);
+          if (data.skillResults) {
+            setResults(data.skillResults);
           }
         }
       }
@@ -362,26 +373,35 @@ export default function AssessmentAttemptPage() {
           <Box sx={{ flex: 1 }}>
             <Typography variant="h4" gutterBottom>
               {assessment?.name}
+              {assessment?.show_teacher_name === 1 && assessment?.teacher_given_name && assessment?.teacher_family_name && (
+                <span style={{ fontWeight: 'normal', color: 'text.secondary', fontSize: '0.7em' }}>
+                  {' '}({assessment.teacher_given_name} {assessment.teacher_family_name})
+                </span>
+              )}
             </Typography>
             <Typography variant="body1" color="text.secondary">
               {assessment?.description}
             </Typography>
+            
+            {/* Skills Information */}
+            {assessment && assessment.skills && assessment.skills.length > 0 && (
+              <Box sx={{ mt: 2, p: 2, backgroundColor: 'grey.100', borderRadius: 1 }}>
+                <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 'bold', mb: 1 }}>
+                  Skills being evaluated:
+                </Typography>
+                {assessment.skills.map((skill, index) => (
+                  <Box key={skill.id} sx={{ mb: index < assessment.skills.length - 1 ? 1 : 0 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'text.primary' }}>
+                      {skill.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                      {skill.description}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            )}
           </Box>
-          
-          {/* Conversation Turns Counter */}
-          {assessment && !isCompleted && (
-            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
-              <Chip
-                label={`${getRemainingTurns()} turns left`}
-                color={getRemainingTurns() === 0 ? 'error' : 'primary'}
-                variant="outlined"
-                sx={{ fontWeight: 'bold' }}
-              />
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                Max: {getMaxTurns()}
-              </Typography>
-            </Box>
-          )}
         </Box>
 
         <Box sx={{ display: 'flex', gap: 3, height: 'calc(100vh - 200px)' }}>
@@ -423,17 +443,6 @@ export default function AssessmentAttemptPage() {
                 {assessment?.case_text}
               </Typography>
             </Box>
-            
-            {assessment && (
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>Skills to evaluate:</strong> {assessment.skills.map(s => s.name).join(', ')}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>Maximum turns:</strong> {assessment.skills.length * assessment.questions_per_skill}
-                </Typography>
-              </Box>
-            )}
           </Paper>
 
           {/* Chat Panel */}
@@ -508,6 +517,67 @@ export default function AssessmentAttemptPage() {
                       <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                         {message.message_text}
                       </Typography>
+                      
+                      {/* Evaluation Type Indicators */}
+                      {message.message_type === 'ai' && currentEvaluationType && (
+                        <Box sx={{ mt: 2 }}>
+                          {currentEvaluationType === 'incomplete' && missingAspects.length > 0 && (
+                            <Box sx={{ mb: 1 }}>
+                              <Chip 
+                                label="Incomplete Response" 
+                                color="warning" 
+                                size="small" 
+                                sx={{ mb: 1 }}
+                              />
+                              <Typography variant="body2" color="warning.dark" sx={{ fontWeight: 'bold' }}>
+                                Missing aspects:
+                              </Typography>
+                              <ul style={{ margin: '4px 0', paddingLeft: '16px' }}>
+                                {missingAspects.map((aspect, index) => (
+                                  <li key={index}>
+                                    <Typography variant="body2" color="text.secondary">
+                                      {aspect}
+                                    </Typography>
+                                  </li>
+                                ))}
+                              </ul>
+                            </Box>
+                          )}
+                          
+                          {currentEvaluationType === 'improvable' && improvementSuggestions.length > 0 && (
+                            <Box sx={{ mb: 1 }}>
+                              <Chip 
+                                label="Response Complete - Can Improve" 
+                                color="info" 
+                                size="small" 
+                                sx={{ mb: 1 }}
+                              />
+                              <Typography variant="body2" color="info.dark" sx={{ fontWeight: 'bold' }}>
+                                Suggestions for improvement:
+                              </Typography>
+                              <ul style={{ margin: '4px 0', paddingLeft: '16px' }}>
+                                {improvementSuggestions.map((suggestion, index) => (
+                                  <li key={index}>
+                                    <Typography variant="body2" color="text.secondary">
+                                      {suggestion}
+                                    </Typography>
+                                  </li>
+                                ))}
+                              </ul>
+                            </Box>
+                          )}
+                          
+                          {currentEvaluationType === 'final' && (
+                            <Chip 
+                              label="Final Evaluation" 
+                              color="success" 
+                              size="small" 
+                              sx={{ mt: 1 }}
+                            />
+                          )}
+                        </Box>
+                      )}
+                      
                       <Typography 
                         variant="caption" 
                         sx={{ 

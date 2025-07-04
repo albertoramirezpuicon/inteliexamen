@@ -102,21 +102,6 @@ export default function TeacherUsersPage() {
     initializeData();
   }, [router, locale]);
 
-  // Fetch students after user data is loaded
-  useEffect(() => {
-    console.log('useEffect triggered - user state:', user);
-    if (user) {
-      console.log('User is available, calling fetchStudents');
-      fetchStudents();
-    } else {
-      console.log('User is not available yet');
-    }
-  }, [user, fetchStudents]);
-
-  useEffect(() => {
-    applyFiltersAndSorting();
-  }, [applyFiltersAndSorting]);
-
   const fetchStudents = useCallback(async () => {
     try {
       console.log('Fetching students for user:', user);
@@ -198,6 +183,21 @@ export default function TeacherUsersPage() {
     setFilteredStudents(filtered);
     setPage(0);
   }, [students, sortField, sortOrder, searchTerm]);
+
+  // Fetch students after user data is loaded
+  useEffect(() => {
+    console.log('useEffect triggered - user state:', user);
+    if (user) {
+      console.log('User is available, calling fetchStudents');
+      fetchStudents();
+    } else {
+      console.log('User is not available yet');
+    }
+  }, [user, fetchStudents]);
+
+  useEffect(() => {
+    applyFiltersAndSorting();
+  }, [applyFiltersAndSorting]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {

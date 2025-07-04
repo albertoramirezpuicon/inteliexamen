@@ -53,6 +53,7 @@ export async function GET(
         a.dispute_period,
         a.created_at,
         a.updated_at,
+        a.show_teacher_name,
         u.given_name as teacher_given_name,
         u.family_name as teacher_family_name,
         g.name as group_name
