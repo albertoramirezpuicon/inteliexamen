@@ -1,3 +1,33 @@
+/**
+ * ADMIN ASSESSMENT VIEW PAGE
+ * 
+ * PURPOSE: View and manage specific assessment details system-wide
+ * 
+ * CONNECTIONS:
+ * - Accessible from /admin/assessments via View button
+ * - Links to /admin/assessments/[id]/groups for group management
+ * - Uses AssessmentView component for detailed display
+ * - Breadcrumb navigation: Dashboard > Assessments > View Assessment
+ * 
+ * KEY FEATURES:
+ * - Assessment details display and management
+ * - Edit and delete functionality for assessments
+ * - Group assignment management
+ * - System-wide assessment monitoring
+ * - Dynamic route handling with assessment ID
+ * 
+ * NAVIGATION FLOW:
+ * - Accessible from admin assessments list
+ * - View button navigates to specific assessment details
+ * - Group management available for assessment assignment
+ * - Breadcrumb navigation allows easy return to previous pages
+ * 
+ * SYSTEM SCOPE:
+ * - Manages assessments across all institutions
+ * - Global assessment configuration
+ * - Cross-institutional assessment monitoring
+ */
+
 'use client';
 
 import { Box, Typography, Breadcrumbs, Link } from '@mui/material';

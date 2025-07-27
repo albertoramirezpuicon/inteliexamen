@@ -1,3 +1,38 @@
+/**
+ * TEACHER ASSESSMENTS MANAGEMENT PAGE
+ * 
+ * PURPOSE: Teacher's assessment management for their institution
+ * 
+ * CONNECTIONS:
+ * - Links to /teacher/assessments/create for creating new assessments
+ * - Links to /teacher/assessments/[id] for assessment details
+ * - Links to /teacher/assessments/[id]/groups for group assignment
+ * - Accessible from /teacher/dashboard under Assessment Management
+ * - Uses AssessmentGroupsModal component for group management
+ * 
+ * KEY FEATURES:
+ * - Create and manage assessments for teacher's institution
+ * - Assessment status tracking (Draft, Active, Completed)
+ * - Group assignment and management for assessments
+ * - Assessment filtering and search capabilities
+ * - Pagination for large assessment lists
+ * - Assessment deletion with confirmation
+ * - Institution-specific assessment monitoring
+ * 
+ * NAVIGATION FLOW:
+ * - Accessible from teacher dashboard
+ * - Create button navigates to assessment creation
+ * - View/Edit buttons navigate to assessment details
+ * - Group management available for assessment assignment
+ * - Breadcrumb navigation for easy return
+ * 
+ * INSTITUTION SCOPE:
+ * - Manages assessments within teacher's institution only
+ * - Creates assessments for assigned student groups
+ * - Monitors assessment status and participation
+ * - Handles assessment lifecycle management
+ */
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -36,7 +71,8 @@ import {
   Visibility as ViewIcon,
   Clear as ClearIcon,
   Group as GroupIcon,
-  Home as HomeIcon
+  Home as HomeIcon,
+  HelpOutline
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
@@ -60,6 +96,7 @@ interface Assessment {
   domain_name: string;
   associated_groups: string;
   teacher_id: number;
+  attempt_count: number;
 }
 
 export default function TeacherAssessmentsPage() {
@@ -91,6 +128,9 @@ export default function TeacherAssessmentsPage() {
   // Groups modal
   const [groupsModalOpen, setGroupsModalOpen] = useState(false);
   const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null);
+
+  // Info box state
+  const [showAssessmentInfo, setShowAssessmentInfo] = useState(true);
 
   // Load user info
   const loadUserInfo = useCallback(async () => {
@@ -168,10 +208,15 @@ export default function TeacherAssessmentsPage() {
   }, [currentUserId, currentInstitutionId, loadAssessments]);
 
   const handleDelete = async () => {
-    if (!assessmentToDelete) return;
+    if (!assessmentToDelete || !currentUserId || !currentInstitutionId) return;
 
     try {
-      const response = await fetch(`/api/teacher/assessments/${assessmentToDelete.id}`, {
+      const params = new URLSearchParams({
+        teacher_id: currentUserId.toString(),
+        institution_id: currentInstitutionId.toString()
+      });
+
+      const response = await fetch(`/api/teacher/assessments/${assessmentToDelete.id}?${params}`, {
         method: 'DELETE',
       });
 
@@ -226,6 +271,10 @@ export default function TeacherAssessmentsPage() {
   const handleCloseGroupsModal = () => {
     setGroupsModalOpen(false);
     setSelectedAssessment(null);
+    // Refresh assessments after closing the modal
+    if (currentUserId && currentInstitutionId) {
+      loadAssessments();
+    }
   };
 
   if (loading && assessments.length === 0) {
@@ -250,19 +299,75 @@ export default function TeacherAssessmentsPage() {
             <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
             {t('dashboard')}
           </Link>
-          <Typography color="text.primary">{t('assessments')}</Typography>
+          <Typography color="text.primary">{t('assessments.title')}</Typography>
         </Breadcrumbs>
 
+        <Typography variant="h4" gutterBottom>
+          {t('assessments.title')}
+        </Typography>
+        
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+          {t('assessments.description')}
+        </Typography>
+
+        {/* Assessments Info Box */}
+        {showAssessmentInfo && (
+          <Box
+            sx={{
+              backgroundColor: '#fff3cd',
+              border: '1px solid #ffeaa7',
+              borderRadius: 1,
+              p: 2,
+              mb: 3,
+              position: 'relative'
+            }}
+          >
+            <IconButton
+              size="small"
+              onClick={() => setShowAssessmentInfo(false)}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                color: 'text.secondary'
+              }}
+            >
+              <HelpOutline />
+            </IconButton>
+            <Typography variant="h6" sx={{ mb: 1, pr: 4 }}>
+              {t('assessments.whatIsAssessment')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t('assessments.assessmentExplanation')}
+            </Typography>
+            <Button
+              size="small"
+              onClick={() => setShowAssessmentInfo(false)}
+              sx={{ mt: 1 }}
+            >
+              {t('assessments.hideInfo')}
+            </Button>
+          </Box>
+        )}
+
+        {!showAssessmentInfo && (
+          <Button
+            size="small"
+            startIcon={<HelpOutline />}
+            onClick={() => setShowAssessmentInfo(true)}
+            sx={{ mb: 3 }}
+          >
+            {t('assessments.showInfo')}
+          </Button>
+        )}
+
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1">
-            {t('assessments')}
-          </Typography>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => router.push(`/${locale}/teacher/assessments/create`)}
           >
-            {tCommon('create')} {t('assessments')}
+            {t('assessments.createAssessment')}
           </Button>
         </Box>
 
@@ -313,10 +418,11 @@ export default function TeacherAssessmentsPage() {
                 <TableRow>
                   <TableCell>{tCommon('name')}</TableCell>
                   <TableCell>{tCommon('status')}</TableCell>
-                  <TableCell>Difficulty</TableCell>
-                  <TableCell>Domain</TableCell>
-                  <TableCell>Skill</TableCell>
-                  <TableCell>Groups</TableCell>
+                  <TableCell>{t('assessments.difficulty')}</TableCell>
+                  <TableCell>{t('assessments.domain')}</TableCell>
+                  <TableCell>{t('assessments.skill')}</TableCell>
+                  <TableCell>{t('assessments.groups')}</TableCell>
+                  <TableCell>Attempts</TableCell>
                   <TableCell>{tCommon('createdAt')}</TableCell>
                   <TableCell>{tCommon('actions')}</TableCell>
                 </TableRow>
@@ -365,6 +471,7 @@ export default function TeacherAssessmentsPage() {
                         </Typography>
                       )}
                     </TableCell>
+                    <TableCell>{assessment.attempt_count}</TableCell>
                     <TableCell>{formatDate(assessment.created_at)}</TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 1 }}>
@@ -417,7 +524,7 @@ export default function TeacherAssessmentsPage() {
           <DialogTitle>{tCommon('confirm')} {tCommon('delete')}</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Are you sure you want to delete &quot;{assessmentToDelete?.name}&quot;? This action cannot be undone.
+              {t('assessments.deleteConfirmation', { name: assessmentToDelete?.name })}
             </DialogContentText>
           </DialogContent>
           <DialogActions>

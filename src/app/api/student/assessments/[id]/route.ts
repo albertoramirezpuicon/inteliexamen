@@ -43,6 +43,9 @@ export async function GET(
         a.name,
         a.description,
         a.case_text,
+        a.case_sections,
+        a.case_navigation_enabled,
+        a.case_sections_metadata,
         a.questions_per_skill,
         a.output_language,
         a.difficulty_level,
@@ -54,6 +57,7 @@ export async function GET(
         a.created_at,
         a.updated_at,
         a.show_teacher_name,
+        a.integrity_protection,
         u.given_name as teacher_given_name,
         u.family_name as teacher_family_name,
         g.name as group_name
@@ -92,8 +96,8 @@ export async function GET(
 
     const skillsResult = await query(skillsQuery, [assessmentId]);
 
-    // Get skill levels for each skill
-    const skillsWithLevels = await Promise.all(
+    // Get skill levels and sources for each skill
+    const skillsWithLevelsAndSources = await Promise.all(
       skillsResult.map(async (skill: { id: number; name: string; description: string }) => {
         const levelsQuery = `
           SELECT 
@@ -106,18 +110,47 @@ export async function GET(
           ORDER BY \`order\`
         `;
         
-        const levelsResult = await query(levelsQuery, [skill.id]);
+        const sourcesQuery = `
+          SELECT 
+            s.id,
+            s.title,
+            s.authors,
+            s.publication_year,
+            s.pdf_s3_key,
+            s.pdf_content_embeddings,
+            s.pdf_processing_status,
+            s.pdf_file_size,
+            s.is_custom,
+            s.created_at
+          FROM inteli_sources s
+          INNER JOIN inteli_assessments_sources as2 ON s.id = as2.source_id
+          WHERE as2.assessment_id = ?
+          ORDER BY s.title
+        `;
+        
+        const [levelsResult, sourcesResult] = await Promise.all([
+          query(levelsQuery, [skill.id]),
+          query(sourcesQuery, [assessmentId])
+        ]);
         
         return {
           ...skill,
-          levels: levelsResult || []
+          levels: levelsResult || [],
+          sources: sourcesResult || []
         };
       })
     );
 
+    // Parse JSON fields if they exist
     const assessmentWithSkills = {
       ...assessment,
-      skills: skillsWithLevels
+      case_sections: assessment.case_sections ? 
+        (typeof assessment.case_sections === 'string' ? JSON.parse(assessment.case_sections) : assessment.case_sections) : 
+        null,
+      case_sections_metadata: assessment.case_sections_metadata ? 
+        (typeof assessment.case_sections_metadata === 'string' ? JSON.parse(assessment.case_sections_metadata) : assessment.case_sections_metadata) : 
+        null,
+      skills: skillsWithLevelsAndSources
     };
 
     return NextResponse.json({

@@ -29,6 +29,7 @@ CREATE TABLE `inteli_assessments` (
   `institution_id` int NOT NULL,
   `teacher_id` int NOT NULL,
   `show_teacher_name` tinyint NOT NULL DEFAULT '0',
+  `integrity_protection` tinyint DEFAULT '1',
   `name` varchar(45) COLLATE utf8mb3_unicode_ci NOT NULL,
   `description` varchar(1024) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
   `difficulty_level` enum('Easy','Intermediate','Difficult') COLLATE utf8mb3_unicode_ci NOT NULL,
@@ -36,6 +37,7 @@ CREATE TABLE `inteli_assessments` (
   `output_language` enum('es','en') CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci NOT NULL,
   `evaluation_context` varchar(1024) COLLATE utf8mb3_unicode_ci NOT NULL,
   `case_text` varchar(8192) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci NOT NULL,
+  `case_solution` varchar(8192) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
   `questions_per_skill` int NOT NULL,
   `available_from` datetime NOT NULL,
   `available_until` datetime NOT NULL,
@@ -43,13 +45,18 @@ CREATE TABLE `inteli_assessments` (
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `status` enum('Active','Inactive') COLLATE utf8mb3_unicode_ci NOT NULL DEFAULT 'Active',
+  `case_sections` json DEFAULT NULL COMMENT 'Structured case sections for navigation',
+  `case_navigation_enabled` tinyint(1) DEFAULT '0' COMMENT 'Whether case navigation is enabled for this assessment',
+  `case_sections_metadata` json DEFAULT NULL COMMENT 'Metadata about case sections (titles, order, etc.)',
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`),
   KEY `fk_ia_institution_idx` (`institution_id`),
   KEY `fk_ia_user_idx` (`teacher_id`),
+  KEY `idx_assessments_navigation_enabled` (`case_navigation_enabled`),
   CONSTRAINT `fk_ia_institution` FOREIGN KEY (`institution_id`) REFERENCES `inteli_institutions` (`id`),
   CONSTRAINT `fk_ia_user` FOREIGN KEY (`teacher_id`) REFERENCES `inteli_users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+
 
 CREATE TABLE `inteli_assessments_attempts` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -133,6 +140,19 @@ CREATE TABLE `inteli_assessments_skills` (
   CONSTRAINT `fk_as_skill` FOREIGN KEY (`skill_id`) REFERENCES `inteli_skills` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci
 
+CREATE TABLE `inteli_assessments_sources` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `assessment_id` int NOT NULL,
+  `source_id` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_assessment_source` (`assessment_id`,`source_id`),
+  KEY `assessment_id` (`assessment_id`),
+  KEY `source_id` (`source_id`),
+  CONSTRAINT `inteli_assessments_sources_ibfk_1` FOREIGN KEY (`assessment_id`) REFERENCES `inteli_assessments` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `inteli_assessments_sources_ibfk_2` FOREIGN KEY (`source_id`) REFERENCES `inteli_sources` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+
 CREATE TABLE `inteli_domains` (
   `id` int NOT NULL AUTO_INCREMENT,
   `institution_id` int NOT NULL,
@@ -198,12 +218,14 @@ CREATE TABLE `inteli_skills_levels` (
   `skill_id` int NOT NULL,
   `order` int NOT NULL,
   `label` varchar(45) COLLATE utf8mb3_unicode_ci NOT NULL,
+  `standard` int DEFAULT '0',
   `description` varchar(1024) COLLATE utf8mb3_unicode_ci NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`),
   KEY `fk_sl_skill_idx` (`skill_id`),
-  CONSTRAINT `fk_sl_skill` FOREIGN KEY (`skill_id`) REFERENCES `inteli_skills` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci
+  CONSTRAINT `fk_sl_skill` FOREIGN KEY (`skill_id`) REFERENCES `inteli_skills` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+
 
 CREATE TABLE `inteli_skills_levels_settings` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -214,6 +236,42 @@ CREATE TABLE `inteli_skills_levels_settings` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci
+
+CREATE TABLE `inteli_skills_sources` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `skill_id` int NOT NULL,
+  `source_id` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_skill_source` (`skill_id`,`source_id`),
+  KEY `source_id` (`source_id`),
+  KEY `idx_skills_sources_skill` (`skill_id`),
+  CONSTRAINT `inteli_skills_sources_ibfk_1` FOREIGN KEY (`skill_id`) REFERENCES `inteli_skills` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `inteli_skills_sources_ibfk_2` FOREIGN KEY (`source_id`) REFERENCES `inteli_sources` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+
+
+CREATE TABLE `inteli_sources` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `title` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci NOT NULL,
+  `authors` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci DEFAULT NULL,
+  `publication_year` int DEFAULT NULL,
+  `pdf_s3_key` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci DEFAULT NULL,
+  `pdf_content_embeddings` json DEFAULT NULL,
+  `pdf_processing_status` enum('pending','processing','completed','failed') COLLATE utf8mb3_unicode_ci DEFAULT 'pending',
+  `pdf_upload_date` timestamp NULL DEFAULT NULL,
+  `pdf_file_size` bigint DEFAULT NULL,
+  `is_custom` tinyint(1) DEFAULT '0',
+  `created_by` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `created_by` (`created_by`),
+  KEY `idx_sources_custom` (`is_custom`),
+  KEY `idx_sources_processing_status` (`pdf_processing_status`),
+  CONSTRAINT `inteli_sources_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `inteli_users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+
 
 CREATE TABLE `inteli_users` (
   `id` int NOT NULL AUTO_INCREMENT,

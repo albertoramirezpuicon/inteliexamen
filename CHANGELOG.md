@@ -4,6 +4,519 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **Conversation Turn Counting Bug**: Fixed critical issue where the system was incorrectly counting conversation turns, causing AI to ignore student responses beyond the first turn
+  - **Root Cause**: The system was using `Math.max(studentMessages, aiMessages)` to count turns, which doesn't properly track conversation pairs
+  - **Solution**: Implemented proper conversation pair counting that tracks complete student-AI exchanges
+  - **Key Improvements**:
+    - **Accurate Turn Counting**: Now counts complete conversation pairs (student message + AI response) instead of individual messages
+    - **Proper Context Awareness**: AI now correctly considers all previous student responses when evaluating subsequent replies
+    - **Enhanced Conversation History**: Improved conversation history processing to include all previous exchanges
+    - **Better AI Prompts**: Enhanced AI prompts to emphasize cumulative evaluation of student responses
+  - **Technical Changes**:
+    - **Fixed Turn Counting Logic**: Replaced flawed `Math.max()` approach with proper conversation pair tracking
+    - **Enhanced AI Evaluation**: Updated `evaluateWithAI` function to use corrected turn counting
+    - **Improved Prompts**: Added explicit instructions for AI to consider all previous responses cumulatively
+    - **Better Debugging**: Enhanced logging to show conversation pairs and turn progression
+  - **AI Prompt Enhancements**:
+    - **Cumulative Evaluation**: AI now explicitly considers all previous student responses
+    - **Context Awareness**: If student addressed an aspect in a previous response, it's not marked as missing in current response
+    - **Progress Recognition**: AI acknowledges understanding demonstrated at any point in the conversation
+    - **Evolution Tracking**: Evaluates the progress and evolution of student responses over time
+  - **Files Modified**:
+    - `src/app/api/student/attempts/[id]/conversation/route.ts` (fixed turn counting and enhanced AI prompts)
+  - **Benefits**:
+    - **Accurate Evaluation**: AI now properly evaluates student responses across multiple turns
+    - **Better Learning Experience**: Students receive appropriate feedback that considers their full conversation history
+    - **Improved AI Accuracy**: More accurate turn counting leads to better AI evaluation decisions
+    - **Enhanced Context**: AI maintains awareness of student progress throughout the conversation
+    - **Proper Turn Limits**: System correctly enforces maximum turn limits based on actual conversation pairs
+- **Enhanced AI Instructions**: Added explicit instructions to prevent AI from repeating feedback for already addressed aspects
+- **Improved Conversation Context**: Enhanced prompts to make conversation history more prominent and ensure AI reads it properly
+- **Better Debugging**: Added comprehensive logging to track conversation history processing and AI responses
+- **Frontend Hints Display**: Added UI components to display hints and examples to students in the assessment interface
+  - **Hints State Management**: Added state variable to store and manage hints from AI responses
+  - **Visual Hints Section**: Created dedicated UI section with light blue background to display hints and examples
+  - **Structured Display**: Hints are organized by aspect with clear visual hierarchy
+  - **Examples Integration**: Analogous examples are displayed below each hint for better guidance
+  - **Color-Coded Feedback**: Different color schemes for incomplete (warning) vs improvable (info) evaluations
+  - **Enhanced UX**: Students now see both what's missing and how to improve with concrete examples
+
+### Added
+- **Assessment-Sources Relationship System**: Implemented direct linking between assessments and sources for enhanced AI feedback
+  - **New Database Table**: Created `inteli_assessments_sources` table to link assessments directly to their sources
+    - Many-to-many relationship between assessments and sources
+    - Automatic population when teachers select sources for skills during assessment creation
+    - Proper indexing for performance optimization
+  - **Enhanced Assessment APIs**: Updated assessment creation and management APIs
+    - **Teacher Assessment API**: Modified to handle assessment-source relationships during creation/updates
+    - **Admin Assessment API**: Updated to support multiple skills and assessment-source relationships
+    - **Assessment Form**: Modified to include selected sources in submission data
+  - **Improved AI Feedback System**: Enhanced student feedback to use assessment-specific sources and case solutions
+    - **Assessment-Specific Sources**: AI now uses only sources specifically linked to each assessment
+    - **Case Solution Integration**: AI feedback now includes the case solution text for comprehensive evaluation
+    - **Combined Evaluation Context**: AI combines reference solutions and academic sources for better feedback
+    - **Enhanced Prompts**: Updated AI prompts to include both case solution and assessment-specific sources
+  - **Updated Student APIs**: Modified student-facing APIs to use assessment-specific sources
+    - **Student Assessment API**: Updated to fetch assessment-specific sources instead of skill sources
+    - **Student Feedback API**: Enhanced to include case solution text and assessment-specific sources
+    - **Better Evaluation Context**: Students receive feedback based on the specific sources used in their assessment
+  - **Technical Implementation**:
+    - **Database Migration**: Created `scripts/create-assessment-sources-table.sql` for table creation
+    - **API Updates**: Modified assessment creation, student assessment, and feedback APIs
+    - **Form Integration**: Updated assessment form to handle source relationships
+    - **Prompt Enhancement**: Enhanced AI prompts with case solution and source integration
+  - **Benefits**:
+    - **Targeted Feedback**: AI feedback now uses only sources relevant to the specific assessment
+    - **Comprehensive Evaluation**: Combines case solutions and academic sources for better assessment
+    - **Academic Integrity**: Ensures feedback is based on the specific materials used in the assessment
+    - **Better Learning Outcomes**: Students receive more relevant and contextual feedback
+    - **Improved AI Accuracy**: More focused context leads to better AI evaluation
+  - **Files Added**:
+    - `scripts/create-assessment-sources-table.sql` (database migration)
+  - **Files Modified**:
+    - `src/app/api/teacher/assessments/route.ts` (assessment-source relationship handling)
+    - `src/app/api/admin/assessments/route.ts` (assessment-source relationship handling)
+    - `src/app/api/student/assessments/[id]/route.ts` (assessment-specific sources)
+    - `src/app/api/student/attempts/[id]/conversation/route.ts` (enhanced feedback with case solution)
+    - `src/components/admin/AssessmentForm.tsx` (source data inclusion)
+- **Enhanced Sources Page UX**: Improved teacher sources management page to reduce clicks and improve workflow efficiency
+  - **Root Cause**: The sources page required too many clicks - users had to select a skill, click "Manage Sources" button, then open a modal to see and manage sources
+  - **Solution**: Redesigned the sources page to show sources directly below skill selection with inline management capabilities
+  - **Key Improvements**:
+    - **Direct Source Display**: Sources are now shown immediately below skill selection without requiring additional clicks
+    - **Inline Source Addition**: Added "Add New Source" button directly in the sources display section
+    - **Streamlined Workflow**: Users can now select a skill and immediately see all linked sources
+    - **Reduced Click Count**: Eliminated the need to click "Manage Sources" button to view sources
+    - **Simplified Interface**: Removed redundant "Manage Sources" button for cleaner UI
+    - **Enhanced Add Source Dialog**: Improved layout with wider fields and vertically stacked buttons
+  - **New Features**:
+    - **Real-time Source Loading**: Sources load automatically when a skill is selected
+    - **Inline Source Management**: Checkbox selection for sources with save functionality
+    - **Quick Add Source Dialog**: Streamlined dialog for adding new sources without leaving the page
+    - **Enhanced Dialog Layout**: Wider title and authors fields with vertically stacked buttons for better UX
+    - **Processing Status Display**: Visual indicators for PDF processing status (pending, processing, completed, failed)
+    - **Source Count Updates**: Real-time updates of source counts in skill dropdown
+  - **User Experience Enhancements**:
+    - **Immediate Feedback**: Sources appear instantly when skill is selected
+    - **Visual Consistency**: Maintains the same light gray background as other sections
+    - **Responsive Design**: Works well on different screen sizes
+    - **Error Handling**: Proper error messages and loading states
+    - **Accessibility**: Maintains keyboard navigation and screen reader support
+  - **Technical Implementation**:
+    - **State Management**: Added sources state management with loading and error states
+    - **API Integration**: Reused existing API endpoints for consistency
+    - **Clean Code**: Removed unused modal components and functions for better maintainability
+    - **Translation Support**: Used existing translation keys for consistency
+    - **PDF Processing Workaround**: Implemented temporary PDF processing workaround due to library compatibility issues
+  - **Files Modified**:
+    - `src/app/[locale]/teacher/sources/page.tsx` (enhanced with direct source display and inline management)
+  - **Benefits**:
+    - **Improved Efficiency**: Reduced clicks from 3+ to 1 for viewing sources
+    - **Better UX**: More intuitive workflow for source management
+    - **Faster Workflow**: Immediate source visibility improves productivity
+    - **Maintained Functionality**: All existing features preserved while improving usability
+    - **Consistent Design**: Follows established design patterns and programming standards
+  - **Known Issues**:
+    - **PDF Processing**: Currently using temporary workaround due to `pdf-parse` library compatibility issues in development environment
+    - **Future Enhancement**: Will implement proper PDF text extraction once library issue is resolved
+  - **S3 Organization Improvement**:
+    - **Better File Organization**: Files now stored in `sources/{sourceId}/` instead of `sources/temp/`
+    - **Database-First Approach**: Create database record first, then upload to S3 with proper source ID
+    - **Error Handling**: Clean up database record if S3 upload fails
+    - **Improved Structure**: Each source gets its own folder for better organization
+  - **Automatic Source Linking**:
+    - **Auto-Link on Upload**: New sources are automatically linked to the selected skill when uploaded
+    - **Manual Unlinking**: Users can uncheck sources to unlink them from the skill
+    - **Clearer Button Text**: Changed button text to "Link/Unlink Sources to Skill" for better clarity
+    - **Improved UX**: No need to manually save after uploading - linking happens automatically
+- **Simplified Sources Management**: Implemented streamlined PDF-based sources system for enhanced AI integration
+  - **Database Schema Update**: Completely redesigned sources table for PDF-based RAG (Retrieval-Augmented Generation):
+    - Removed complex fields (source_type, url, doi, description) in favor of simplified structure
+    - Added PDF-specific fields: `pdf_s3_key`, `pdf_content_embeddings`, `pdf_processing_status`, `pdf_upload_date`, `pdf_file_size`
+    - Maintained backward compatibility with existing sources during migration
+    - Added proper indexing for performance optimization
+  - **New TypeScript Interfaces**: Created comprehensive type definitions in `src/lib/types.ts`:
+    - `Source`: Updated interface for simplified PDF-based approach
+    - `LegacySource`: Backward compatibility interface for migration
+    - `CreateSourcePayload`: Type-safe source creation payload
+    - `SourceUploadResponse`: API response types for upload operations
+    - `PDFProcessingStatus`: Status tracking for PDF processing
+  - **Simplified Sources Modal**: New `SimplifiedSourcesModal` component with streamlined UX:
+    - Only requires title, author, year, and PDF upload
+    - Real-time PDF processing status indicators
+    - File size validation and type checking
+    - Progress tracking for upload and processing operations
+    - Visual feedback for processing states (pending, processing, completed, failed)
+  - **Enhanced API Endpoints**: New and updated API routes for PDF handling:
+    - `/api/teacher/sources/upload`: New endpoint for PDF upload and source creation
+    - Updated existing sources endpoints to work with new schema
+    - File validation (PDF type, size limits up to 50MB)
+    - S3 integration preparation (currently simulated)
+    - Background processing queue preparation for text extraction and embeddings
+  - **Translation Support**: Added comprehensive translation keys for new functionality:
+    - English and Spanish translations for all new UI elements
+    - Processing status messages and user feedback
+    - File upload and validation messages
+  - **Migration Strategy**: Designed smooth transition from legacy to new system:
+    - Database migration script preserves existing data
+    - Backward compatibility maintained during transition
+    - Gradual migration path for existing sources
+  - **RAG Architecture Preparation**: Foundation for AI-enhanced feedback:
+    - PDF storage in S3 for scalable access
+    - Text extraction pipeline preparation
+    - Embedding generation for semantic search
+    - Retrieval-augmented generation for AI feedback
+  - **Files Added**:
+    - `database-schema-update-sources.sql` (new schema migration)
+    - `src/lib/types.ts` (comprehensive type definitions)
+    - `src/components/teacher/SimplifiedSourcesModal.tsx` (new simplified modal)
+    - `src/app/api/teacher/sources/upload/route.ts` (new upload endpoint)
+  - **Files Modified**:
+    - `src/app/api/teacher/sources/route.ts` (updated for new schema)
+    - `src/app/api/teacher/skills/[id]/sources/route.ts` (updated for new schema)
+    - `src/app/[locale]/teacher/sources/page.tsx` (updated to use new modal)
+    - `src/messages/en.json` and `src/messages/es.json` (new translation keys)
+  - **Benefits**:
+    - **User-Friendly**: Simplified interface reduces cognitive load for teachers
+    - **RAG-Ready**: Foundation for AI-powered feedback using actual source content
+    - **Scalable**: S3-based storage supports large PDF libraries
+    - **Maintainable**: Cleaner schema and codebase structure
+    - **Future-Proof**: Architecture supports advanced AI features
+    - **Performance**: Optimized database structure with proper indexing
+- **RAG-Enhanced AI Feedback System**: Implemented complete Retrieval-Augmented Generation (RAG) system for enhanced AI feedback
+  - **S3 Integration**: Complete AWS S3 integration for PDF storage and management:
+    - `src/lib/s3.ts`: Comprehensive S3 utilities for file upload, download, and management
+    - Secure file handling with presigned URLs for temporary access
+    - File validation and size limits (up to 50MB per PDF)
+    - Proper error handling and retry logic for S3 operations
+  - **PDF Processing Pipeline**: Advanced PDF text extraction and content analysis:
+    - `src/lib/pdfProcessor.ts`: Complete PDF processing utilities
+    - Text extraction with metadata preservation (title, author, creation date)
+    - Content sectioning and analysis (titles, headings, lists, body text)
+    - Key phrase extraction and content cleaning
+    - Processing time tracking and error handling
+  - **Embedding Generation System**: Semantic embedding generation for RAG:
+    - `src/lib/embeddings.ts`: OpenAI-powered embedding generation
+    - Intelligent text chunking with overlap for better context
+    - Batch processing to respect API rate limits
+    - Cosine similarity calculations for content matching
+    - Metadata preservation for source attribution
+  - **RAG-Enhanced AI Feedback API**: New endpoint for source-based feedback:
+    - `/api/ai/rag-feedback`: AI feedback using actual PDF content
+    - Semantic search across all sources for relevant content
+    - Source attribution with relevance scores
+    - Confidence scoring for feedback quality
+    - Constructive feedback generation based on source materials
+  - **Background Job System**: Asynchronous PDF processing for better UX:
+    - `src/lib/backgroundJobs.ts`: Job queue for PDF processing
+    - Progress tracking and status updates
+    - Error handling and retry logic
+    - Job cleanup and memory management
+  - **Enhanced Upload API**: Complete PDF processing pipeline:
+    - Updated `/api/teacher/sources/upload` with full processing
+    - Real-time status updates during processing
+    - Error handling and rollback on failures
+    - Integration with background job system
+  - **Environment Configuration**: Comprehensive setup for RAG system:
+    - AWS S3 configuration variables
+    - PDF processing settings
+    - OpenAI API integration
+    - File size and chunking parameters
+  - **Technical Architecture**:
+    - **Text Chunking**: Intelligent splitting with 1000-character chunks and 200-character overlap
+    - **Embedding Model**: OpenAI text-embedding-3-small for optimal performance
+    - **Similarity Search**: Cosine similarity for finding relevant content
+    - **Source Attribution**: Complete metadata tracking for academic integrity
+    - **Error Handling**: Comprehensive error handling at every step
+  - **Files Added**:
+    - `src/lib/s3.ts` (S3 utilities)
+    - `src/lib/pdfProcessor.ts` (PDF processing)
+    - `src/lib/embeddings.ts` (Embedding generation)
+    - `src/lib/backgroundJobs.ts` (Job system)
+    - `src/app/api/ai/rag-feedback/route.ts` (RAG feedback API)
+  - **Files Modified**:
+    - `src/app/api/teacher/sources/upload/route.ts` (enhanced with full processing)
+    - `env.example` (added S3 and RAG configuration)
+  - **Dependencies Added**:
+    - `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner` (S3 integration)
+    - `pdf-parse` (PDF text extraction)
+    - `openai` (embedding generation)
+  - **Benefits**:
+    - **Academic Integrity**: AI feedback now based on actual source materials
+    - **Enhanced Learning**: Students receive feedback grounded in authoritative sources
+    - **Scalable Storage**: S3-based architecture supports unlimited PDF storage
+    - **Real-time Processing**: Background jobs ensure responsive user experience
+    - **Source Attribution**: Complete tracking of which sources informed feedback
+    - **Quality Assurance**: Confidence scoring helps identify high-quality feedback
+    - **Future-Ready**: Architecture supports advanced features like semantic search and content recommendations
+- **Assessment Creation Info Box**: Added comprehensive information box to assessment creation page with detailed field explanations
+  - **Root Cause**: Teachers needed clear guidance on how to create effective assessments, especially regarding student-facing content and evaluation context
+  - **Solution**: Added hideable information box with detailed instructions for assessment creation and comprehensive field explanations
+  - **Features**: 
+    - Consistent styling with other teacher area info boxes (light yellow background, close button)
+    - Hideable box with show/hide toggle functionality
+    - Comprehensive explanation of assessment creation process
+    - Detailed explanations for each form field with character limits and usage guidelines
+    - Emphasis on student-friendly language for name and description
+    - Highlighted importance of evaluation context for AI case generation
+  - **Content**: 
+    - Step-by-step guide for assessment creation
+    - Stressed field explanations for Assessment Name & Description and Evaluation Context
+    - Detailed field explanations including:
+      - Assessment Name & Description (student-facing content)
+      - Difficulty & Educational Level selection
+      - Output Language for AI generation
+      - Evaluation Context importance and guidelines
+      - Questions per Skill configuration
+      - Availability dates and dispute period
+      - Integrity protection and teacher name display
+      - Skill selection and group assignment
+      - Case generation process
+    - Clear explanation that assessment name/description are visible to students
+    - Emphasis on evaluation context importance for AI-generated cases
+    - Instructions to include student characteristics, environment, and cultural features
+  - **UI**: Consistent design pattern with skills and domains pages, organized field explanations with bullet points and bold field names
+  - **Translation**: Added complete English and Spanish translations for all info box content and field explanations
+  - **Files Modified**: 
+    - `src/components/admin/AssessmentForm.tsx` (enhanced info box with stressed fields and detailed field explanations)
+    - `src/messages/en.json` (added comprehensive field explanations)
+    - `src/messages/es.json` (added Spanish translations for all field explanations)
+  - **Result**: Teachers now have comprehensive guidance on creating effective assessments with detailed understanding of each field's purpose and requirements, with special emphasis on critical fields
+- **Case Navigation System**: Implemented comprehensive case navigation functionality for student assessments
+  - **Database Schema**: Added new columns to `inteli_assessments` table:
+    - `case_sections` (JSON): Structured case content with context, main scenario, and questions sections
+    - `case_navigation_enabled` (BOOLEAN): Toggle to enable/disable case navigation
+    - `case_sections_metadata` (JSON): Metadata about case sections including titles and order
+  - **Student Interface**: Enhanced student attempt page with case navigation features:
+    - `CaseNavigationMenu`: Top navigation menu with clickable section links
+    - `CaseSectionViewer`: Enhanced case display with smooth scrolling and section highlighting
+    - Visual indicators for active sections and navigation progress
+    - "Back to top" functionality for easy navigation
+  - **Teacher Interface**: Added case section management for teachers:
+    - `CaseSectionEditor`: Comprehensive interface for managing case sections
+    - Toggle to enable/disable case navigation for students
+    - Auto-split functionality to divide existing case text into sections
+    - Manual editing of section titles and content
+    - Preview functionality to see how sections will appear to students
+  - **AI Integration**: Enhanced AI capabilities for case management:
+    - New `/api/ai/generate-questions` endpoint for AI-powered question generation
+    - Questions generation based on context and main scenario content
+    - Integration with existing skills and assessment parameters
+  - **API Updates**: Enhanced assessment APIs to support case navigation:
+    - Updated teacher assessment creation/editing to include case sections
+    - Updated student assessment loading to include navigation data
+    - JSON parsing for case sections and metadata
+  - **Translation Support**: Added comprehensive translation keys for case navigation:
+    - English and Spanish translations for all new functionality
+    - Context-aware terminology for different user roles
+  - **Backward Compatibility**: Maintained full compatibility with existing assessments:
+    - Existing cases continue to work without navigation
+    - Gradual migration path for teachers to enable navigation
+    - Fallback to original case text display when navigation is disabled
+  - **User Experience**: Improved student navigation through complex cases:
+    - Three-section structure: Context, Main Scenario, Questions
+    - Smooth scrolling between sections with visual feedback
+    - Section highlighting and progress tracking
+    - Intuitive navigation with Material-UI design patterns
+  - **Files Added**:
+    - `src/components/student/CaseNavigationMenu.tsx`
+    - `src/components/student/CaseSectionViewer.tsx`
+    - `src/components/teacher/CaseSectionEditor.tsx`
+    - `src/app/api/ai/generate-questions/route.ts`
+  - **Files Modified**:
+    - `src/app/[locale]/student/assessments/[id]/attempt/page.tsx`
+    - `src/components/admin/AssessmentForm.tsx`
+    - `src/app/api/teacher/assessments/route.ts`
+    - `src/app/api/student/assessments/[id]/route.ts`
+    - `src/messages/en.json` and `src/messages/es.json`
+  - **Benefits**:
+    - Improved student experience with better case organization
+    - Enhanced teacher control over case structure
+    - AI-assisted question generation for better assessment quality
+    - Scalable architecture for future navigation enhancements
+    - Maintains existing functionality while adding new features
+- **Documentation**: Comprehensive page documentation and comments added to all pages in `src/app/[locale]` folder
+- **Programming Standards**: Created comprehensive `programming_standards.md` documenting all coding patterns and conventions
+  - **Analysis Scope**: Thorough analysis of all files in `src/app` folder including pages, API routes, components, and utilities
+  - **Standards Documented**:
+    - Project Architecture (Next.js App Router with internationalization)
+    - Internationalization patterns (next-intl integration, locale switching, translation usage)
+    - Visual Design Standards (CSS design system, Material-UI integration, layout patterns)
+    - Component Patterns (client components, props interfaces, dynamic imports, form handling)
+    - API Design Patterns (route handlers, health checks, error handling)
+    - Database Patterns (connection pooling, retry logic, query functions)
+    - Authentication & Authorization (role system, session management, access control)
+    - AI Integration Patterns (OpenAI API integration, three-tier evaluation system, response parsing)
+    - Error Handling (API and frontend error patterns, error display)
+    - State Management (local state, data fetching, form state patterns)
+    - TypeScript Standards (type definitions, function annotations, API response types)
+    - File Organization (directory structure, component organization)
+    - Naming Conventions (files, variables, functions, database, API)
+    - Code Documentation (JSDoc comments, function documentation, inline comments)
+  - **Examples Included**: Real code examples from the codebase for each standard
+  - **Benefits**: 
+    - Establishes consistent coding patterns across the platform
+    - Provides clear guidelines for new developers
+    - Ensures maintainability and scalability
+    - Documents the sophisticated AI integration patterns
+    - Captures the three-role system architecture
+  - **Page Index**: Created `page_index.md` with complete overview of all pages, their purposes, and relationships
+  - **Page Comments**: Added detailed JSDoc comments to all pages explaining:
+    - Purpose and functionality of each page
+    - Connections and navigation flow to other pages
+    - Key features and capabilities
+    - User journey and navigation patterns
+    - System scope and role-specific functionality
+  - **Documentation Coverage**: 
+    - Root level pages (layout, landing page, reset password)
+    - Admin section (dashboard, login, assessments, attempts, etc.)
+    - Teacher section (dashboard, login, attempts, etc.)
+    - Student section (dashboard, login, assessment attempts, etc.)
+  - **Benefits**: 
+    - Improved code maintainability and understanding
+    - Clear documentation of page relationships and navigation flows
+    - Better onboarding for new developers
+    - Comprehensive overview of the three-role system (Admin, Teacher, Student)
+    - Documentation of the AI-powered assessment workflow
+- **Features**: Added two new columns to teacher domains page:
+  - Skills List column with icon to view skills associated with a domain (read-only)
+  - AI Suggestions column with icon to generate and save AI-powered skill suggestions for domains
+- **Features**: Enhanced create domain modal with multiple action options:
+  - "Create and go to skills page": Saves domain and redirects to skills page
+  - "Create and show me skills suggestions": Saves domain and opens AI suggestions modal
+  - "Create": Saves domain and stays on domains page
+- **API**: New `/api/ai/domain-skill-suggest` endpoint for generating skill suggestions based on domain name and description
+- **API**: New `/api/teacher/domains/[id]/skills` endpoint for managing domain skills (GET and POST)
+- **Components**: `DomainSkillsModal` component for viewing skills in a domain
+- **Components**: `DomainSkillSuggestionsModal` component for AI-generated skill suggestions with selection and save functionality
+- **Translations**: Added new translation keys for domains functionality in both English and Spanish
+
+### Fixed
+- **Case Section Splitting Bug**: Fixed issue where case navigation section splitting was failing due to conflicting ** markers
+  - **Root Cause**: The AI case generation was using ** markers for both section boundaries and bold text formatting, causing the section splitting logic to fail when ** was used for emphasis within section content
+  - **Solution**: Changed AI case generation to use new section markers (<<CONTEXT:>>, <<MAIN SCENARIO:>>, <<QUESTIONS:>>) and updated the splitting logic accordingly
+  - **Changes Made**:
+    - Updated AI prompts in `/api/ai/generate-case/route.ts` to use new section markers
+    - Completely rewrote `splitCaseTextIntoSections` function in `CaseSectionEditor.tsx` to use robust regex patterns that properly extract content between section markers
+    - Added support for both English and Spanish section markers
+    - Maintained backward compatibility with existing cases that don't use section navigation
+  - **Files Modified**:
+    - `src/app/api/ai/generate-case/route.ts` (updated AI prompts to use new section markers)
+    - `src/components/teacher/CaseSectionEditor.tsx` (updated section splitting logic)
+  - **Result**: Case navigation now works correctly without conflicts between section boundaries and bold text formatting, allowing teachers to enable case navigation for students without truncation issues
+
+### Added
+- **Intelligent Hints System**: Enhanced student feedback with structured hints for better learning outcomes
+  - **Root Cause**: Students needed more specific guidance when their responses were incomplete, but giving full answers would defeat the learning purpose
+  - **Solution**: Implemented intelligent hint generation system that provides targeted guidance without giving complete answers
+  - **Enhanced AI Prompts**: Updated evaluation prompts to include comprehensive hint generation instructions:
+    - **Hint Types**: Conceptual, methodological, analysis, and research-based hints
+    - **Source Integration**: Hints leverage assessment-specific sources and case solutions when available
+    - **Structured Guidance**: Maximum 2-3 hints per missing aspect to avoid overwhelming students
+    - **Critical Thinking Focus**: Hints designed to activate student thinking rather than provide direct answers
+  - **JSON Response Enhancement**: Extended AI response structure to include hints:
+    - New `hints` array in evaluation responses with `aspect` and `hint` properties
+    - Hints provided for "incomplete" and "improvable" evaluation types
+    - Hints not applicable for "final" evaluations (when assessment is complete)
+    - Validation ensures hints are properly structured and relevant
+  - **API Response Updates**: Enhanced student conversation API to include hints in responses:
+    - Hints included in API responses for incomplete/improvable evaluations
+    - Backward compatibility maintained for existing frontend implementations
+    - Proper error handling and fallback responses include empty hints array
+  - **Hint Generation Strategy**:
+    - **Conceptual Hints**: "Consider the concept of [concept] and how it applies to..."
+    - **Methodological Hints**: "Think about the process of [method] to address..."
+    - **Analysis Hints**: "Analyze the situation from the perspective of [approach]..."
+    - **Research Hints**: "According to [author/source], experts suggest considering..."
+  - **Educational Benefits**:
+    - **Guided Discovery**: Students discover answers through structured guidance
+    - **Critical Thinking**: Hints encourage deeper analysis and reasoning
+    - **Source Integration**: Hints reference academic sources for credibility
+    - **Personalized Learning**: Hints tailored to specific missing aspects
+    - **Confidence Building**: Gradual guidance helps students build confidence
+  - **Technical Implementation**:
+    - Enhanced `createEvaluationPrompt` function with hint generation instructions
+    - Updated `evaluateWithAI` function to validate hint structure
+    - Modified API response structure to include hints array
+    - Added comprehensive validation for hint format and content
+  - **Files Modified**:
+    - `src/app/api/student/attempts/[id]/conversation/route.ts` (enhanced with hint generation and validation)
+  - **Benefits**:
+    - **Better Learning Outcomes**: Students receive targeted guidance without complete answers
+    - **Academic Integrity**: Hints based on assessment-specific sources and case solutions
+    - **Improved Engagement**: Structured guidance keeps students motivated and engaged
+    - **Scalable System**: Hint generation works across all assessment types and skills
+    - **Quality Assurance**: Validation ensures hints are relevant and properly formatted
+- **Teacher Assessment Attempt Management**: Enhanced teacher assessment management with attempt-based editing restrictions
+  - **Attempt Count Display**: Added attempt count column to teacher assessments listing page showing number of attempts (in progress or completed) for each assessment
+  - **Conditional Editing**: Implemented smart editing system that shows different forms based on attempt status:
+    - **No Attempts**: Full editing capabilities with all fields editable (existing behavior)
+    - **Has Attempts**: Limited editing form that only allows modification of specific fields to preserve assessment integrity
+  - **Limited Edit Form**: New `LimitedAssessmentForm` component that allows editing only:
+    - `show_teacher_name`: Toggle for showing teacher name to students
+    - `integrity_protection`: Toggle for assessment integrity protection
+    - `available_until`: Assessment availability end date
+    - `dispute_period`: Number of days for dispute resolution
+    - `status`: Assessment status (Active/Inactive)
+  - **API Enhancement**: New `/api/teacher/assessments/[id]/limited` endpoint for handling limited assessment updates
+  - **Smart Navigation**: Edit button text changes to "Limited Edit" when assessment has attempts
+  - **Data Integrity**: Prevents modification of core assessment content (case text, skills, etc.) when attempts exist
+  - **User Experience**: Clear visual indicators and messaging about editing restrictions
+  - **Files Added**:
+    - `src/components/teacher/LimitedAssessmentForm.tsx` (new limited editing form)
+    - `src/app/api/teacher/assessments/[id]/limited/route.ts` (new API endpoint for limited updates)
+  - **Files Modified**:
+    - `src/app/api/teacher/assessments/route.ts` (added attempt count to assessment listing)
+    - `src/app/api/teacher/assessments/[id]/route.ts` (added attempt count to individual assessment endpoint)
+    - `src/app/[locale]/teacher/assessments/page.tsx` (added attempt count column to table)
+    - `src/app/[locale]/teacher/assessments/[id]/edit/page.tsx` (conditional form rendering)
+    - `src/app/[locale]/teacher/assessments/[id]/page.tsx` (added attempt count display and smart edit button)
+  - **Benefits**:
+    - Preserves assessment integrity when students have already attempted
+    - Provides clear feedback about editing restrictions
+    - Maintains flexibility for administrative changes (dates, settings)
+- **RAG-Enhanced Student Feedback**: Implemented complete source-aware feedback system using Retrieval-Augmented Generation
+  - **Source Content Analysis**: Student feedback now reads and analyzes actual PDF content from assessment-linked sources
+    - **Semantic Search**: Uses OpenAI embeddings to find most relevant content chunks from sources
+    - **Dynamic Content Extraction**: Extracts relevant content based on student's specific response
+    - **Multi-Source Integration**: Combines content from all assessment-linked sources
+    - **Relevance Scoring**: Ranks content chunks by similarity to student's response
+  - **Enhanced AI Evaluation**: Updated feedback system to use both case solutions and source content
+    - **Case Solution Integration**: AI compares student responses against the case reference solution
+    - **Source Content Integration**: AI uses actual PDF content for academic validation
+    - **Combined Evaluation**: Merges case solution and source content for comprehensive feedback
+    - **Fallback to General Knowledge**: Uses internet knowledge when no sources are available
+  - **Technical Implementation**:
+    - **RAG Pipeline**: Complete retrieval-augmented generation system for source content
+    - **Embedding Generation**: Creates embeddings for student responses and source content
+    - **Similarity Search**: Uses cosine similarity to find most relevant source chunks
+    - **Content Chunking**: Intelligent text chunking with metadata preservation
+    - **Error Handling**: Comprehensive error handling for embedding and content extraction
+  - **Enhanced Prompts**: Updated AI prompts to include relevant source content
+    - **Source Attribution**: Includes source title, author, and page information
+    - **Content Integration**: Seamlessly integrates source content into feedback context
+    - **Academic Validation**: Uses source content to validate student concepts and approaches
+    - **Citation Support**: Enables AI to reference specific source content in feedback
+  - **Files Modified**:
+    - `src/app/api/student/attempts/[id]/conversation/route.ts` (RAG-enhanced feedback with source content analysis)
+    - `src/app/api/student/assessments/[id]/route.ts` (updated to include PDF content embeddings)
+  - **Benefits**:
+    - **Academic Integrity**: Feedback based on actual source materials, not just metadata
+    - **Enhanced Learning**: Students receive feedback grounded in authoritative source content
+    - **Dynamic Context**: AI adapts feedback based on specific content relevant to student's response
+    - **Source Attribution**: Complete tracking of which source content informed feedback
+    - **Comprehensive Evaluation**: Combines case solutions and source content for better assessment
+    - **Scalable Architecture**: Supports unlimited sources with efficient content retrieval
+    - Improves data consistency and prevents assessment corruption
+    - Enhanced user experience with contextual editing options
+
+- **Teacher Domains API Database Error**: Fixed "Unknown column 'd.created_at' in 'field list'" error
+  - **Root Cause**: The teacher domains update API was trying to select `created_at` and `updated_at` columns that don't exist in the `inteli_domains` table
+  - **Solution**: Removed references to non-existent `d.created_at` and `d.updated_at` columns from the SELECT query and GROUP BY clause
+  - **File**: `src/app/api/teacher/domains/[id]/route.ts`
+  - **Result**: Domain updates now work correctly without database errors
+
 ### Enhanced
 - **Student Assessment Evaluation System**: Implemented three-tier evaluation system for improved student feedback
   - **Three-Tier System**: 
@@ -198,6 +711,88 @@ All notable changes to this project will be documented in this file.
   - **Result**: Restored the original working implementation that matches the API expectations
 
 - **Teacher Skill Levels AI Assistance**: Added AI-powered description generation
+
+- **Teacher Assessment Edit Route 404 Error**: Fixed 404 error when accessing teacher assessment edit page
+  - **Missing Route**: Created `/teacher/assessments/[id]/edit` page that was missing from the routing structure
+  - **AssessmentForm Integration**: New edit page uses the existing AssessmentForm component with `userType="teacher"` and `assessmentId` prop
+  - **View Page**: Also created `/teacher/assessments/[id]` view page for the view button functionality
+  - **Translation Support**: Added missing translation key `editAssessment` to both English and Spanish
+  - **Breadcrumb Navigation**: Added proper breadcrumb navigation from Dashboard > Assessments > Edit Assessment
+  - **API Enhancement**: Updated teacher assessment API to handle multiple skills and groups instead of single skill
+  - **Next.js Params Fix**: Fixed params Promise issue by using `React.use()` to unwrap params in both edit and view pages
+  - **Root Cause**: The teacher assessments page had an "Edit" button that navigated to `/teacher/assessments/[id]/edit`, but this route didn't exist
+  - **Solution**: Created the missing routes and enhanced the API to support the full assessment form functionality
+
+- **Teacher Pages Info Boxes and Translations**: Added comprehensive info boxes and Spanish translations for all teacher pages
+  - **Groups Page**: Added hideable info box explaining what groups are and their purpose
+  - **Users Page**: Added hideable info box explaining what students are and their role
+  - **Assessments Page**: Added hideable info box explaining what assessments are and their purpose
+  - **Attempts Page**: Added hideable info box explaining what attempts are and their components
+  - **Translation Keys**: Added comprehensive translation keys for all four pages in both English and Spanish
+  - **Consistent Design**: Implemented unified info box design pattern across all teacher pages
+  - **Features**: 
+    - Light yellow background with border
+    - Close button in top-right corner
+    - Show/hide toggle functionality
+    - Consistent styling and behavior
+  - **Translation Coverage**: All hardcoded English text replaced with translation keys
+  - **Result**: Improved user experience with helpful explanations and full Spanish language support
+  - **Root Cause**: Teachers needed assistance in creating meaningful skill level descriptions
+  - **Solution**: Integrated AI suggestion API with skill levels management page
+  - **Features**: "Generate with AI" button, context-based suggestions, language selection
+  - **UI**: Modal with context fields, suggestion display, and easy selection
+  - **API Integration**: Uses existing `/api/ai/skill-levels-suggest` endpoint
+  - **Result**: Teachers can now get AI-powered suggestions for skill level descriptions
+
+- **Teacher Skills Page Information Box**: Added hideable information box explaining what skills are
+  - **Root Cause**: Teachers needed clear explanation of what skills represent in the platform context
+  - **Solution**: Added light yellow information box below the "Skills" title with detailed explanation
+  - **Features**: Hideable box with close button, show/hide toggle, clear explanation of skills vs domains
+  - **Content**: Explains that skills are specific competencies within domains, with examples
+  - **UI**: Consistent styling with domains page info box, proper spacing and typography
+  - **Result**: Teachers now have clear understanding of what skills represent in the educational framework
+
+- **Teacher Skills Page Spanish Translation**: Added comprehensive Spanish translations for skills page
+  - **Root Cause**: Skills page was not fully translated to Spanish, missing many translation keys
+  - **Solution**: Added complete Spanish translations for all skills-related text in the page
+  - **Translation Keys Added**: 
+    - Page title, description, and info box content
+    - Search and filter labels
+    - Table headers and action buttons
+    - Dialog titles and form labels
+    - AI helper modal content
+    - Success/error messages and confirmations
+  - **Files Modified**: `src/messages/es.json` (added skills section)
+  - **Result**: Skills page is now fully translated to Spanish, providing consistent multilingual experience
+
+- **Information Box Design Pattern Standardization**: Standardized information box design across domains and skills pages
+  - **Root Cause**: Inconsistent information box designs between domains and skills pages (different borders, button positions, styling)
+  - **Solution**: Standardized both pages to use the same design pattern with consistent styling and behavior
+  - **Design Changes**:
+    - **Background**: Light yellow (`#fff3cd`) instead of darker yellow
+    - **Border**: Light yellow border (`#ffeaa7`) instead of orange border
+    - **Close Button**: Moved from top-right corner to inside box at bottom-left
+    - **Show Button**: Added below box when hidden (consistent with skills page)
+    - **Typography**: Standardized to H6 for title, body2 for description
+  - **Files Modified**: 
+    - `src/app/[locale]/teacher/domains/page.tsx` (updated to match skills pattern)
+    - `README.md` (added design pattern rules)
+  - **Documentation**: Added comprehensive design pattern rules to README for future consistency
+  - **Result**: Both pages now have identical information box design and behavior, establishing a platform-wide standard
+
+- **Teacher Dashboard Spanish Translation**: Fixed hardcoded English text in teacher dashboard
+  - **Root Cause**: Several sections in the teacher dashboard had hardcoded English text instead of using translation keys
+  - **Solution**: Added missing translation keys and updated the dashboard to use them
+  - **Translation Keys Added**:
+    - `academicContent`: "Contenido Académico" / "Academic Content"
+    - `academicContentDescription`: "Gestiona dominios educativos y habilidades" / "Manage educational domains and skills"
+    - `recentActivityDescription`: "Últimos intentos de estudiantes y actividades" / "Latest student attempts and activities"
+    - `attempted`: "intentó" / "attempted"
+  - **Files Modified**: 
+    - `src/messages/es.json` (added missing Spanish translations)
+    - `src/messages/en.json` (added missing English translations)
+    - `src/app/[locale]/teacher/dashboard/page.tsx` (updated to use translation keys)
+  - **Result**: Teacher dashboard is now fully translated to Spanish, providing consistent multilingual experience
   - **Feature**: "Generate with AI" button that creates comprehensive skill level descriptions
   - **API Integration**: Uses existing `/api/ai/skill-levels-suggest` endpoint
   - **Functionality**: Generates descriptions for all levels at once based on skill information
@@ -217,6 +812,21 @@ All notable changes to this project will be documented in this file.
 
 - **Teacher Groups API Fix**: Fixed validation error when creating/updating groups
   - **Root Cause**: API was expecting `institution_id` in request body, but frontend only sends `name` and `description`
+
+- **Teacher Domains Page Spanish Translations**: Added comprehensive Spanish translations for the domains page
+  - **Root Cause**: The teacher domains page had hardcoded English strings instead of using the translation system
+  - **Solution**: Added complete Spanish translations for all UI elements in the domains page
+  - **Translations Added**: 
+    - Page title, descriptions, and informational text
+    - Search functionality labels and placeholders
+    - Table headers and action buttons
+    - Dialog titles, form labels, and buttons
+    - Delete confirmation messages and warnings
+    - Toggle button for information box
+  - **Files Modified**: 
+    - `src/messages/es.json` (added domains section with 15+ translations)
+    - `src/app/[locale]/teacher/domains/page.tsx` (replaced all hardcoded strings with translation calls)
+  - **Result**: The domains page now fully supports Spanish localization with proper translations for all user-facing text
   - **Solution**: Modified API to use `institution_id` from request header instead of requiring it in body
   - **Endpoints Fixed**: `/api/teacher/groups` (POST) and `/api/teacher/groups/[id]` (PUT)
   - **Security**: Teachers can only create/update groups for their own institution (enforced by header)
@@ -1582,3 +2192,40 @@ All notable changes to this project will be documented in this file.
     - **Disabled source maps**: Set `productionBrowserSourceMaps: false` to reduce build time
     - **Disabled SWC minification**: Set `swcMinify: false` to use Terser instead (faster for this project)
   - **Result**: Dramatically reduced build context size and build time, should eliminate timeout issues
+
+### Added
+- Spanish translations for AssessmentForm component including step names, form labels, buttons, and error messages
+- Comprehensive translation coverage for teacher assessment creation workflow
+
+### Fixed
+- Teacher assessment create page now displays in Spanish when using Spanish locale
+- All hardcoded English text in AssessmentForm component replaced with translation keys
+
+### Added
+- **Multiple Skills Selection**: Teachers can now select up to 4 skills per assessment using checkboxes organized by domain
+- **Group Assignment**: Teachers can assign assessments to multiple groups of students during creation
+- **Integrity Protection**: Added switch to enable/disable copy-paste protection during student assessments (defaults to enabled)
+- **Enhanced Case Generation**: AI now generates comprehensive cases that cover all selected skills with more detailed content
+- **Improved Assessment Preview**: Shows all selected skills and groups in the preview step
+- **Spanish translations** for AssessmentForm component including step names, form labels, buttons, and error messages
+- **Comprehensive translation coverage** for teacher assessment creation workflow
+
+### Changed
+- **Skill Selection UI**: Replaced domain/skill dropdowns with organized skill selection by domain using switches
+- **Assessment Details Step**: Added group assignment and integrity protection controls
+- **Case Generation**: Updated AI prompts to handle multiple skills and generate more robust, comprehensive cases
+- **Form Validation**: Added validation for maximum 4 skills per assessment
+- **Database Integration**: Updated API to handle multiple skills and groups in assessment creation
+
+### Fixed
+- Teacher assessment create page now displays in Spanish when using Spanish locale
+- All hardcoded English text in AssessmentForm component replaced with translation keys
+- Assessment creation API now properly handles multiple skills and groups
+- AI case generation now works with multiple skills instead of single skill
+
+### Technical Details
+- Updated `AssessmentForm` component to support multiple skill and group selection
+- Modified teacher assessment creation API (`/api/teacher/assessments`) to handle arrays of skills and groups
+- Enhanced AI case generation API (`/api/ai/generate-case`) to create comprehensive cases for multiple skills
+- Added new translation keys for all new functionality
+- Updated database operations to insert multiple assessment-skill and assessment-group relationships

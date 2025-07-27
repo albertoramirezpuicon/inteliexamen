@@ -6,7 +6,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const attemptId = parseInt(params.id);
+    const { id } = await params;
+    const attemptId = parseInt(id);
     const teacherId = request.headers.get('x-user-id');
     const institutionId = request.headers.get('x-institution-id');
 

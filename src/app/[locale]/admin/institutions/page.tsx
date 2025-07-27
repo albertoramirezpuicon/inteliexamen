@@ -1,3 +1,35 @@
+/**
+ * ADMIN INSTITUTION MANAGEMENT PAGE
+ * 
+ * PURPOSE: System-wide institution management for administrators
+ * 
+ * CONNECTIONS:
+ * - Accessible from /admin/dashboard under Global Functions
+ * - Links to /admin/institutions/[id] for institution details
+ * - Uses InstitutionManagement component for CRUD operations
+ * - Foundation for user and group organization
+ * 
+ * KEY FEATURES:
+ * - Create, edit, and delete educational institutions
+ * - Institution-user relationship management
+ * - System organization and structure
+ * - Institution-specific data isolation
+ * - System-wide institution monitoring
+ * - Breadcrumb navigation for easy navigation
+ * 
+ * NAVIGATION FLOW:
+ * - Accessible from admin dashboard
+ * - Create button for new institution creation
+ * - View/Edit buttons for institution details
+ * - Back navigation to dashboard
+ * 
+ * SYSTEM SCOPE:
+ * - Manages institutions across the entire platform
+ * - Global institution configuration and control
+ * - Foundation for multi-institutional platform
+ * - Organizational structure administration
+ */
+
 'use client';
 
 import { Box, Typography, Breadcrumbs, Link } from '@mui/material';

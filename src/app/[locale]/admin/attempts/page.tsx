@@ -1,3 +1,36 @@
+/**
+ * ADMIN ATTEMPTS MONITORING PAGE
+ * 
+ * PURPOSE: System-wide attempt monitoring and management for administrators
+ * 
+ * CONNECTIONS:
+ * - Accessible from /admin/dashboard under Assessment Functions
+ * - Links to /admin/attempts/[id]/results for detailed results viewing
+ * - Filtering by institution and assessment
+ * - Breadcrumb navigation: Dashboard > Attempts
+ * 
+ * KEY FEATURES:
+ * - All assessment attempts across the platform
+ * - Filtering and search capabilities by institution and assessment
+ * - Attempt status monitoring (In Progress, Completed)
+ * - Detailed results viewing with skill-level assessments
+ * - Attempt deletion with confirmation
+ * - Cross-institutional attempt monitoring
+ * 
+ * NAVIGATION FLOW:
+ * - Accessible from admin dashboard
+ * - Filter attempts by institution and/or assessment
+ * - View detailed results for specific attempts
+ * - Delete attempts with confirmation dialog
+ * - Breadcrumb navigation for easy return
+ * 
+ * SYSTEM SCOPE:
+ * - Monitors attempts across all institutions
+ * - Global attempt tracking and management
+ * - Cross-institutional performance analysis
+ * - System-wide assessment effectiveness monitoring
+ */
+
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -532,34 +565,75 @@ export default function AdminAttemptsPage() {
               </Typography>
             ) : (
               <List>
-                {results.map((result, index) => (
-                  <React.Fragment key={result.id}>
-                    <ListItem>
-                      <ListItemText
-                        primary={
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Typography variant="subtitle1" fontWeight="medium">
-                              {result.skill_name}
-                            </Typography>
-                            <Chip
-                              label={result.skill_level_label}
-                              color="primary"
-                              size="small"
-                            />
-                          </Box>
-                        }
-                        secondary={
-                          <Box sx={{ mt: 1 }}>
-                            <Typography variant="body2" color="text.secondary" component="span">
-                              {result.feedback}
-                            </Typography>
-                          </Box>
-                        }
-                      />
-                    </ListItem>
-                    {index < results.length - 1 && <Divider />}
-                  </React.Fragment>
-                ))}
+                {results.map((result, index) => {
+                  // Calculate color based on skill level (assuming max 5 levels)
+                  const getResultColor = (skillLevelOrder: number, maxLevels: number = 5) => {
+                    const percentage = skillLevelOrder / maxLevels;
+                    if (percentage <= 0.2) return '#ffebee'; // Light red for lowest levels
+                    if (percentage <= 0.4) return '#ffcdd2'; // Red
+                    if (percentage <= 0.6) return '#ffb74d'; // Orange
+                    if (percentage <= 0.8) return '#81c784'; // Light green
+                    return '#4caf50'; // Green for highest levels
+                  };
+                  
+                  // Get border color based on skill level label
+                  const getBorderColor = (skillLevelLabel: string) => {
+                    const label = skillLevelLabel.toLowerCase();
+                    if (label.includes('starting') || label.includes('beginner') || label.includes('basic') || label.includes('inicial')) {
+                      return '#f44336'; // Darker red
+                    }
+                    if (label.includes('developing') || label.includes('intermediate') || label.includes('intermedio')) {
+                      return '#d32f2f'; // Dark red
+                    }
+                    if (label.includes('proficient') || label.includes('avanzado') || label.includes('competent')) {
+                      return '#f57c00'; // Dark orange
+                    }
+                    if (label.includes('advanced') || label.includes('expert') || label.includes('experto')) {
+                      return '#388e3c'; // Dark green
+                    }
+                    if (label.includes('master') || label.includes('excellent') || label.includes('excelente')) {
+                      return '#2e7d32'; // Darker green
+                    }
+                    return '#f44336'; // Darker red for unknown levels
+                  };
+                  
+                  const backgroundColor = getResultColor(result.skill_level_order || 1, 5);
+                  const borderColor = getBorderColor(result.skill_level_label);
+                  
+                  return (
+                    <React.Fragment key={result.id}>
+                      <ListItem sx={{ 
+                        backgroundColor, 
+                        borderRadius: 1, 
+                        mb: 1,
+                        border: `2px solid ${borderColor}`
+                      }}>
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Typography variant="subtitle1" fontWeight="medium">
+                                {result.skill_name}
+                              </Typography>
+                              <Chip
+                                label={result.skill_level_label}
+                                color="primary"
+                                size="small"
+                              />
+                            </Box>
+                          }
+                          secondary={
+                            <Box sx={{ mt: 1 }}>
+                              <Typography variant="body2" color="text.secondary" component="span">
+                                {result.feedback}
+                              </Typography>
+                            </Box>
+                          }
+                        />
+                      </ListItem>
+                      {index < results.length - 1 && <Divider />}
+                    </React.Fragment>
+                  );
+                })}
               </List>
             )}
           </DialogContent>

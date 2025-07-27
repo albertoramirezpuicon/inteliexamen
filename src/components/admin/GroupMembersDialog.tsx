@@ -51,17 +51,6 @@ export default function GroupMembersDialog({
   const [error, setError] = useState<string | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
 
-  // Load group members when dialog opens
-  useEffect(() => {
-    if (open && groupId) {
-      loadGroupMembers();
-    } else {
-      // Reset state when dialog closes
-      setMembers([]);
-      setError(null);
-    }
-  }, [open, groupId, loadGroupMembers]);
-
   const loadGroupMembers = useCallback(async () => {
     try {
       setLoading(true);
@@ -107,6 +96,17 @@ export default function GroupMembersDialog({
       setLoading(false);
     }
   }, [groupId]);
+
+  // Load group members when dialog opens
+  useEffect(() => {
+    if (open && groupId) {
+      loadGroupMembers();
+    } else {
+      // Reset state when dialog closes
+      setMembers([]);
+      setError(null);
+    }
+  }, [open, groupId, loadGroupMembers]);
 
   const handleClose = () => {
     if (!loading) {
@@ -212,12 +212,12 @@ export default function GroupMembersDialog({
                           }
                           secondary={
                             <Box>
-                              <Typography variant="body2" color="text.secondary">
+                              <Box component="span" sx={{ display: 'block', color: 'text.secondary', fontSize: '0.875rem' }}>
                                 {member.email}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
+                              </Box>
+                              <Box component="span" sx={{ display: 'block', color: 'text.secondary', fontSize: '0.75rem' }}>
                                 Member since: {formatDate(member.created_at)}
-                              </Typography>
+                              </Box>
                             </Box>
                           }
                         />

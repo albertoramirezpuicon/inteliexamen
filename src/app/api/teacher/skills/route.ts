@@ -26,12 +26,14 @@ export async function GET(request: NextRequest) {
         i.name as institution_name, 
         d.name as domain_name,
         COUNT(DISTINCT as2.assessment_id) as assessments_count,
-        COUNT(DISTINCT sl.id) as skill_levels_count
+        COUNT(DISTINCT sl.id) as skill_levels_count,
+        COUNT(DISTINCT iss.source_id) as sources_count
       FROM inteli_skills s
       LEFT JOIN inteli_institutions i ON s.institution_id = i.id
       LEFT JOIN inteli_domains d ON s.domain_id = d.id
       LEFT JOIN inteli_assessments_skills as2 ON s.id = as2.skill_id
       LEFT JOIN inteli_skills_levels sl ON s.id = sl.skill_id
+      LEFT JOIN inteli_skills_sources iss ON s.id = iss.skill_id
       WHERE s.institution_id = ?
     `;
     
@@ -123,12 +125,14 @@ export async function POST(request: NextRequest) {
         i.name as institution_name, 
         d.name as domain_name,
         COUNT(DISTINCT as2.assessment_id) as assessments_count,
-        COUNT(DISTINCT sl.id) as skill_levels_count
+        COUNT(DISTINCT sl.id) as skill_levels_count,
+        COUNT(DISTINCT iss.source_id) as sources_count
       FROM inteli_skills s
       LEFT JOIN inteli_institutions i ON s.institution_id = i.id
       LEFT JOIN inteli_domains d ON s.domain_id = d.id
       LEFT JOIN inteli_assessments_skills as2 ON s.id = as2.skill_id
       LEFT JOIN inteli_skills_levels sl ON s.id = sl.skill_id
+      LEFT JOIN inteli_skills_sources iss ON s.id = iss.skill_id
       WHERE s.id = ?
       GROUP BY s.id, s.institution_id, s.domain_id, s.name, s.description, i.name, d.name`,
       [result.insertId]

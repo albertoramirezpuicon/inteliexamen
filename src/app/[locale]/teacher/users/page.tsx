@@ -19,14 +19,17 @@ import {
   Breadcrumbs,
   Link,
   Avatar,
-  Alert
+  Alert,
+  Button,
+  IconButton
 } from '@mui/material';
 import { 
   Search as SearchIcon,
   People as PeopleIcon,
   Email as EmailIcon,
   CalendarToday as CalendarIcon,
-  Home as HomeIcon
+  Home as HomeIcon,
+  HelpOutline
 } from '@mui/icons-material';
 import Navbar from '@/components/layout/Navbar';
 import { useRouter } from 'next/navigation';
@@ -71,6 +74,9 @@ export default function TeacherUsersPage() {
 
   const [page, setPage] = useState(0);
   const [rowsPerPage] = useState(20);
+
+  // Info box state
+  const [showStudentInfo, setShowStudentInfo] = useState(true);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -242,16 +248,72 @@ export default function TeacherUsersPage() {
             <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
             {t('dashboard')}
           </Link>
-          <Typography color="text.primary">{t('students')}</Typography>
+          <Typography color="text.primary">{t('users.title')}</Typography>
         </Breadcrumbs>
 
+        <Typography variant="h4" gutterBottom>
+          {t('users.title')}
+        </Typography>
+        
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+          {t('users.description')}
+        </Typography>
+
+        {/* Students Info Box */}
+        {showStudentInfo && (
+          <Box
+            sx={{
+              backgroundColor: '#fff3cd',
+              border: '1px solid #ffeaa7',
+              borderRadius: 1,
+              p: 2,
+              mb: 3,
+              position: 'relative'
+            }}
+          >
+            <IconButton
+              size="small"
+              onClick={() => setShowStudentInfo(false)}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                color: 'text.secondary'
+              }}
+            >
+              <HelpOutline />
+            </IconButton>
+            <Typography variant="h6" sx={{ mb: 1, pr: 4 }}>
+              {t('users.whatIsStudent')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t('users.studentExplanation')}
+            </Typography>
+            <Button
+              size="small"
+              onClick={() => setShowStudentInfo(false)}
+              sx={{ mt: 1 }}
+            >
+              {t('users.hideInfo')}
+            </Button>
+          </Box>
+        )}
+
+        {!showStudentInfo && (
+          <Button
+            size="small"
+            startIcon={<HelpOutline />}
+            onClick={() => setShowStudentInfo(true)}
+            sx={{ mb: 3 }}
+          >
+            {t('users.showInfo')}
+          </Button>
+        )}
+
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1">
-            {t('students')}
-          </Typography>
           <Chip
             icon={<PeopleIcon />}
-            label={`${filteredStudents.length} students`}
+            label={t('users.studentsCount', { count: filteredStudents.length })}
             color="primary"
             variant="outlined"
           />
@@ -268,7 +330,7 @@ export default function TeacherUsersPage() {
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Search students..."
+              placeholder={t('users.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
@@ -286,14 +348,14 @@ export default function TeacherUsersPage() {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Student</TableCell>
+                  <TableCell>{t('users.student')}</TableCell>
                   <TableCell>
                     <TableSortLabel
                       active={sortField === 'email'}
                       direction={sortField === 'email' ? sortOrder : 'asc'}
                       onClick={() => handleSort('email')}
                     >
-                      Email
+                      {t('users.email')}
                     </TableSortLabel>
                   </TableCell>
                   <TableCell>
@@ -302,7 +364,7 @@ export default function TeacherUsersPage() {
                       direction={sortField === 'created_at' ? sortOrder : 'asc'}
                       onClick={() => handleSort('created_at')}
                     >
-                      Joined
+                      {t('users.joined')}
                     </TableSortLabel>
                   </TableCell>
                 </TableRow>
@@ -311,13 +373,13 @@ export default function TeacherUsersPage() {
                 {loading ? (
                   <TableRow>
                     <TableCell colSpan={3} align="center">
-                      <Typography>Loading students...</Typography>
+                      <Typography>{t('users.loadingStudents')}</Typography>
                     </TableCell>
                   </TableRow>
                 ) : filteredStudents.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={3} align="center">
-                      <Typography>No students found</Typography>
+                      <Typography>{t('users.noStudentsFound')}</Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -335,7 +397,7 @@ export default function TeacherUsersPage() {
                                 {student.given_name} {student.family_name}
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
-                                Student
+                                {t('users.student')}
                               </Typography>
                             </Box>
                           </Box>

@@ -1,3 +1,32 @@
+/**
+ * PASSWORD RESET PAGE
+ * 
+ * PURPOSE: Password reset functionality for all user types (Admin, Teacher, Student)
+ * 
+ * CONNECTIONS:
+ * - Accessed via email reset links with token parameter
+ * - Redirects to main landing page after successful reset
+ * - Supports all user roles (Admin, Teacher, Student)
+ * 
+ * KEY FEATURES:
+ * - Token-based password reset security
+ * - Form validation (password confirmation, minimum length)
+ * - Error handling and user feedback
+ * - Success confirmation with automatic redirect
+ * - Responsive design for all devices
+ * 
+ * NAVIGATION FLOW:
+ * - User clicks reset link from email
+ * - Token validation and password reset
+ * - Success feedback and redirect to landing page
+ * 
+ * SECURITY FEATURES:
+ * - Token validation before allowing reset
+ * - Password confirmation requirement
+ * - Minimum password length enforcement
+ * - Secure token handling
+ */
+
 'use client';
 
 import { useState, useEffect } from 'react';

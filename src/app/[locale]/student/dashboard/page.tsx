@@ -1,3 +1,36 @@
+/**
+ * STUDENT DASHBOARD - MAIN STUDENT HUB
+ * 
+ * PURPOSE: Student main dashboard showing available and completed assessments
+ * 
+ * CONNECTIONS:
+ * - Links to /student/assessments/[id]/attempt for taking assessments
+ * - Links to /student/assessments/[id]/results for viewing results
+ * - Links to /student/disputes for dispute management
+ * - Accessible after successful student login
+ * 
+ * KEY FEATURES:
+ * - Active and completed assessments display
+ * - Assessment status tracking (Available, In Progress, Completed)
+ * - Quick access to assessment attempts and results
+ * - Dispute period monitoring and access
+ * - Student-specific assessment overview
+ * 
+ * NAVIGATION FLOW:
+ * - Entry point after student login
+ * - View available assessments for participation
+ * - Access completed assessment results
+ * - Initiate disputes within dispute period
+ * - Continue in-progress assessments
+ * 
+ * STUDENT SCOPE:
+ * - Views assessments assigned to student's groups
+ * - Tracks personal assessment progress
+ * - Manages personal assessment results
+ * - Handles personal disputes and challenges
+ * - Monitors dispute periods for completed assessments
+ */
+
 'use client';
 
 import { Box, Typography, Paper, Card, CardContent, Avatar, Button, Chip, Tooltip } from '@mui/material';

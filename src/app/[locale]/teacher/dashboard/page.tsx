@@ -1,3 +1,34 @@
+/**
+ * TEACHER DASHBOARD - MAIN TEACHER HUB
+ * 
+ * PURPOSE: Teacher main dashboard with institution-specific functions and statistics
+ * 
+ * CONNECTIONS:
+ * - ASSESSMENT MANAGEMENT: Links to /teacher/assessments, /teacher/attempts
+ * - STUDENT MANAGEMENT: Links to /teacher/groups, /teacher/users
+ * - ACADEMIC MANAGEMENT: Links to /teacher/domains, /teacher/skills
+ * - Accessible after successful teacher login
+ * 
+ * KEY FEATURES:
+ * - Teacher-specific statistics and overview
+ * - Recent activity and attempt monitoring
+ * - Quick access to main teaching functions
+ * - Institution-specific data and management
+ * - Role-based access control for teacher functions
+ * 
+ * NAVIGATION FLOW:
+ * - Entry point after teacher login
+ * - Central hub for all teacher functions
+ * - Organized by functional categories
+ * 
+ * INSTITUTION SCOPE:
+ * - Manages students and groups within teacher's institution
+ * - Creates and manages assessments for assigned groups
+ * - Monitors assessment attempts and results
+ * - Manages domains and skills for educational content
+ * - Handles student disputes and grade adjustments
+ */
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -21,7 +52,8 @@ import {
   Category as CategoryIcon,
   Psychology as PsychologyIcon,
   Assignment as AssignmentIcon,
-  Assessment as AssessmentIcon
+  Assessment as AssessmentIcon,
+  Book as BookIcon
 } from '@mui/icons-material';
 import Navbar from '@/components/layout/Navbar';
 import { useRouter } from 'next/navigation';
@@ -158,14 +190,6 @@ export default function TeacherDashboard() {
       <Navbar userType="teacher" userName={getUserDisplayName()} />
       
       <Box sx={{ p: 3 }}>
-        <Breadcrumbs sx={{ mb: 2 }}>
-          <Typography color="text.primary">{t('dashboard')}</Typography>
-        </Breadcrumbs>
-        
-        <Typography variant="h4" gutterBottom>
-          {t('dashboard')}
-        </Typography>
-        
         <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
           {t('welcomeMessage', { name: getUserDisplayName() })}
         </Typography>
@@ -177,19 +201,16 @@ export default function TeacherDashboard() {
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           {t('assessmentManagementDescription')}
         </Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2, mb: 4 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 4 }}>
           <FunctionCard
-            title={t('assessments')}
-            description={t('assessmentsDescription', { 
-              total: stats?.totalAssessments || 0, 
-              active: stats?.activeAssessments || 0 
-            })}
-            icon={<AssignmentIcon />}
+            title={t('assessments.title')}
+            description={t('assessmentsDescription', { total: stats?.totalAssessments || 0, active: stats?.activeAssessments || 0 })}
+            icon={<AssessmentIcon />}
             onClick={() => router.push(`/${locale}/teacher/assessments`)}
-            color="#7b1fa2"
+            color="#4caf50"
           />
           <FunctionCard
-            title={t('attempts')}
+            title={t('attempts.title')}
             description={t('attemptsDescription', { total: stats?.totalAttempts || 0 })}
             icon={<AssessmentIcon />}
             onClick={() => router.push(`/${locale}/teacher/attempts`)}
@@ -204,16 +225,16 @@ export default function TeacherDashboard() {
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
           {t('studentManagementDescription')}
         </Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2, mb: 4 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 4 }}>
           <FunctionCard
-            title={t('groups')}
+            title={t('groups.title')}
             description={t('groupsDescription', { total: stats?.totalGroups || 0 })}
             icon={<GroupIcon />}
             onClick={() => router.push(`/${locale}/teacher/groups`)}
             color="#f57c00"
           />
           <FunctionCard
-            title={t('students')}
+            title={t('users.title')}
             description={t('studentsDescription', { total: stats?.totalStudents || 0 })}
             icon={<PeopleIcon />}
             onClick={() => router.push(`/${locale}/teacher/users`)}
@@ -223,25 +244,32 @@ export default function TeacherDashboard() {
 
         {/* Academic Content */}
         <Typography variant="h5" sx={{ mb: 2, mt: 4, color: '#ff6f00', fontWeight: 'bold' }}>
-          Academic Content
+          {t('academicContent')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Manage educational domains and skills
+          {t('academicContentDescription')}
         </Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 2, mb: 4 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 4 }}>
           <FunctionCard
-            title={t('domains')}
+            title={t('domains.title')}
             description={t('domainsDescription', { total: stats?.totalDomains || 0 })}
             icon={<CategoryIcon />}
             onClick={() => router.push(`/${locale}/teacher/domains`)}
             color="#ff6f00"
           />
           <FunctionCard
-            title={t('skills')}
+            title={t('skills.title')}
             description={t('skillsDescription', { total: stats?.totalSkills || 0 })}
             icon={<PsychologyIcon />}
             onClick={() => router.push(`/${locale}/teacher/skills`)}
             color="#0097a7"
+          />
+          <FunctionCard
+            title={t('sources.title')}
+            description={t('sources.description')}
+            icon={<BookIcon />}
+            onClick={() => router.push(`/${locale}/teacher/sources`)}
+            color="#8e24aa"
           />
         </Box>
 
@@ -252,7 +280,7 @@ export default function TeacherDashboard() {
               {t('recentActivity')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-              Latest student attempts and activities
+              {t('recentActivityDescription')}
             </Typography>
             <Card sx={{ mb: 4 }}>
               <CardContent>
@@ -272,7 +300,7 @@ export default function TeacherDashboard() {
                                 {attempt.student_name}
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
-                                attempted
+                                {t('attempted')}
                               </Typography>
                               <Typography variant="body1" fontWeight="medium">
                                 {attempt.assessment_name}
@@ -319,6 +347,7 @@ function FunctionCard({ title, description, icon, onClick, color }: FunctionCard
         display: 'flex', 
         flexDirection: 'column',
         height: '100%',
+        minHeight: { xs: 'auto', md: '140px' },
         transition: 'transform 0.2s, box-shadow 0.2s',
         '&:hover': {
           transform: 'translateY(-4px)',
@@ -341,12 +370,12 @@ function FunctionCard({ title, description, icon, onClick, color }: FunctionCard
           flexDirection: 'column',
           alignItems: 'center',
           textAlign: 'center',
-          p: 3
+          p: { xs: 2, md: 1.5 }
         }}>
           <Box sx={{ 
             color: color,
-            mb: 2,
-            '& svg': { fontSize: 48 }
+            mb: { xs: 1.5, md: 1 },
+            '& svg': { fontSize: { xs: 40, md: 32 } }
           }}>
             {icon}
           </Box>
@@ -362,7 +391,8 @@ function FunctionCard({ title, description, icon, onClick, color }: FunctionCard
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
               lineHeight: 1.2,
-              mb: 1
+              mb: 0.5,
+              fontSize: { xs: '1rem', md: '0.875rem' }
             }}
           >
             {title}
@@ -377,8 +407,9 @@ function FunctionCard({ title, description, icon, onClick, color }: FunctionCard
               WebkitLineClamp: 3,
               WebkitBoxOrient: 'vertical',
               lineHeight: 1.4,
-              minHeight: '4.2em', // 3 lines * 1.4 line height
-              flexGrow: 1
+              minHeight: { xs: '4.2em', md: '3.9em' }, // Adjusted for smaller text
+              flexGrow: 1,
+              fontSize: { xs: '0.875rem', md: '0.75rem' }
             }}
           >
             {description}

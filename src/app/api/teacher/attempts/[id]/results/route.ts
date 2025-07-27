@@ -19,6 +19,7 @@ export async function GET(
         r.id,
         s.name as skill_name,
         l.label as skill_level_label,
+        l.\`order\` as skill_level_order,
         r.feedback
       FROM inteli_assessments_results r
       JOIN inteli_skills s ON r.skill_id = s.id

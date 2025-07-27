@@ -4,10 +4,11 @@ import { query, deleteQuery } from '@/lib/db';
 // DELETE - Delete a specific attempt
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const attemptId = parseInt(params.id);
+    const { id } = await params;
+    const attemptId = parseInt(id);
     
     if (isNaN(attemptId)) {
       return NextResponse.json(

@@ -4,10 +4,11 @@ import { query } from '@/lib/db';
 // GET - Get results for a specific attempt
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const attemptId = parseInt(params.id);
+    const { id } = await params;
+    const attemptId = parseInt(id);
     
     if (isNaN(attemptId)) {
       return NextResponse.json(

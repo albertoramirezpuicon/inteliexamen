@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Box,
   Button,
@@ -39,10 +39,12 @@ import {
   Layers,
   HelpOutline,
   Home as HomeIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
+  Book
 } from '@mui/icons-material';
 import { useTranslations, useLocale } from 'next-intl';
 import Navbar from '@/components/layout/Navbar';
+import SkillSourcesModal from '@/components/teacher/SkillSourcesModal';
 
 const LANGUAGES = [
   { value: 'en', label: 'English' },
@@ -78,6 +80,7 @@ interface Skill {
   domain_name: string;
   assessments_count: number;
   skill_levels_count: number;
+  sources_count?: number;
 }
 
 interface Domain {
@@ -91,6 +94,7 @@ type SortOrder = 'asc' | 'desc';
 
 export default function TeacherSkillsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const locale = useLocale();
   const t = useTranslations('teacher');
   
@@ -108,14 +112,18 @@ export default function TeacherSkillsPage() {
   // Filters and sorting
   const [searchTerm, setSearchTerm] = useState('');
   const [domainFilter, setDomainFilter] = useState('');
-  const [sortField] = useState<SortField>('name');
-  const [sortOrder] = useState<SortOrder>('asc');
+  const [sortField, setSortField] = useState<SortField>('name');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   
   // Dialog states
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [skillToDelete, setSkillToDelete] = useState<Skill | null>(null);
+  
+  // Sources modal state
+  const [sourcesModalOpen, setSourcesModalOpen] = useState(false);
+  const [selectedSkillForSources, setSelectedSkillForSources] = useState<Skill | null>(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -135,6 +143,9 @@ export default function TeacherSkillsPage() {
     context: '',
     language: 'es',
   });
+
+  // Info box state
+  const [showSkillInfo, setShowSkillInfo] = useState(true);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -165,6 +176,18 @@ export default function TeacherSkillsPage() {
 
     initializeData();
   }, [router, locale]);
+
+  // Handle success message from URL
+  useEffect(() => {
+    const successMessage = searchParams.get('success');
+    if (successMessage) {
+      setError(decodeURIComponent(successMessage));
+      // Clear the success parameter from URL
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('success');
+      window.history.replaceState({}, '', newUrl.toString());
+    }
+  }, [searchParams]);
 
   const fetchSkills = useCallback(async () => {
     try {
@@ -448,11 +471,13 @@ export default function TeacherSkillsPage() {
       }
 
       const data = await response.json();
-      setError(data.message || 'Skill deleted successfully');
-
+      
+      // Close the delete dialog and clear the skill to delete
       setDeleteDialogOpen(false);
       setSkillToDelete(null);
-      fetchSkills();
+      
+      // Redirect immediately to skills page with success message
+      router.push(`/${locale}/teacher/skills?success=${encodeURIComponent(data.message || 'Skill deleted successfully')}`);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to delete skill');
     }
@@ -460,6 +485,21 @@ export default function TeacherSkillsPage() {
 
   const handleManageLevels = (skill: Skill) => {
     router.push(`/${locale}/teacher/skills/${skill.id}/levels`);
+  };
+
+  const handleManageSources = (skill: Skill) => {
+    setSelectedSkillForSources(skill);
+    setSourcesModalOpen(true);
+  };
+
+  const handleSourcesModalClose = () => {
+    setSourcesModalOpen(false);
+    setSelectedSkillForSources(null);
+  };
+
+  const handleSourcesSaved = () => {
+    // Refresh the skills list to show updated source counts if needed
+    fetchSkills();
   };
 
   const getUserDisplayName = () => {
@@ -523,27 +563,78 @@ export default function TeacherSkillsPage() {
             <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
             {t('dashboard')}
           </Link>
-          <Typography color="text.primary">{t('skills')}</Typography>
+          <Typography color="text.primary">{t('skills.title')}</Typography>
         </Breadcrumbs>
         
         <Typography variant="h4" gutterBottom>
-          {t('skills')}
+          {t('skills.title')}
         </Typography>
         
         <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-          Manage educational skills in your institution
+          {t('skills.description')}
         </Typography>
+
+        {/* Skills Info Box */}
+        {showSkillInfo && (
+          <Box
+            sx={{
+              backgroundColor: '#fff3cd',
+              border: '1px solid #ffeaa7',
+              borderRadius: 1,
+              p: 2,
+              mb: 3,
+              position: 'relative'
+            }}
+          >
+            <IconButton
+              size="small"
+              onClick={() => setShowSkillInfo(false)}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                color: 'text.secondary'
+              }}
+            >
+              <HelpOutline />
+            </IconButton>
+            <Typography variant="h6" sx={{ mb: 1, pr: 4 }}>
+              {t('skills.whatIsSkill')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t('skills.skillExplanation')}
+            </Typography>
+            <Button
+              size="small"
+              onClick={() => setShowSkillInfo(false)}
+              sx={{ mt: 1 }}
+            >
+              {t('skills.hideInfo')}
+            </Button>
+          </Box>
+        )}
+
+        {!showSkillInfo && (
+          <Button
+            size="small"
+            startIcon={<HelpOutline />}
+            onClick={() => setShowSkillInfo(true)}
+            sx={{ mb: 3 }}
+          >
+            {t('skills.showInfo')}
+          </Button>
+        )}
 
         {/* Search and Add */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <TextField
-              label="Search skills"
+              label={t('skills.searchSkills')}
               variant="outlined"
               size="small"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by name, description, or domain..."
+              placeholder={t('skills.searchPlaceholder')}
               sx={{ minWidth: 300 }}
               InputProps={{
                 startAdornment: (
@@ -555,13 +646,13 @@ export default function TeacherSkillsPage() {
             />
             
             <FormControl size="small" sx={{ minWidth: 200 }}>
-              <InputLabel>Filter by Domain</InputLabel>
+              <InputLabel>{t('skills.filterByDomain')}</InputLabel>
               <Select
                 value={domainFilter}
                 onChange={(e) => setDomainFilter(e.target.value)}
-                label="Filter by Domain"
+                label={t('skills.filterByDomain')}
               >
-                <MenuItem value="">All Domains</MenuItem>
+                <MenuItem value="">{t('skills.allDomains')}</MenuItem>
                 {domains.map((domain) => (
                   <MenuItem key={domain.id} value={domain.id.toString()}>
                     {domain.name}
@@ -576,13 +667,13 @@ export default function TeacherSkillsPage() {
             startIcon={<Add />}
             onClick={() => handleOpenDialog()}
           >
-            Add Skill
+            {t('skills.addSkill')}
           </Button>
         </Box>
 
         {/* Results count */}
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Showing {paginatedSkills.length} of {filteredSkills.length} skills
+          {t('skills.showingResults', { current: paginatedSkills.length, total: filteredSkills.length })}
         </Typography>
 
         {/* Table */}
@@ -599,7 +690,7 @@ export default function TeacherSkillsPage() {
                     direction={sortField === 'name' ? sortOrder : 'asc'}
                     sx={{ cursor: 'pointer' }}
                   >
-                    Skill Name
+                    {t('skills.skillName')}
                   </TableSortLabel>
                 </TableCell>
                 <TableCell 
@@ -611,7 +702,7 @@ export default function TeacherSkillsPage() {
                     direction={sortField === 'description' ? sortOrder : 'asc'}
                     sx={{ cursor: 'pointer' }}
                   >
-                    Description
+                    {t('skills.description')}
                   </TableSortLabel>
                 </TableCell>
                 <TableCell 
@@ -623,7 +714,7 @@ export default function TeacherSkillsPage() {
                     direction={sortField === 'domain_name' ? sortOrder : 'asc'}
                     sx={{ cursor: 'pointer' }}
                   >
-                    Domain
+                    {t('skills.domain')}
                   </TableSortLabel>
                 </TableCell>
                 <TableCell 
@@ -635,7 +726,7 @@ export default function TeacherSkillsPage() {
                     direction={sortField === 'assessments_count' ? sortOrder : 'asc'}
                     sx={{ cursor: 'pointer' }}
                   >
-                    Assessments
+                    {t('skills.assessments')}
                   </TableSortLabel>
                 </TableCell>
                 <TableCell 
@@ -647,10 +738,11 @@ export default function TeacherSkillsPage() {
                     direction={sortField === 'skill_levels_count' ? sortOrder : 'asc'}
                     sx={{ cursor: 'pointer' }}
                   >
-                    Skill Levels
+                    {t('skillLevels.title')}
                   </TableSortLabel>
                 </TableCell>
-                <TableCell>Actions</TableCell>
+                <TableCell>{t('skills.sources')}</TableCell>
+                <TableCell>{t('skills.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -671,7 +763,15 @@ export default function TeacherSkillsPage() {
                       label={skill.skill_levels_count} 
                       size="small"
                       color={skill.skill_levels_count > 0 ? "success" : "default"}
-                      title={skill.skill_levels_count > 0 ? "Skill levels configured" : "No skill levels configured"}
+                      title={skill.skill_levels_count > 0 ? t('skills.skillLevelsConfigured') : t('skills.noSkillLevelsConfigured')}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={skill.sources_count || 0} 
+                      size="small"
+                      color={skill.sources_count && skill.sources_count > 0 ? "info" : "default"}
+                      title={skill.sources_count && skill.sources_count > 0 ? `${skill.sources_count} sources configured` : 'No sources configured'}
                     />
                   </TableCell>
                   <TableCell>
@@ -679,16 +779,24 @@ export default function TeacherSkillsPage() {
                       size="small"
                       onClick={() => handleManageLevels(skill)}
                       color="primary"
-                      title="Manage Skill Levels"
+                      title={t('skills.manageSkillLevels')}
                     >
                       <Layers />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleManageSources(skill)}
+                      color="secondary"
+                      title={t('skills.manageSources')}
+                    >
+                      <Book />
                     </IconButton>
                     <IconButton
                       size="small"
                       onClick={() => handleOpenDialog(skill)}
                       color="primary"
                       disabled={skill.assessments_count > 0}
-                      title={skill.assessments_count > 0 ? "Cannot edit skill used in assessments" : "Edit skill"}
+                      title={skill.assessments_count > 0 ? t('skills.cannotEditSkillUsedInAssessments') : t('skills.editSkill')}
                     >
                       <Edit />
                     </IconButton>
@@ -697,7 +805,7 @@ export default function TeacherSkillsPage() {
                       onClick={() => handleDelete(skill)}
                       color="error"
                       disabled={skill.assessments_count > 0}
-                      title={skill.assessments_count > 0 ? "Cannot delete skill used in assessments" : "Delete skill"}
+                      title={skill.assessments_count > 0 ? t('skills.deleteWarning', { count: skill.assessments_count }) : t('skills.delete')}
                     >
                       <Delete />
                     </IconButton>
@@ -724,18 +832,18 @@ export default function TeacherSkillsPage() {
       </Box>
 
       {/* Add/Edit Dialog */}
-      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
         <DialogTitle>
-          {editingSkill ? 'Edit Skill' : 'Add New Skill'}
+          {editingSkill ? t('skills.editSkill') : t('skills.addNewSkill')}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
             <FormControl fullWidth margin="normal" required>
-              <InputLabel>Domain</InputLabel>
+              <InputLabel>{t('skills.domain')}</InputLabel>
               <Select
                 value={formData.domain_id}
                 onChange={(e) => setFormData(prev => ({ ...prev, domain_id: e.target.value }))}
-                label="Domain"
+                label={t('skills.domain')}
               >
                 {domains.map((domain) => (
                   <MenuItem key={domain.id} value={domain.id.toString()}>
@@ -746,7 +854,7 @@ export default function TeacherSkillsPage() {
             </FormControl>
             <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
               <TextField
-                label="Skill Name"
+                label={t('skills.skillNameLabel')}
                 fullWidth
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
@@ -754,57 +862,56 @@ export default function TeacherSkillsPage() {
                 required
               />
               <Button variant="text" startIcon={<HelpOutline />} onClick={() => openAiModal('name')} sx={{ mb: 0.5 }}>
-                Need help?
+                {t('skills.generateWithAI')}
               </Button>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1 }}>
               <TextField
-                label="Description"
+                label={t('skills.skillDescriptionLabel')}
                 fullWidth
                 multiline
-                rows={3}
+                rows={10}
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 margin="normal"
                 required
               />
               <Button variant="text" startIcon={<HelpOutline />} onClick={() => openAiModal('description')} sx={{ mb: 0.5 }}>
-                Need help?
+                {t('skills.generateWithAI')}
               </Button>
             </Box>
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleCloseDialog}>{t('skills.cancel')}</Button>
           <Button onClick={handleSubmit} variant="contained">
-            {editingSkill ? 'Update' : 'Create'}
+            {editingSkill ? t('skills.update') : t('skills.create')}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogTitle>{t('skills.confirmDelete')}</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete the skill &quot;{skillToDelete?.name}&quot;? 
+            {t('skills.deleteConfirmation', { name: skillToDelete?.name })} 
             {skillToDelete?.assessments_count > 0 && (
               <Alert severity="warning" sx={{ mt: 2 }}>
-                This skill is used in {skillToDelete.assessments_count} assessment(s). 
-                You cannot delete a skill that is used in assessments.
+                {t('skills.deleteWarning', { count: skillToDelete.assessments_count })}
               </Alert>
             )}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDeleteDialogOpen(false)}>{t('skills.cancel')}</Button>
           <Button 
             onClick={confirmDelete} 
             color="error" 
             variant="contained"
             disabled={skillToDelete?.assessments_count > 0}
           >
-            Delete
+            {t('skills.delete')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -821,6 +928,17 @@ export default function TeacherSkillsPage() {
         onPick={handleAiPick}
         onClose={closeAiModal}
       />
+
+      {/* Sources Management Modal */}
+      {selectedSkillForSources && (
+        <SkillSourcesModal
+          open={sourcesModalOpen}
+          skillId={selectedSkillForSources.id}
+          skillName={selectedSkillForSources.name}
+          onClose={handleSourcesModalClose}
+          onSave={handleSourcesSaved}
+        />
+      )}
     </Box>
   );
 }
@@ -838,6 +956,7 @@ interface AiHelperModalProps {
 }
 
 function AiHelperModal({ open, type, context, loading, suggestions, error, onSuggest, onPick, onClose }: AiHelperModalProps) {
+  const t = useTranslations('teacher');
   const [localContext, setLocalContext] = React.useState(context);
   React.useEffect(() => { setLocalContext(context); }, [context, open]);
   // Only allow Get Suggestions if all context fields are filled
@@ -845,7 +964,7 @@ function AiHelperModal({ open, type, context, loading, suggestions, error, onSug
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        {type === 'name' ? 'Need help with Skill Name?' : 'Need help with Skill Description?'}
+        {type === 'name' ? t('skills.aiHelper') + ' - ' + t('skills.skillNameLabel') : t('skills.aiHelper') + ' - ' + t('skills.skillDescriptionLabel')}
       </DialogTitle>
       <DialogContent>
         <Box sx={{
@@ -855,10 +974,10 @@ function AiHelperModal({ open, type, context, loading, suggestions, error, onSug
           mb: 2,
           border: theme => `1px solid ${theme.palette.info.main}`
         }}>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>Skill Context (required for AI help)</Typography>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('skills.aiHelperDescription')}</Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
-              label="Rough Idea"
+              label={t('skills.context')}
               value={localContext.idea}
               onChange={e => setLocalContext(c => ({ ...c, idea: e.target.value.slice(0, 200) }))}
               inputProps={{ maxLength: 200 }}
@@ -869,18 +988,18 @@ function AiHelperModal({ open, type, context, loading, suggestions, error, onSug
               minRows={3}
             />
             <FormControl required fullWidth>
-              <InputLabel id="level-label">Instructional Level</InputLabel>
+              <InputLabel id="level-label">{t('skills.educationalLevel')}</InputLabel>
               <Select
                 labelId="level-label"
                 value={localContext.level}
-                label="Instructional Level"
+                label={t('skills.educationalLevel')}
                 onChange={e => setLocalContext(c => ({ ...c, level: e.target.value }))}
               >
                 {LEVELS.map(l => <MenuItem key={l} value={l}>{l}</MenuItem>)}
               </Select>
             </FormControl>
             <TextField
-              label="Educational Context"
+              label={t('skills.additionalContext')}
               value={localContext.context}
               onChange={e => setLocalContext(c => ({ ...c, context: e.target.value.slice(0, 200) }))}
               inputProps={{ maxLength: 200 }}
@@ -891,11 +1010,11 @@ function AiHelperModal({ open, type, context, loading, suggestions, error, onSug
               minRows={3}
             />
             <FormControl required fullWidth>
-              <InputLabel id="lang-label">Output Language</InputLabel>
+              <InputLabel id="lang-label">{t('skills.language')}</InputLabel>
               <Select
                 labelId="lang-label"
                 value={localContext.language}
-                label="Output Language"
+                label={t('skills.language')}
                 onChange={e => setLocalContext(c => ({ ...c, language: e.target.value }))}
               >
                 {LANGUAGES.map(l => <MenuItem key={l.value} value={l.value}>{l.label}</MenuItem>)}
@@ -920,23 +1039,23 @@ function AiHelperModal({ open, type, context, loading, suggestions, error, onSug
           fullWidth
           sx={{ mb: 2 }}
         >
-          {loading ? 'Getting suggestions...' : 'Get Suggestions'}
+          {loading ? t('skills.generateSuggestions') + '...' : t('skills.generateSuggestions')}
         </Button>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {suggestions.length > 0 && (
           <Box>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>Suggestions</Typography>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>{t('skills.selectSuggestion')}</Typography>
             {suggestions.map((s, i) => (
               <Paper key={i} sx={{ p: 2, mb: 1, cursor: 'pointer', '&:hover': { backgroundColor: 'action.hover' } }} onClick={() => onPick(s)}>
                 {s}
               </Paper>
             ))}
-            <Typography variant="caption" color="text.secondary">Click a suggestion to use it</Typography>
+            <Typography variant="caption" color="text.secondary">{t('skills.selectSuggestion')}</Typography>
           </Box>
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('skills.cancel')}</Button>
       </DialogActions>
     </Dialog>
   );

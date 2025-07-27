@@ -4,10 +4,11 @@ import { query, deleteQuery } from '@/lib/db';
 // GET - Get groups for a specific assessment (restricted to teacher's assessments)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const assessmentId = parseInt(params.id);
+    const { id } = await params;
+    const assessmentId = parseInt(id);
     
     // Get user info from headers (set by middleware)
     const userId = request.headers.get('x-user-id');
@@ -75,10 +76,11 @@ export async function GET(
 // POST - Add groups to assessment
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const assessmentId = parseInt(params.id);
+    const { id } = await params;
+    const assessmentId = parseInt(id);
     const { groupIds } = await request.json();
     
     // Get user info from headers (set by middleware)
@@ -171,10 +173,11 @@ export async function POST(
 // DELETE - Remove groups from assessment
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const assessmentId = parseInt(params.id);
+    const { id } = await params;
+    const assessmentId = parseInt(id);
     const { searchParams } = new URL(request.url);
     const groupIdsParam = searchParams.get('groupIds');
     

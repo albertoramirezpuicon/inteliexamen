@@ -373,6 +373,75 @@ const [availableStudents, setAvailableStudents] = useState([]);
 #### 14. **Regular Code Audits**
 **Rule**: Schedule regular code audits to identify and fix accumulated technical debt.
 
+### UI/UX Design Pattern Rules
+
+#### 15. **Information Box Design Pattern**
+**Rule**: All information boxes explaining concepts (domains, skills, etc.) must follow this standardized design pattern:
+
+```typescript
+// ✅ CORRECT - Standardized Information Box Pattern
+{showInfo && (
+  <Box
+    sx={{
+      backgroundColor: '#fff3cd',
+      border: '1px solid #ffeaa7',
+      borderRadius: 1,
+      p: 2,
+      mb: 3,
+      position: 'relative'
+    }}
+  >
+    <IconButton
+      size="small"
+      onClick={() => setShowInfo(false)}
+      sx={{
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        color: 'text.secondary'
+      }}
+    >
+      <HelpOutline />
+    </IconButton>
+    <Typography variant="h6" sx={{ mb: 1, pr: 4 }}>
+      {t('section.whatIsConcept')}
+    </Typography>
+    <Typography variant="body2" color="text.secondary">
+      {t('section.conceptExplanation')}
+    </Typography>
+    <Button
+      size="small"
+      onClick={() => setShowInfo(false)}
+      sx={{ mt: 1 }}
+    >
+      {t('section.hideInfo')}
+    </Button>
+  </Box>
+)}
+
+{!showInfo && (
+  <Button
+    size="small"
+    startIcon={<HelpOutline />}
+    onClick={() => setShowInfo(true)}
+    sx={{ mb: 3 }}
+  >
+    {t('section.showInfo')}
+  </Button>
+)}
+```
+
+**Design Requirements**:
+- **Background**: Light yellow (`#fff3cd`)
+- **Border**: Light yellow border (`#ffeaa7`)
+- **Close Button**: Positioned in top-right corner with HelpOutline icon
+- **Hide Button**: Inside the box at bottom-left
+- **Show Button**: Below the box when hidden
+- **Typography**: H6 for title, body2 for description
+- **Spacing**: Proper margins and padding for readability
+
+**Rule**: Use this exact pattern for all information boxes across the platform to maintain consistency.
+
 ### Summary of Code Quality Improvements
 
 These rules were established after fixing:
@@ -459,6 +528,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] CI/CD pipeline tested
 - [ ] Performance testing completed
 - [ ] Security audit performed
+
+## Info Boxes for Teacher Pages
+
+All teacher pages for skills, domains, groups, users, assessments, attempts, and skill levels include a hideable info box at the top of the main content area. The info box uses a light yellow background (`#FFF9E5`), a border (`#FFE082`), and a close button inside the box at the bottom left. When hidden, a 'Show Info' button appears below the box. The info box content is fully translatable and uses translation keys under the relevant namespace (e.g., `skillLevels.whatIsSkillLevel`).
+
+### Skill Levels Info Box
+- Explains what a skill level is and that the template is institution-wide, created by the administrator.
+- Uses translation keys: `skillLevels.whatIsSkillLevel`, `skillLevels.skillLevelExplanation`, `skillLevels.hideInfo`, `skillLevels.showInfo`, `skillLevels.backToSkills`.
+
+### Translation
+- Spanish and English translations for the info box and related UI have been added to `src/messages/es.json` and `src/messages/en.json` under the `skillLevels` key.
 
 ---
 

@@ -1,3 +1,33 @@
+/**
+ * ADMIN ASSESSMENTS MANAGEMENT PAGE
+ * 
+ * PURPOSE: System-wide assessment management for administrators
+ * 
+ * CONNECTIONS:
+ * - Links to /admin/assessments/create for creating new assessments
+ * - Links to /admin/assessments/[id] for viewing specific assessment details
+ * - Accessible from /admin/dashboard under Assessment Functions
+ * - Uses AssessmentManagement component for CRUD operations
+ * 
+ * KEY FEATURES:
+ * - Assessment listing and management across all institutions
+ * - Create, view, edit, and delete assessments
+ * - Assessment group assignment and management
+ * - System-wide assessment monitoring
+ * - Breadcrumb navigation for easy navigation
+ * 
+ * NAVIGATION FLOW:
+ * - Accessible from admin dashboard
+ * - Create button navigates to assessment creation
+ * - View buttons navigate to specific assessment details
+ * - Back navigation to dashboard
+ * 
+ * SYSTEM SCOPE:
+ * - Manages assessments across all institutions
+ * - Global assessment configuration
+ * - Cross-institutional assessment monitoring
+ */
+
 'use client';
 
 import { Box, Typography, Breadcrumbs, Link } from '@mui/material';

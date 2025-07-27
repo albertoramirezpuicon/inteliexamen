@@ -38,18 +38,12 @@ export default function TeacherAssessmentCreatePage() {
             underline="hover"
             sx={{ cursor: 'pointer' }}
           >
-            {t('assessments')}
+            {t('assessments.title')}
           </Link>
           <Typography color="text.primary">{t('createAssessment')}</Typography>
         </Breadcrumbs>
         
-        <Typography variant="h4" gutterBottom>
-          {t('createAssessment')}
-        </Typography>
-        
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-          {t('assessmentManagementDescription')}
-        </Typography>
+
         
         <AssessmentForm userType="teacher" />
       </Box>

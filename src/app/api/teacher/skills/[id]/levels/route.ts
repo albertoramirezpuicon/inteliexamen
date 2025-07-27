@@ -44,7 +44,7 @@ export async function GET(
 
     // Get existing skill levels
     const skillLevels = await query(
-      `SELECT id, \`order\`, label, description
+      `SELECT id, \`order\`, label, description, standard
        FROM inteli_skills_levels
        WHERE skill_id = ?
        ORDER BY \`order\``,
@@ -148,15 +148,15 @@ export async function POST(
     // Insert new skill levels
     for (const level of levels) {
       await query(
-        `INSERT INTO inteli_skills_levels (skill_id, \`order\`, label, description)
-         VALUES (?, ?, ?, ?)`,
-        [id, level.order, level.label, level.description.trim()]
+        `INSERT INTO inteli_skills_levels (skill_id, \`order\`, label, description, standard)
+         VALUES (?, ?, ?, ?, ?)`,
+        [id, level.order, level.label, level.description.trim(), level.standard || 0]
       );
     }
 
     // Get updated skill levels
     const updatedLevels = await query(
-      `SELECT id, \`order\`, label, description
+      `SELECT id, \`order\`, label, description, standard
        FROM inteli_skills_levels
        WHERE skill_id = ?
        ORDER BY \`order\``,

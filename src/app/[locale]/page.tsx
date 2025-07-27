@@ -1,3 +1,32 @@
+/**
+ * LANDING PAGE - MAIN ENTRY POINT
+ * 
+ * PURPOSE: Main landing page with role-based login options and platform introduction
+ * 
+ * CONNECTIONS:
+ * - Links to /admin/login, /teacher/login, /student/login for role-based authentication
+ * - Language switcher for internationalization (English/Spanish)
+ * - Platform features showcase and introduction
+ * 
+ * KEY FEATURES:
+ * - Role-based login buttons (Admin, Teacher, Student)
+ * - Platform features and benefits presentation
+ * - Language selection and switching
+ * - Responsive design with modern UI
+ * - Modal-based login forms for each role
+ * 
+ * NAVIGATION FLOW:
+ * - Entry point for all users
+ * - Role selection determines authentication path
+ * - Language selection affects all subsequent pages
+ * 
+ * USER JOURNEY:
+ * - User arrives at landing page
+ * - Selects role (Admin/Teacher/Student)
+ * - Chooses language preference
+ * - Proceeds to role-specific login
+ */
+
 'use client';
 
 import { useState } from 'react';

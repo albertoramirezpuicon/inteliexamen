@@ -1,3 +1,24 @@
+/**
+ * INTERNATIONALIZATION LAYOUT WRAPPER
+ * 
+ * PURPOSE: Provides internationalization context for all pages in the application
+ * 
+ * CONNECTIONS:
+ * - Wraps all pages with NextIntlClientProvider for translation support
+ * - Loads locale-specific messages from src/messages/[locale].json
+ * - Supports dynamic locale routing via [locale] parameter
+ * 
+ * KEY FEATURES:
+ * - Automatic locale detection from URL path
+ * - Message loading for current locale (English/Spanish)
+ * - Translation context provision for all child components
+ * 
+ * NAVIGATION FLOW:
+ * - Entry point for all localized routes
+ * - Enables language switching without page reload
+ * - Maintains translation context across page navigation
+ */
+
 import { NextIntlClientProvider } from 'next-intl';
 
 export default async function LocaleLayout({

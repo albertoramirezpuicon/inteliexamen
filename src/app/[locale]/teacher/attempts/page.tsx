@@ -1,3 +1,38 @@
+/**
+ * TEACHER ATTEMPTS MONITORING PAGE
+ * 
+ * PURPOSE: Monitor and manage assessment attempts for teacher's assessments
+ * 
+ * CONNECTIONS:
+ * - Accessible from /teacher/dashboard under Assessment Management
+ * - Links to /teacher/attempts/[id]/results for detailed results viewing
+ * - Links to /teacher/attempts/[id]/disputes for dispute management
+ * - Filtering by assessment
+ * - Breadcrumb navigation: Dashboard > Attempts
+ * 
+ * KEY FEATURES:
+ * - Attempt monitoring and filtering for teacher's assessments
+ * - Results viewing with skill-level assessments
+ * - Dispute management and resolution
+ * - Attempt deletion with confirmation
+ * - Institution-specific attempt monitoring
+ * - Student performance tracking
+ * 
+ * NAVIGATION FLOW:
+ * - Accessible from teacher dashboard
+ * - Filter attempts by assessment
+ * - View detailed results for specific attempts
+ * - Manage disputes for student challenges
+ * - Delete attempts with confirmation dialog
+ * - Breadcrumb navigation for easy return
+ * 
+ * INSTITUTION SCOPE:
+ * - Monitors attempts for teacher's institution only
+ * - Manages student disputes and grade adjustments
+ * - Tracks student performance on assigned assessments
+ * - Provides feedback and evaluation management
+ */
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -45,11 +80,12 @@ import {
   Delete as DeleteIcon,
   ExpandMore as ExpandMoreIcon,
   Person as PersonIcon,
-  SmartToy as SmartToyIcon
+  SmartToy as SmartToyIcon,
+  HelpOutline
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/layout/Navbar';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 interface Assessment {
   id: number;
@@ -110,6 +146,7 @@ interface User {
 export default function TeacherAttemptsPage() {
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations('teacher');
   
   const [user, setUser] = useState<User | null>(null);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
@@ -142,6 +179,9 @@ export default function TeacherAttemptsPage() {
   const [skillLevels, setSkillLevels] = useState<{id: number, label: string}[]>([]);
   const [submittingDispute, setSubmittingDispute] = useState(false);
   const [loadingDisputes, setLoadingDisputes] = useState(false);
+
+  // Info box state
+  const [showAttemptInfo, setShowAttemptInfo] = useState(true);
 
   // Load user info
   const loadUserInfo = useCallback(async () => {
@@ -456,27 +496,78 @@ export default function TeacherAttemptsPage() {
       <Box sx={{ p: 3 }}>
         <Breadcrumbs sx={{ mb: 2 }}>
           <Link href={`/${locale}/teacher/dashboard`} color="inherit" underline="hover">
-            Dashboard
+            {t('dashboard')}
           </Link>
-          <Typography color="text.primary">Attempts</Typography>
+          <Typography color="text.primary">{t('attempts.title')}</Typography>
         </Breadcrumbs>
         
         <Typography variant="h4" gutterBottom>
-          Assessment Attempts
+          {t('attempts.title')}
         </Typography>
         
         <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-          Select an assessment to view student attempts and results.
+          {t('attempts.description')}
         </Typography>
+
+        {/* Attempts Info Box */}
+        {showAttemptInfo && (
+          <Box
+            sx={{
+              backgroundColor: '#fff3cd',
+              border: '1px solid #ffeaa7',
+              borderRadius: 1,
+              p: 2,
+              mb: 3,
+              position: 'relative'
+            }}
+          >
+            <IconButton
+              size="small"
+              onClick={() => setShowAttemptInfo(false)}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                color: 'text.secondary'
+              }}
+            >
+              <HelpOutline />
+            </IconButton>
+            <Typography variant="h6" sx={{ mb: 1, pr: 4 }}>
+              {t('attempts.whatIsAttempt')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t('attempts.attemptExplanation')}
+            </Typography>
+            <Button
+              size="small"
+              onClick={() => setShowAttemptInfo(false)}
+              sx={{ mt: 1 }}
+            >
+              {t('attempts.hideInfo')}
+            </Button>
+          </Box>
+        )}
+
+        {!showAttemptInfo && (
+          <Button
+            size="small"
+            startIcon={<HelpOutline />}
+            onClick={() => setShowAttemptInfo(true)}
+            sx={{ mb: 3 }}
+          >
+            {t('attempts.showInfo')}
+          </Button>
+        )}
 
         {/* Assessment Selection */}
         <Box sx={{ mb: 4 }}>
           <FormControl fullWidth sx={{ maxWidth: 400 }}>
-            <InputLabel>Select Assessment</InputLabel>
+            <InputLabel>{t('attempts.selectAssessment')}</InputLabel>
             <Select
               value={selectedAssessment || ''}
               onChange={(e) => handleAssessmentChange(e.target.value as number)}
-              label="Select Assessment"
+              label={t('attempts.selectAssessment')}
             >
               {assessments.map((assessment) => (
                 <MenuItem key={assessment.id} value={assessment.id}>
@@ -501,24 +592,24 @@ export default function TeacherAttemptsPage() {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Student</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Completion Date</TableCell>
-                    <TableCell>Final Grade</TableCell>
-                    <TableCell align="center">Actions</TableCell>
+                    <TableCell>{t('attempts.student')}</TableCell>
+                    <TableCell>{t('attempts.status')}</TableCell>
+                    <TableCell>{t('attempts.completionDate')}</TableCell>
+                    <TableCell>{t('attempts.finalGrade')}</TableCell>
+                    <TableCell align="center">{t('attempts.actions')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {loading ? (
                     <TableRow>
                       <TableCell colSpan={5} align="center">
-                        <Typography>Loading attempts...</Typography>
+                        <Typography>{t('attempts.loadingAttempts')}</Typography>
                       </TableCell>
                     </TableRow>
                   ) : attempts.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={5} align="center">
-                        <Typography>No attempts found for this assessment.</Typography>
+                        <Typography>{t('attempts.noAttemptsFound')}</Typography>
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -549,7 +640,7 @@ export default function TeacherAttemptsPage() {
                         </TableCell>
                         <TableCell align="center">
                           <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                            <Tooltip title="View Results">
+                            <Tooltip title={t('attempts.viewResults')}>
                               <IconButton
                                 size="small"
                                 onClick={() => handleViewResults(attempt.id)}
@@ -558,7 +649,7 @@ export default function TeacherAttemptsPage() {
                                 <AssessmentIcon />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="View Disputes">
+                            <Tooltip title={t('attempts.viewDisputes')}>
                               <IconButton
                                 size="small"
                                 onClick={() => handleViewDisputesModal(attempt.id)}
@@ -567,7 +658,7 @@ export default function TeacherAttemptsPage() {
                                 <PsychologyIcon />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="Delete Attempt">
+                            <Tooltip title={t('attempts.deleteAttempt')}>
                               <IconButton
                                 size="small"
                                 onClick={() => handleDeleteAttempt(attempt.id, attempt.student_name)}
@@ -596,7 +687,7 @@ export default function TeacherAttemptsPage() {
         >
           <DialogTitle>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Assessment Results</span>
+              <span>{t('attempts.assessmentResults')}</span>
               <IconButton onClick={() => setResultsModalOpen(false)}>
                 <CloseIcon />
               </IconButton>
@@ -604,35 +695,76 @@ export default function TeacherAttemptsPage() {
           </DialogTitle>
           <DialogContent>
             {resultsLoading ? (
-              <Typography>Loading results...</Typography>
+              <Typography>{t('attempts.loadingResults')}</Typography>
             ) : results.length === 0 ? (
-              <Typography>No results found for this attempt.</Typography>
+              <Typography>{t('attempts.noResultsFound')}</Typography>
             ) : (
               <List>
-                {results.map((result, index) => (
-                  <Box key={result.id}>
-                    <ListItem>
-                      <ListItemText
-                        primary={
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Typography variant="h6">{result.skill_name}</Typography>
-                            <Chip 
-                              label={result.skill_level_label} 
-                              color="primary" 
-                              size="small"
-                            />
-                          </Box>
-                        }
-                        secondary={
-                          <Typography variant="body2" sx={{ mt: 1 }}>
-                            {result.feedback}
-                          </Typography>
-                        }
-                      />
-                    </ListItem>
-                    {index < results.length - 1 && <Divider />}
-                  </Box>
-                ))}
+                {results.map((result, index) => {
+                  // Calculate color based on skill level (assuming max 5 levels)
+                  const getResultColor = (skillLevelOrder: number, maxLevels: number = 5) => {
+                    const percentage = skillLevelOrder / maxLevels;
+                    if (percentage <= 0.2) return '#ffebee'; // Light red for lowest levels
+                    if (percentage <= 0.4) return '#ffcdd2'; // Red
+                    if (percentage <= 0.6) return '#ffb74d'; // Orange
+                    if (percentage <= 0.8) return '#81c784'; // Light green
+                    return '#4caf50'; // Green for highest levels
+                  };
+                  
+                  // Get border color based on skill level label
+                  const getBorderColor = (skillLevelLabel: string) => {
+                    const label = skillLevelLabel.toLowerCase();
+                    if (label.includes('starting') || label.includes('beginner') || label.includes('basic') || label.includes('inicial')) {
+                      return '#f44336'; // Darker red
+                    }
+                    if (label.includes('developing') || label.includes('intermediate') || label.includes('intermedio')) {
+                      return '#d32f2f'; // Dark red
+                    }
+                    if (label.includes('proficient') || label.includes('avanzado') || label.includes('competent')) {
+                      return '#f57c00'; // Dark orange
+                    }
+                    if (label.includes('advanced') || label.includes('expert') || label.includes('experto')) {
+                      return '#388e3c'; // Dark green
+                    }
+                    if (label.includes('master') || label.includes('excellent') || label.includes('excelente')) {
+                      return '#2e7d32'; // Darker green
+                    }
+                    return '#f44336'; // Darker red for unknown levels
+                  };
+                  
+                  const backgroundColor = getResultColor(result.skill_level_order || 1, 5);
+                  const borderColor = getBorderColor(result.skill_level_label);
+                  
+                  return (
+                    <Box key={result.id}>
+                      <ListItem sx={{ 
+                        backgroundColor, 
+                        borderRadius: 1, 
+                        mb: 1,
+                        border: `2px solid ${borderColor}`
+                      }}>
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Typography variant="h6">{result.skill_name}</Typography>
+                              <Chip 
+                                label={result.skill_level_label} 
+                                color="primary" 
+                                size="small"
+                              />
+                            </Box>
+                          }
+                          secondary={
+                            <Typography variant="body2" sx={{ mt: 1 }}>
+                              {result.feedback}
+                            </Typography>
+                          }
+                        />
+                      </ListItem>
+                      {index < results.length - 1 && <Divider />}
+                    </Box>
+                  );
+                })}
               </List>
             )}
           </DialogContent>

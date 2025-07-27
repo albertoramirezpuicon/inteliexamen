@@ -59,7 +59,8 @@ export async function GET(request: NextRequest) {
         s.name as skill_name,
         s.description as skill_description,
         d.name as domain_name,
-        GROUP_CONCAT(DISTINCT g.name ORDER BY g.name ASC SEPARATOR ', ') as associated_groups
+        GROUP_CONCAT(DISTINCT g.name ORDER BY g.name ASC SEPARATOR ', ') as associated_groups,
+        (SELECT COUNT(*) FROM inteli_assessments_attempts aa WHERE aa.assessment_id = a.id) as attempt_count
       FROM inteli_assessments a
       LEFT JOIN inteli_institutions i ON a.institution_id = i.id
       LEFT JOIN inteli_users u ON a.teacher_id = u.id
@@ -98,6 +99,7 @@ export async function POST(request: NextRequest) {
   try {
     const {
       show_teacher_name,
+      integrity_protection,
       name,
       description,
       difficulty_level,
@@ -105,12 +107,17 @@ export async function POST(request: NextRequest) {
       output_language,
       evaluation_context,
       case_text,
+      case_sections,
+      case_navigation_enabled,
+      case_sections_metadata,
       questions_per_skill,
       available_from,
       available_until,
       dispute_period,
       status,
-      skill_id,
+      selected_skills,
+      selected_groups,
+      selected_sources,
       teacher_id,
       institution_id
     } = await request.json();
@@ -126,9 +133,18 @@ export async function POST(request: NextRequest) {
     // Validation
     if (!name || !description || !difficulty_level || 
         !educational_level || !output_language || !evaluation_context || !case_text || 
-        !questions_per_skill || !available_from || !available_until || !dispute_period || !skill_id) {
+        !questions_per_skill || !available_from || !available_until || !dispute_period || 
+        !selected_skills || selected_skills.length === 0) {
       return NextResponse.json(
         { error: 'All required fields must be provided' },
+        { status: 400 }
+      );
+    }
+
+    // Validate maximum skills
+    if (selected_skills.length > 4) {
+      return NextResponse.json(
+        { error: 'Maximum 4 skills allowed per assessment' },
         { status: 400 }
       );
     }
@@ -159,19 +175,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate that the skill belongs to the teacher's institution
+    // Validate that all skills belong to the teacher's institution
     const skillCheck = await query(
       `SELECT s.id FROM inteli_skills s 
        JOIN inteli_domains d ON s.domain_id = d.id 
-       WHERE s.id = ? AND d.institution_id = ?`,
-      [skill_id, parseInt(institution_id)]
+       WHERE s.id IN (${selected_skills.map(() => '?').join(',')}) AND d.institution_id = ?`,
+      [...selected_skills, parseInt(institution_id)]
     );
 
-    if (skillCheck.length === 0) {
+    if (skillCheck.length !== selected_skills.length) {
       return NextResponse.json(
-        { error: 'Invalid skill selected' },
+        { error: 'One or more invalid skills selected' },
         { status: 400 }
       );
+    }
+
+    // Validate that all groups belong to the teacher's institution (if any selected)
+    if (selected_groups && selected_groups.length > 0) {
+      const groupCheck = await query(
+        `SELECT id FROM inteli_groups WHERE id IN (${selected_groups.map(() => '?').join(',')}) AND institution_id = ?`,
+        [...selected_groups, parseInt(institution_id)]
+      );
+
+      if (groupCheck.length !== selected_groups.length) {
+        return NextResponse.json(
+          { error: 'One or more invalid groups selected' },
+          { status: 400 }
+        );
+      }
     }
     
     // Start transaction
@@ -182,26 +213,62 @@ export async function POST(request: NextRequest) {
       // Insert assessment
       const result = await insertQuery(
         `INSERT INTO inteli_assessments (
-          institution_id, teacher_id, show_teacher_name, name, description,
+          institution_id, teacher_id, show_teacher_name, integrity_protection, name, description,
           difficulty_level, educational_level, output_language, evaluation_context,
-          case_text, questions_per_skill, available_from, available_until,
+          case_text, case_sections, case_navigation_enabled, case_sections_metadata,
+          questions_per_skill, available_from, available_until,
           dispute_period, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          parseInt(institution_id), parseInt(teacher_id), show_teacher_name ? 1 : 0, name, description,
+          parseInt(institution_id), parseInt(teacher_id), show_teacher_name ? 1 : 0, integrity_protection ? 1 : 0, name, description,
           difficulty_level, educational_level, output_language, evaluation_context,
-          sanitizeText(case_text), questions_per_skill, available_from, available_until,
+          sanitizeText(case_text), 
+          case_sections ? JSON.stringify(case_sections) : null,
+          case_navigation_enabled ? 1 : 0,
+          case_sections_metadata ? JSON.stringify(case_sections_metadata) : null,
+          questions_per_skill, available_from, available_until,
           dispute_period, status || 'Active'
         ]
       );
       
       const assessmentId = result.insertId;
       
-      // Insert assessment-skill relationship
-      await query(
-        'INSERT INTO inteli_assessments_skills (assessment_id, skill_id) VALUES (?, ?)',
-        [assessmentId, skill_id]
-      );
+      // Insert assessment-skill relationships
+      for (const skillId of selected_skills) {
+        await query(
+          'INSERT INTO inteli_assessments_skills (assessment_id, skill_id) VALUES (?, ?)',
+          [assessmentId, skillId]
+        );
+      }
+
+      // Insert assessment-source relationships (if sources are provided)
+      if (selected_sources && Object.keys(selected_sources).length > 0) {
+        const allSourceIds = new Set<number>();
+        
+        // Collect all source IDs from all skills
+        for (const skillId of selected_skills) {
+          const sourcesForSkill = selected_sources[skillId] || [];
+          sourcesForSkill.forEach(sourceId => allSourceIds.add(sourceId));
+        }
+        
+        // Insert assessment-source relationships
+        for (const sourceId of allSourceIds) {
+          await query(
+            'INSERT INTO inteli_assessments_sources (assessment_id, source_id) VALUES (?, ?)',
+            [assessmentId, sourceId]
+          );
+        }
+      }
+
+      // Insert assessment-group relationships (if any groups selected)
+      if (selected_groups && selected_groups.length > 0) {
+        for (const groupId of selected_groups) {
+          await query(
+            'INSERT INTO inteli_assessments_groups (assessment_id, group_id) VALUES (?, ?)',
+            [assessmentId, groupId]
+          );
+        }
+      }
       
       await connection.commit();
       

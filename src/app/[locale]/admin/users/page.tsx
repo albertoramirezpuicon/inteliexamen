@@ -1,3 +1,36 @@
+/**
+ * ADMIN USER MANAGEMENT PAGE
+ * 
+ * PURPOSE: System-wide user management for administrators
+ * 
+ * CONNECTIONS:
+ * - Accessible from /admin/dashboard under Global Functions
+ * - Links to /admin/users/[id] for user details
+ * - Links to /admin/users/[id]/groups for user group management
+ * - Uses UserManagement component for CRUD operations
+ * 
+ * KEY FEATURES:
+ * - Create, edit, and delete users across all institutions
+ * - Role assignment (Admin, Teacher, Student)
+ * - Institution assignment and management
+ * - User group membership management
+ * - System-wide user monitoring and control
+ * - Breadcrumb navigation for easy navigation
+ * 
+ * NAVIGATION FLOW:
+ * - Accessible from admin dashboard
+ * - Create button for new user creation
+ * - View/Edit buttons for user details
+ * - Group management for user assignments
+ * - Back navigation to dashboard
+ * 
+ * SYSTEM SCOPE:
+ * - Manages users across all institutions
+ * - Global user configuration and control
+ * - Cross-institutional user management
+ * - Role-based access control administration
+ */
+
 'use client';
 
 import { Box, Typography, Breadcrumbs, Link } from '@mui/material';

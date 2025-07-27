@@ -1,3 +1,36 @@
+/**
+ * ADMIN DASHBOARD - MAIN ADMIN HUB
+ * 
+ * PURPOSE: Admin main dashboard with system-wide management functions and navigation
+ * 
+ * CONNECTIONS:
+ * - GLOBAL FUNCTIONS: Links to /admin/institutions, /admin/users, /admin/groups
+ * - ACADEMIC FUNCTIONS: Links to /admin/domains, /admin/skills
+ * - ASSESSMENT FUNCTIONS: Links to /admin/assessments, /admin/attempts
+ * - SYSTEM FUNCTIONS: Links to /admin/analytics, /admin/settings
+ * - Accessible after successful admin login
+ * 
+ * KEY FEATURES:
+ * - User information display and management
+ * - Categorized function cards for system management
+ * - Navigation to all admin functions
+ * - System-wide overview and statistics
+ * - Role-based access control
+ * 
+ * NAVIGATION FLOW:
+ * - Entry point after admin login
+ * - Central hub for all admin functions
+ * - Organized by functional categories
+ * 
+ * SYSTEM MANAGEMENT:
+ * - Institution management across platform
+ * - User management with role assignment
+ * - Group management for student organization
+ * - Domain and skill configuration
+ * - Assessment and attempt monitoring
+ * - System analytics and settings
+ */
+
 'use client';
 
 import { useState, useEffect } from 'react';

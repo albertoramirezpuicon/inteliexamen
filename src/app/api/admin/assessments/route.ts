@@ -115,15 +115,25 @@ export async function POST(request: NextRequest) {
       available_until,
       dispute_period,
       status,
-      skill_id
+      selected_skills,
+      selected_sources
     } = await request.json();
 
     // Validation
     if (!institution_id || !teacher_id || !name || !description || !difficulty_level || 
         !educational_level || !output_language || !evaluation_context || !case_text || 
-        !questions_per_skill || !available_from || !available_until || !dispute_period || !skill_id) {
+        !questions_per_skill || !available_from || !available_until || !dispute_period || 
+        !selected_skills || selected_skills.length === 0) {
       return NextResponse.json(
         { error: 'All required fields must be provided' },
+        { status: 400 }
+      );
+    }
+
+    // Validate maximum skills
+    if (selected_skills.length > 4) {
+      return NextResponse.json(
+        { error: 'Maximum 4 skills allowed per assessment' },
         { status: 400 }
       );
     }
@@ -177,11 +187,32 @@ export async function POST(request: NextRequest) {
       
       const assessmentId = result.insertId;
       
-      // Insert assessment-skill relationship
-      await query(
-        'INSERT INTO inteli_assessments_skills (assessment_id, skill_id) VALUES (?, ?)',
-        [assessmentId, skill_id]
-      );
+      // Insert assessment-skill relationships
+      for (const skillId of selected_skills) {
+        await query(
+          'INSERT INTO inteli_assessments_skills (assessment_id, skill_id) VALUES (?, ?)',
+          [assessmentId, skillId]
+        );
+      }
+
+      // Insert assessment-source relationships (if sources are provided)
+      if (selected_sources && Object.keys(selected_sources).length > 0) {
+        const allSourceIds = new Set<number>();
+        
+        // Collect all source IDs from all skills
+        for (const skillId of selected_skills) {
+          const sourcesForSkill = selected_sources[skillId] || [];
+          sourcesForSkill.forEach(sourceId => allSourceIds.add(sourceId));
+        }
+        
+        // Insert assessment-source relationships
+        for (const sourceId of allSourceIds) {
+          await query(
+            'INSERT INTO inteli_assessments_sources (assessment_id, source_id) VALUES (?, ?)',
+            [assessmentId, sourceId]
+          );
+        }
+      }
       
       await connection.commit();
       

@@ -31,10 +31,17 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Search as SearchIcon,
-  Home as HomeIcon
+  Home as HomeIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  HelpOutline,
+  List as ListIcon,
+  Lightbulb as LightbulbIcon
 } from '@mui/icons-material';
 import { useTranslations, useLocale } from 'next-intl';
 import Navbar from '@/components/layout/Navbar';
+import DomainSkillsModal from '@/components/teacher/DomainSkillsModal';
+import DomainSkillSuggestionsModal from '@/components/teacher/DomainSkillSuggestionsModal';
 
 interface User {
   id: number;
@@ -85,11 +92,23 @@ export default function TeacherDomainsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [domainToDelete, setDomainToDelete] = useState<Domain | null>(null);
   
+  // Modal states
+  const [skillsModalOpen, setSkillsModalOpen] = useState(false);
+  const [suggestionsModalOpen, setSuggestionsModalOpen] = useState(false);
+  const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
+  
+  // Create domain states
+  const [creatingDomain, setCreatingDomain] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  
   // Form state
   const [formData, setFormData] = useState({
     name: '',
     description: ''
   });
+
+  // UI state
+  const [showDomainInfo, setShowDomainInfo] = useState(true);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -250,6 +269,7 @@ export default function TeacherDomainsPage() {
       name: '',
       description: ''
     });
+    setCreateError(null);
   };
 
   const handleSubmit = async () => {
@@ -318,6 +338,89 @@ export default function TeacherDomainsPage() {
     }
   };
 
+  // Modal handlers
+  const handleOpenSkillsModal = (domain: Domain) => {
+    setSelectedDomain(domain);
+    setSkillsModalOpen(true);
+  };
+
+  const handleCloseSkillsModal = () => {
+    setSkillsModalOpen(false);
+    setSelectedDomain(null);
+  };
+
+  const handleOpenSuggestionsModal = (domain: Domain) => {
+    setSelectedDomain(domain);
+    setSuggestionsModalOpen(true);
+  };
+
+  const handleCloseSuggestionsModal = () => {
+    setSuggestionsModalOpen(false);
+    setSelectedDomain(null);
+  };
+
+  const handleSkillsCreated = () => {
+    // Refresh domains to update skills count
+    fetchDomains();
+  };
+
+  // Create domain handlers
+  const handleCreateDomain = async (action: 'create' | 'createAndGoToSkills' | 'createAndShowSuggestions') => {
+    if (!user?.institution_id) return;
+
+    try {
+      setCreatingDomain(true);
+      setCreateError(null);
+
+      const response = await fetch('/api/teacher/domains', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-institution-id': user.institution_id.toString()
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+          institution_id: user.institution_id
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create domain');
+      }
+
+      const data = await response.json();
+      const newDomain = data.domain;
+
+      // Close the create modal
+      handleCloseDialog();
+
+      // Handle different actions
+      switch (action) {
+        case 'create':
+          // Just refresh the domains list
+          fetchDomains();
+          break;
+        
+        case 'createAndGoToSkills':
+          // Navigate to skills page
+          router.push(`/${locale}/teacher/skills`);
+          break;
+        
+        case 'createAndShowSuggestions':
+          // Set the new domain and open suggestions modal
+          setSelectedDomain(newDomain);
+          setSuggestionsModalOpen(true);
+          break;
+      }
+    } catch (error) {
+      setCreateError(error instanceof Error ? error.message : 'Failed to create domain');
+    } finally {
+      setCreatingDomain(false);
+    }
+  };
+
   const getUserDisplayName = () => {
     if (!user) return '';
     return `${user.given_name} ${user.family_name}`.trim() || user.email;
@@ -364,26 +467,77 @@ export default function TeacherDomainsPage() {
             <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
             {t('dashboard')}
           </Link>
-          <Typography color="text.primary">{t('domains')}</Typography>
+          <Typography color="text.primary">{t('domains.title')}</Typography>
         </Breadcrumbs>
         
         <Typography variant="h4" gutterBottom>
-          {t('domains')}
+          {t('domains.title')}
         </Typography>
         
         <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-          Manage educational domains in your institution
+          {t('domains.description')}
         </Typography>
+
+        {/* Domain Information Box */}
+        {showDomainInfo && (
+          <Box
+            sx={{
+              backgroundColor: '#fff3cd',
+              border: '1px solid #ffeaa7',
+              borderRadius: 1,
+              p: 2,
+              mb: 3,
+              position: 'relative'
+            }}
+          >
+            <IconButton
+              size="small"
+              onClick={() => setShowDomainInfo(false)}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                color: 'text.secondary'
+              }}
+            >
+              <HelpOutline />
+            </IconButton>
+            <Typography variant="h6" sx={{ mb: 1, pr: 4 }}>
+              {t('domains.whatIsDomain')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t('domains.domainExplanation')}
+            </Typography>
+            <Button
+              size="small"
+              onClick={() => setShowDomainInfo(false)}
+              sx={{ mt: 1 }}
+            >
+              {t('domains.hideInfo')}
+            </Button>
+          </Box>
+        )}
+
+        {!showDomainInfo && (
+          <Button
+            size="small"
+            startIcon={<HelpOutline />}
+            onClick={() => setShowDomainInfo(true)}
+            sx={{ mb: 3 }}
+          >
+            {t('domains.showInfo')}
+          </Button>
+        )}
 
         {/* Search and Add */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <TextField
-            label="Search domains"
+            label={t('domains.searchDomains')}
             variant="outlined"
             size="small"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by name or description..."
+            placeholder={t('domains.searchPlaceholder')}
             sx={{ minWidth: 300 }}
             InputProps={{
               startAdornment: (
@@ -399,13 +553,13 @@ export default function TeacherDomainsPage() {
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
           >
-            Add Domain
+            {t('domains.addDomain')}
           </Button>
         </Box>
 
         {/* Results count */}
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Showing {paginatedDomains.length} of {filteredDomains.length} domains
+          {t('domains.showingResults', { current: paginatedDomains.length, total: filteredDomains.length })}
         </Typography>
 
         {/* Table */}
@@ -422,7 +576,7 @@ export default function TeacherDomainsPage() {
                     direction={sortField === 'name' ? sortOrder : 'asc'}
                     sx={{ cursor: 'pointer' }}
                   >
-                    Domain Name
+                    {t('domains.domainName')}
                   </TableSortLabel>
                 </TableCell>
                 <TableCell 
@@ -434,7 +588,7 @@ export default function TeacherDomainsPage() {
                     direction={sortField === 'description' ? sortOrder : 'asc'}
                     sx={{ cursor: 'pointer' }}
                   >
-                    Description
+                    {t('domains.description')}
                   </TableSortLabel>
                 </TableCell>
                 <TableCell 
@@ -446,10 +600,12 @@ export default function TeacherDomainsPage() {
                     direction={sortField === 'skills_count' ? sortOrder : 'asc'}
                     sx={{ cursor: 'pointer' }}
                   >
-                    Skills
+                    {t('domains.skills')}
                   </TableSortLabel>
                 </TableCell>
-                <TableCell>Actions</TableCell>
+                <TableCell>Skills List</TableCell>
+                <TableCell>AI Skills Suggestions</TableCell>
+                <TableCell>{t('domains.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -458,6 +614,26 @@ export default function TeacherDomainsPage() {
                   <TableCell>{domain.name}</TableCell>
                   <TableCell>{domain.description}</TableCell>
                   <TableCell>{domain.skills_count}</TableCell>
+                  <TableCell>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleOpenSkillsModal(domain)}
+                      color="primary"
+                      title="View Skills"
+                    >
+                      <ListIcon />
+                    </IconButton>
+                  </TableCell>
+                  <TableCell>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleOpenSuggestionsModal(domain)}
+                      color="secondary"
+                      title="AI Skill Suggestions"
+                    >
+                      <LightbulbIcon />
+                    </IconButton>
+                  </TableCell>
                   <TableCell>
                     <IconButton
                       size="small"
@@ -498,63 +674,119 @@ export default function TeacherDomainsPage() {
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
-          {editingDomain ? 'Edit Domain' : 'Add New Domain'}
+          {editingDomain ? t('domains.editDomain') : t('domains.addNewDomain')}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
+            {createError && (
+              <Alert severity="error" sx={{ mb: 2 }} onClose={() => setCreateError(null)}>
+                {createError}
+              </Alert>
+            )}
             <TextField
-              label="Domain Name"
+              label={t('domains.domainName')}
               fullWidth
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               margin="normal"
               required
+              disabled={creatingDomain}
             />
             <TextField
-              label="Description"
+              label={t('domains.description')}
               fullWidth
               multiline
               rows={3}
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               margin="normal"
+              disabled={creatingDomain}
             />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained">
-            {editingDomain ? 'Update' : 'Create'}
+          <Button onClick={handleCloseDialog} disabled={creatingDomain}>
+            {t('domains.cancel')}
           </Button>
+          {editingDomain ? (
+            <Button onClick={handleSubmit} variant="contained" disabled={creatingDomain}>
+              {t('domains.update')}
+            </Button>
+          ) : (
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              <Button 
+                onClick={() => handleCreateDomain('create')} 
+                variant="contained" 
+                disabled={creatingDomain}
+              >
+                {t('domains.create')}
+              </Button>
+              <Button 
+                onClick={() => handleCreateDomain('createAndGoToSkills')} 
+                variant="contained" 
+                disabled={creatingDomain}
+              >
+                {t('domains.createAndGoToSkills')}
+              </Button>
+              <Button 
+                onClick={() => handleCreateDomain('createAndShowSuggestions')} 
+                variant="contained" 
+                disabled={creatingDomain}
+              >
+                {t('domains.createAndShowSuggestions')}
+              </Button>
+            </Box>
+          )}
         </DialogActions>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogTitle>{t('domains.confirmDelete')}</DialogTitle>
         <DialogContent>
           <Typography component="span">
-            Are you sure you want to delete the domain &quot;{domainToDelete?.name}&quot;? 
+            {t('domains.deleteConfirmation', { name: domainToDelete?.name })} 
             {domainToDelete?.skills_count > 0 && (
               <Alert severity="warning" sx={{ mt: 2 }}>
-                This domain has {domainToDelete.skills_count} associated skills. 
-                You cannot delete a domain that has skills.
+                {t('domains.deleteWarning', { count: domainToDelete.skills_count })}
               </Alert>
             )}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDeleteDialogOpen(false)}>{t('domains.cancel')}</Button>
           <Button 
             onClick={confirmDelete} 
             color="error" 
             variant="contained"
             disabled={domainToDelete?.skills_count > 0}
           >
-            Delete
+            {t('domains.delete')}
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Skills List Modal */}
+      {selectedDomain && (
+        <DomainSkillsModal
+          open={skillsModalOpen}
+          onClose={handleCloseSkillsModal}
+          domainId={selectedDomain.id}
+          domainName={selectedDomain.name}
+        />
+      )}
+
+      {/* AI Suggestions Modal */}
+      {selectedDomain && (
+        <DomainSkillSuggestionsModal
+          open={suggestionsModalOpen}
+          onClose={handleCloseSuggestionsModal}
+          domainId={selectedDomain.id}
+          domainName={selectedDomain.name}
+          domainDescription={selectedDomain.description}
+          onSkillsCreated={handleSkillsCreated}
+        />
+      )}
     </Box>
   );
 } 

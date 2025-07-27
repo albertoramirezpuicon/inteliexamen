@@ -28,17 +28,10 @@ export async function GET(
         a.*,
         i.name as institution_name,
         CONCAT(u.given_name, ' ', u.family_name) as teacher_name,
-        s.name as skill_name,
-        s.description as skill_description,
-        d.name as domain_name,
-        d.id as domain_id,
-        s.id as skill_id
+        (SELECT COUNT(*) FROM inteli_assessments_attempts aa WHERE aa.assessment_id = a.id) as attempt_count
       FROM inteli_assessments a
       LEFT JOIN inteli_institutions i ON a.institution_id = i.id
       LEFT JOIN inteli_users u ON a.teacher_id = u.id
-      LEFT JOIN inteli_assessments_skills aas ON a.id = aas.assessment_id
-      LEFT JOIN inteli_skills s ON aas.skill_id = s.id
-      LEFT JOIN inteli_domains d ON s.domain_id = d.id
       WHERE a.id = ? AND a.institution_id = ? AND a.teacher_id = ?`,
       [id, parseInt(institutionId), parseInt(teacherId)]
     );
@@ -53,8 +46,56 @@ export async function GET(
       );
     }
     
-    console.log('Returning assessment:', assessmentResult[0]);
-    return NextResponse.json({ assessment: assessmentResult[0] });
+    if (!assessmentResult.length) {
+      console.log('Assessment not found or access denied');
+      return NextResponse.json(
+        { error: 'Assessment not found or access denied' },
+        { status: 404 }
+      );
+    }
+
+    const assessment = assessmentResult[0];
+
+    // Get associated skills
+    const skillsResult = await query(
+      `SELECT 
+        s.id,
+        s.name,
+        s.description,
+        s.domain_id,
+        d.name as domain_name
+      FROM inteli_assessments_skills aas
+      JOIN inteli_skills s ON aas.skill_id = s.id
+      JOIN inteli_domains d ON s.domain_id = d.id
+      WHERE aas.assessment_id = ?`,
+      [id]
+    );
+
+    // Get associated groups
+    const groupsResult = await query(
+      `SELECT 
+        g.id,
+        g.name,
+        g.description,
+        g.institution_id,
+        COUNT(ug.user_id) as member_count
+      FROM inteli_assessments_groups ag
+      JOIN inteli_groups g ON ag.group_id = g.id
+      LEFT JOIN inteli_users_groups ug ON g.id = ug.group_id
+      WHERE ag.assessment_id = ?
+      GROUP BY g.id, g.name, g.description, g.institution_id`,
+      [id]
+    );
+
+    const assessmentWithRelations = {
+      ...assessment,
+      selected_skills: skillsResult.map(s => s.id),
+      selected_groups: groupsResult.map(g => g.id),
+      attempt_count: assessment.attempt_count || 0
+    };
+
+    console.log('Returning assessment:', assessmentWithRelations);
+    return NextResponse.json({ assessment: assessmentWithRelations });
   } catch (error) {
     console.error('Error fetching teacher assessment:', error);
     return NextResponse.json(
@@ -117,6 +158,7 @@ export async function PUT(
     
     const {
       show_teacher_name,
+      integrity_protection,
       name,
       description,
       difficulty_level,
@@ -124,20 +166,33 @@ export async function PUT(
       output_language,
       evaluation_context,
       case_text,
+      case_sections,
+      case_navigation_enabled,
+      case_sections_metadata,
       questions_per_skill,
       available_from,
       available_until,
       dispute_period,
       status,
-      skill_id
+      selected_skills,
+      selected_groups
     } = await request.json();
 
     // Validation
     if (!name || !description || !difficulty_level || 
         !educational_level || !output_language || !evaluation_context || !case_text || 
-        !questions_per_skill || !available_from || !available_until || !dispute_period || !skill_id) {
+        !questions_per_skill || !available_from || !available_until || !dispute_period || 
+        !selected_skills || selected_skills.length === 0) {
       return NextResponse.json(
         { error: 'All required fields must be provided' },
+        { status: 400 }
+      );
+    }
+
+    // Validate maximum skills
+    if (selected_skills.length > 4) {
+      return NextResponse.json(
+        { error: 'Maximum 4 skills allowed per assessment' },
         { status: 400 }
       );
     }
@@ -160,19 +215,34 @@ export async function PUT(
       );
     }
 
-    // Validate that the skill belongs to the teacher's institution
+    // Validate that all skills belong to the teacher's institution
     const skillCheck = await query(
       `SELECT s.id FROM inteli_skills s 
        JOIN inteli_domains d ON s.domain_id = d.id 
-       WHERE s.id = ? AND d.institution_id = ?`,
-      [skill_id, parseInt(institutionId)]
+       WHERE s.id IN (${selected_skills.map(() => '?').join(',')}) AND d.institution_id = ?`,
+      [...selected_skills, parseInt(institutionId)]
     );
 
-    if (skillCheck.length === 0) {
+    if (skillCheck.length !== selected_skills.length) {
       return NextResponse.json(
-        { error: 'Invalid skill selected' },
+        { error: 'One or more invalid skills selected' },
         { status: 400 }
       );
+    }
+
+    // Validate that all groups belong to the teacher's institution (if any selected)
+    if (selected_groups && selected_groups.length > 0) {
+      const groupCheck = await query(
+        `SELECT id FROM inteli_groups WHERE id IN (${selected_groups.map(() => '?').join(',')}) AND institution_id = ?`,
+        [...selected_groups, parseInt(institutionId)]
+      );
+
+      if (groupCheck.length !== selected_groups.length) {
+        return NextResponse.json(
+          { error: 'One or more invalid groups selected' },
+          { status: 400 }
+        );
+      }
     }
     
     // Check if assessment has attempts
@@ -196,30 +266,50 @@ export async function PUT(
       // Update assessment
       await query(
         `UPDATE inteli_assessments SET
-          show_teacher_name = ?, name = ?, description = ?,
+          show_teacher_name = ?, integrity_protection = ?, name = ?, description = ?,
           difficulty_level = ?, educational_level = ?, output_language = ?,
-          evaluation_context = ?, case_text = ?, questions_per_skill = ?,
-          available_from = ?, available_until = ?, dispute_period = ?, status = ?
+          evaluation_context = ?, case_text = ?, case_sections = ?, case_navigation_enabled = ?, case_sections_metadata = ?,
+          questions_per_skill = ?, available_from = ?, available_until = ?, dispute_period = ?, status = ?
         WHERE id = ? AND institution_id = ? AND teacher_id = ?`,
         [
-          show_teacher_name ? 1 : 0, name, description,
+          show_teacher_name ? 1 : 0, integrity_protection ? 1 : 0, name, description,
           difficulty_level, educational_level, output_language,
-          evaluation_context, sanitizeText(case_text), questions_per_skill,
-          available_from, available_until, dispute_period, status,
+          evaluation_context, sanitizeText(case_text), 
+          case_sections ? JSON.stringify(case_sections) : null,
+          case_navigation_enabled ? 1 : 0,
+          case_sections_metadata ? JSON.stringify(case_sections_metadata) : null,
+          questions_per_skill, available_from, available_until, dispute_period, status,
           id, parseInt(institutionId), parseInt(teacherId)
         ]
       );
       
-      // Update assessment-skill relationship
+      // Update assessment-skill relationships
       await query(
         'DELETE FROM inteli_assessments_skills WHERE assessment_id = ?',
         [id]
       );
       
+      for (const skillId of selected_skills) {
+        await query(
+          'INSERT INTO inteli_assessments_skills (assessment_id, skill_id) VALUES (?, ?)',
+          [id, skillId]
+        );
+      }
+
+      // Update assessment-group relationships
       await query(
-        'INSERT INTO inteli_assessments_skills (assessment_id, skill_id) VALUES (?, ?)',
-        [id, skill_id]
+        'DELETE FROM inteli_assessments_groups WHERE assessment_id = ?',
+        [id]
       );
+      
+      if (selected_groups && selected_groups.length > 0) {
+        for (const groupId of selected_groups) {
+          await query(
+            'INSERT INTO inteli_assessments_groups (assessment_id, group_id) VALUES (?, ?)',
+            [id, groupId]
+          );
+        }
+      }
       
       await connection.commit();
       
@@ -228,25 +318,55 @@ export async function PUT(
         `SELECT 
           a.*,
           i.name as institution_name,
-          CONCAT(u.given_name, ' ', u.family_name) as teacher_name,
-          s.name as skill_name,
-          s.description as skill_description,
-          d.name as domain_name,
-          d.id as domain_id,
-          s.id as skill_id
+          CONCAT(u.given_name, ' ', u.family_name) as teacher_name
         FROM inteli_assessments a
         LEFT JOIN inteli_institutions i ON a.institution_id = i.id
         LEFT JOIN inteli_users u ON a.teacher_id = u.id
-        LEFT JOIN inteli_assessments_skills aas ON a.id = aas.assessment_id
-        LEFT JOIN inteli_skills s ON aas.skill_id = s.id
-        LEFT JOIN inteli_domains d ON s.domain_id = d.id
         WHERE a.id = ?`,
         [id]
       );
+
+      // Get associated skills
+      const skillsResult = await query(
+        `SELECT 
+          s.id,
+          s.name,
+          s.description,
+          s.domain_id,
+          d.name as domain_name
+        FROM inteli_assessments_skills aas
+        JOIN inteli_skills s ON aas.skill_id = s.id
+        JOIN inteli_domains d ON s.domain_id = d.id
+        WHERE aas.assessment_id = ?`,
+        [id]
+      );
+
+      // Get associated groups
+      const groupsResult = await query(
+        `SELECT 
+          g.id,
+          g.name,
+          g.description,
+          g.institution_id,
+          COUNT(ug.user_id) as member_count
+        FROM inteli_assessments_groups ag
+        JOIN inteli_groups g ON ag.group_id = g.id
+        LEFT JOIN inteli_users_groups ug ON g.id = ug.group_id
+        WHERE ag.assessment_id = ?
+        GROUP BY g.id, g.name, g.description, g.institution_id`,
+        [id]
+      );
+
+      const assessmentWithRelations = {
+        ...assessmentResult[0],
+        selected_skills: skillsResult.map(s => s.id),
+        selected_groups: groupsResult.map(g => g.id),
+        attempt_count: assessment.attempt_count || 0
+      };
       
       return NextResponse.json({
         message: 'Assessment updated successfully',
-        assessment: assessmentResult[0]
+        assessment: assessmentWithRelations
       });
     } catch (error) {
       await connection.rollback();
@@ -308,18 +428,7 @@ export async function DELETE(
       );
     }
 
-    // Check if assessment has associated groups
-    const groupsCheck = await query(
-      'SELECT COUNT(*) as count FROM inteli_assessments_groups WHERE assessment_id = ?',
-      [id]
-    );
 
-    if (groupsCheck[0].count > 0) {
-      return NextResponse.json(
-        { error: 'Cannot delete assessment that has associated groups. Please remove group associations first.' },
-        { status: 400 }
-      );
-    }
     
     // Start transaction
     const connection = await pool.getConnection();
@@ -329,6 +438,12 @@ export async function DELETE(
       // Delete assessment-skill relationships
       await query(
         'DELETE FROM inteli_assessments_skills WHERE assessment_id = ?',
+        [id]
+      );
+      
+      // Delete assessment-group relationships
+      await query(
+        'DELETE FROM inteli_assessments_groups WHERE assessment_id = ?',
         [id]
       );
       

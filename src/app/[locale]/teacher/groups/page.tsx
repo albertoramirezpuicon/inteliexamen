@@ -34,7 +34,8 @@ import {
   People as PeopleIcon,
   Search as SearchIcon,
   Visibility as VisibilityIcon,
-  Home as HomeIcon
+  Home as HomeIcon,
+  HelpOutline
 } from '@mui/icons-material';
 import Navbar from '@/components/layout/Navbar';
 import GroupMembersDialog from '@/components/teacher/GroupMembersDialog';
@@ -99,6 +100,9 @@ export default function TeacherGroupsPage() {
     name: '',
     description: ''
   });
+
+  // Info box state
+  const [showGroupInfo, setShowGroupInfo] = useState(true);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -408,19 +412,75 @@ export default function TeacherGroupsPage() {
             <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
             {t('dashboard')}
           </Link>
-          <Typography color="text.primary">{t('groups')}</Typography>
+          <Typography color="text.primary">{t('groups.title')}</Typography>
         </Breadcrumbs>
 
+        <Typography variant="h4" gutterBottom>
+          {t('groups.title')}
+        </Typography>
+        
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+          {t('groups.description')}
+        </Typography>
+
+        {/* Groups Info Box */}
+        {showGroupInfo && (
+          <Box
+            sx={{
+              backgroundColor: '#fff3cd',
+              border: '1px solid #ffeaa7',
+              borderRadius: 1,
+              p: 2,
+              mb: 3,
+              position: 'relative'
+            }}
+          >
+            <IconButton
+              size="small"
+              onClick={() => setShowGroupInfo(false)}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                color: 'text.secondary'
+              }}
+            >
+              <HelpOutline />
+            </IconButton>
+            <Typography variant="h6" sx={{ mb: 1, pr: 4 }}>
+              {t('groups.whatIsGroup')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t('groups.groupExplanation')}
+            </Typography>
+            <Button
+              size="small"
+              onClick={() => setShowGroupInfo(false)}
+              sx={{ mt: 1 }}
+            >
+              {t('groups.hideInfo')}
+            </Button>
+          </Box>
+        )}
+
+        {!showGroupInfo && (
+          <Button
+            size="small"
+            startIcon={<HelpOutline />}
+            onClick={() => setShowGroupInfo(true)}
+            sx={{ mb: 3 }}
+          >
+            {t('groups.showInfo')}
+          </Button>
+        )}
+
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1">
-            {t('groups')}
-          </Typography>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
           >
-            Create Group
+            {t('groups.addGroup')}
           </Button>
         </Box>
 
@@ -435,7 +495,7 @@ export default function TeacherGroupsPage() {
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Search groups..."
+              placeholder={t('groups.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
@@ -459,7 +519,7 @@ export default function TeacherGroupsPage() {
                       direction={sortField === 'name' ? sortOrder : 'asc'}
                       onClick={() => handleSort('name')}
                     >
-                      Name
+                      {t('groups.groupName')}
                     </TableSortLabel>
                   </TableCell>
                   <TableCell>
@@ -468,7 +528,7 @@ export default function TeacherGroupsPage() {
                       direction={sortField === 'description' ? sortOrder : 'asc'}
                       onClick={() => handleSort('description')}
                     >
-                      Description
+                      {t('groups.description')}
                     </TableSortLabel>
                   </TableCell>
                   <TableCell>
@@ -477,7 +537,7 @@ export default function TeacherGroupsPage() {
                       direction={sortField === 'member_count' ? sortOrder : 'asc'}
                       onClick={() => handleSort('member_count')}
                     >
-                      Members
+                      {t('groups.members')}
                     </TableSortLabel>
                   </TableCell>
                   <TableCell>
@@ -486,23 +546,23 @@ export default function TeacherGroupsPage() {
                       direction={sortField === 'created_at' ? sortOrder : 'asc'}
                       onClick={() => handleSort('created_at')}
                     >
-                      Created
+                      {t('groups.created')}
                     </TableSortLabel>
                   </TableCell>
-                  <TableCell align="center">Actions</TableCell>
+                  <TableCell align="center">{t('groups.actions')}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {loading ? (
                   <TableRow>
                     <TableCell colSpan={5} align="center">
-                      <Typography>Loading groups...</Typography>
+                      <Typography>{t('groups.loadingGroups')}</Typography>
                     </TableCell>
                   </TableRow>
                 ) : filteredGroups.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} align="center">
-                      <Typography>No groups found</Typography>
+                      <Typography>{t('groups.noGroupsFound')}</Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -523,7 +583,7 @@ export default function TeacherGroupsPage() {
                         <TableCell>
                           <Chip
                             icon={<PeopleIcon />}
-                            label={`${group.member_count} members`}
+                            label={t('groups.membersCount', { count: group.member_count })}
                             size="small"
                             color="primary"
                             variant="outlined"
@@ -540,7 +600,7 @@ export default function TeacherGroupsPage() {
                               size="small"
                               onClick={() => handleViewMembers(group)}
                               color="primary"
-                              title="View Members"
+                              title={t('groups.viewMembers')}
                             >
                               <VisibilityIcon />
                             </IconButton>
@@ -548,7 +608,7 @@ export default function TeacherGroupsPage() {
                               size="small"
                               onClick={() => handleOpenDialog(group)}
                               color="primary"
-                              title="Edit Group"
+                              title={t('groups.editGroup')}
                             >
                               <EditIcon />
                             </IconButton>
@@ -556,7 +616,7 @@ export default function TeacherGroupsPage() {
                               size="small"
                               onClick={() => handleDelete(group)}
                               color="error"
-                              title="Delete Group"
+                              title={t('groups.deleteGroup')}
                             >
                               <DeleteIcon />
                             </IconButton>
@@ -586,12 +646,12 @@ export default function TeacherGroupsPage() {
         {/* Create/Edit Group Dialog */}
         <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
           <DialogTitle>
-            {editingGroup ? 'Edit Group' : 'Create New Group'}
+            {editingGroup ? t('groups.editGroup') : t('groups.addNewGroup')}
           </DialogTitle>
           <DialogContent>
             <TextField
               fullWidth
-              label="Group Name"
+              label={t('groups.groupName')}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               margin="normal"
@@ -599,7 +659,7 @@ export default function TeacherGroupsPage() {
             />
             <TextField
               fullWidth
-              label="Description"
+              label={t('groups.description')}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               margin="normal"
@@ -608,28 +668,28 @@ export default function TeacherGroupsPage() {
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleCloseDialog}>Cancel</Button>
+            <Button onClick={handleCloseDialog}>{t('groups.cancel')}</Button>
             <Button onClick={handleSubmit} variant="contained">
-              {editingGroup ? 'Update' : 'Create'}
+              {editingGroup ? t('groups.update') : t('groups.create')}
             </Button>
           </DialogActions>
         </Dialog>
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogTitle>{t('groups.confirmDelete')}</DialogTitle>
           <DialogContent>
             <Typography>
-              Are you sure you want to delete the group &quot;{groupToDelete?.name}&quot;?
+              {t('groups.deleteConfirmation', { name: groupToDelete?.name })}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              This action cannot be undone. All members will be removed from this group.
+              {t('groups.deleteWarning', { count: groupToDelete?.member_count || 0 })}
             </Typography>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button onClick={() => setDeleteDialogOpen(false)}>{t('groups.cancel')}</Button>
             <Button onClick={confirmDelete} color="error" variant="contained">
-              Delete
+              {t('groups.delete')}
             </Button>
           </DialogActions>
         </Dialog>

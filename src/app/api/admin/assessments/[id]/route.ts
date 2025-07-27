@@ -94,6 +94,7 @@ export async function PUT(
       institution_id,
       teacher_id,
       show_teacher_name,
+      integrity_protection,
       name,
       description,
       difficulty_level,
@@ -101,6 +102,9 @@ export async function PUT(
       output_language,
       evaluation_context,
       case_text,
+      case_sections,
+      case_navigation_enabled,
+      case_sections_metadata,
       questions_per_skill,
       available_from,
       available_until,
@@ -158,15 +162,20 @@ export async function PUT(
       // Update assessment
       await query(
         `UPDATE inteli_assessments SET
-          institution_id = ?, teacher_id = ?, show_teacher_name = ?, name = ?, description = ?,
+          institution_id = ?, teacher_id = ?, show_teacher_name = ?, integrity_protection = ?, name = ?, description = ?,
           difficulty_level = ?, educational_level = ?, output_language = ?, evaluation_context = ?,
-          case_text = ?, questions_per_skill = ?, available_from = ?, available_until = ?,
+          case_text = ?, case_sections = ?, case_navigation_enabled = ?, case_sections_metadata = ?,
+          questions_per_skill = ?, available_from = ?, available_until = ?,
           dispute_period = ?, status = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?`,
         [
-          institution_id, teacher_id, show_teacher_name ? 1 : 0, name, description,
+          institution_id, teacher_id, show_teacher_name ? 1 : 0, integrity_protection ? 1 : 0, name, description,
           difficulty_level, educational_level, output_language, evaluation_context,
-          sanitizeText(case_text), questions_per_skill, available_from, available_until,
+          sanitizeText(case_text), 
+          case_sections ? JSON.stringify(case_sections) : null,
+          case_navigation_enabled ? 1 : 0,
+          case_sections_metadata ? JSON.stringify(case_sections_metadata) : null,
+          questions_per_skill, available_from, available_until,
           dispute_period, status, id
         ]
       );

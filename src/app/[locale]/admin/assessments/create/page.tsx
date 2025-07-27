@@ -1,3 +1,32 @@
+/**
+ * ADMIN ASSESSMENT CREATION PAGE
+ * 
+ * PURPOSE: Create new assessments system-wide for administrators
+ * 
+ * CONNECTIONS:
+ * - Accessible from /admin/assessments via Create Assessment button
+ * - Redirects to /admin/assessments after successful creation
+ * - Uses AssessmentForm component with admin userType
+ * - Breadcrumb navigation: Dashboard > Assessments > Create Assessment
+ * 
+ * KEY FEATURES:
+ * - Assessment creation form with all configuration options
+ * - System-wide assessment creation (not institution-specific)
+ * - Integration with shared AssessmentForm component
+ * - Breadcrumb navigation for easy navigation
+ * - Admin-specific assessment configuration
+ * 
+ * NAVIGATION FLOW:
+ * - Accessible from admin assessments page
+ * - Form submission creates assessment and redirects to assessments list
+ * - Breadcrumb navigation allows easy return to previous pages
+ * 
+ * SYSTEM SCOPE:
+ * - Creates assessments available across all institutions
+ * - Global assessment configuration
+ * - Cross-institutional assessment setup
+ */
+
 'use client';
 
 import { Box, Typography, Breadcrumbs, Link } from '@mui/material';
@@ -42,13 +71,7 @@ export default function AdminAssessmentCreatePage() {
           <Typography color="text.primary">{t('createAssessment')}</Typography>
         </Breadcrumbs>
         
-        <Typography variant="h4" gutterBottom>
-          {t('createAssessment')}
-        </Typography>
-        
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-          {t('createAssessmentDescription')}
-        </Typography>
+
         
         <AssessmentForm userType="admin" />
       </Box>

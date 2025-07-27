@@ -21,15 +21,20 @@ import {
   Card,
   CardContent,
   Divider,
-  Chip
+  Chip,
+  IconButton,
+  Checkbox
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import {
   Save as SaveIcon,
   AutoAwesome as AIIcon,
-  ArrowBack as BackIcon
+  ArrowBack as BackIcon,
+  HelpOutline
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import CaseSectionEditor from '@/components/teacher/CaseSectionEditor';
 
 interface AssessmentFormProps {
   userType: 'admin' | 'teacher';
@@ -54,6 +59,24 @@ interface Skill {
   name: string;
   description: string;
   domain_id: number;
+  domain_name?: string;
+}
+
+interface Group {
+  id: number;
+  name: string;
+  description: string;
+  institution_id: number;
+  member_count: number;
+}
+
+interface Source {
+  id: number;
+  title: string;
+  authors: string;
+  publication_year: number;
+  pdf_processing_status: string;
+  is_custom: boolean;
 }
 
 interface Teacher {
@@ -64,7 +87,7 @@ interface Teacher {
   role: string;
 }
 
-const steps = ['Basic Information', 'Skill Selection', 'Assessment Details', 'Case Generation', 'Preview'];
+const steps = ['basicInformation', 'skillSelection', 'assessmentDetails', 'caseGeneration', 'caseSolution', 'preview'];
 
 export default function AssessmentForm({ 
   userType, 
@@ -73,6 +96,7 @@ export default function AssessmentForm({
   assessmentId 
 }: AssessmentFormProps) {
   const router = useRouter();
+  const t = useTranslations('teacher.assessmentForm');
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -83,6 +107,7 @@ export default function AssessmentForm({
     institution_id: currentInstitutionId?.toString() || '',
     teacher_id: currentUserId?.toString() || '',
     show_teacher_name: false,
+    integrity_protection: true,
     name: '',
     description: '',
     difficulty_level: '',
@@ -90,24 +115,38 @@ export default function AssessmentForm({
     output_language: 'es',
     evaluation_context: '',
     case_text: '',
+    case_solution: '',
+    case_sections: null as any,
+    case_navigation_enabled: false,
+    case_sections_metadata: null as any,
     questions_per_skill: 5,
     available_from: new Date().toISOString().slice(0, 16),
     available_until: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
     dispute_period: 7,
     status: 'Active',
-    skill_id: ''
+    selected_skills: [] as number[],
+    selected_groups: [] as number[]
   });
 
   // Data for dropdowns
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [domains, setDomains] = useState<Domain[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  
+  // Sources data
+  const [sourcesBySkill, setSourcesBySkill] = useState<Record<number, Source[]>>({});
+  const [selectedSources, setSelectedSources] = useState<Record<number, number[]>>({});
 
   // Case generation
   const [generatingCase, setGeneratingCase] = useState(false);
+  const [generatingSolution, setGeneratingSolution] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
+
+  // Info box state
+  const [showAssessmentInfo, setShowAssessmentInfo] = useState(false);
 
   // Load initial data
   // Move this useEffect after the function declarations
@@ -125,8 +164,10 @@ export default function AssessmentForm({
             teacher_id: user.id.toString()
           }));
           
-          // Load domains for teacher's institution
+          // Load domains and skills for teacher's institution
           await loadDomains(user.institution_id);
+          await loadAllSkills(user.institution_id);
+          await loadGroups(user.institution_id);
         }
       }
 
@@ -160,7 +201,7 @@ export default function AssessmentForm({
         }
       }
     } catch {
-      setError('Failed to load initial data');
+      setError(t('failedToLoadInitialData'));
     }
   }, [userType]);
 
@@ -179,7 +220,7 @@ export default function AssessmentForm({
           const user = JSON.parse(userData);
           apiUrl = `/api/teacher/assessments/${assessmentId}?teacher_id=${user.id}&institution_id=${user.institution_id}`;
         } else {
-          throw new Error('User data not found');
+          throw new Error(t('failedToLoadInitialData'));
         }
       } else {
         apiUrl = `/api/admin/assessments/${assessmentId}`;
@@ -191,7 +232,7 @@ export default function AssessmentForm({
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Response not OK:', response.status, errorText);
-        throw new Error(`Failed to load assessment: ${response.status}`);
+        throw new Error(`${t('failedToLoadAssessment')}: ${response.status}`);
       }
 
       const data = await response.json();
@@ -206,6 +247,7 @@ export default function AssessmentForm({
         institution_id: assessment.institution_id?.toString() || '',
         teacher_id: assessment.teacher_id?.toString() || '',
         show_teacher_name: assessment.show_teacher_name === 1,
+        integrity_protection: assessment.integrity_protection === 1,
         name: assessment.name || '',
         description: assessment.description || '',
         difficulty_level: assessment.difficulty_level || '',
@@ -213,12 +255,16 @@ export default function AssessmentForm({
         output_language: assessment.output_language || 'es',
         evaluation_context: assessment.evaluation_context || '',
         case_text: assessment.case_text || '',
+        case_sections: assessment.case_sections || null,
+        case_navigation_enabled: assessment.case_navigation_enabled === 1,
+        case_sections_metadata: assessment.case_sections_metadata || null,
         questions_per_skill: assessment.questions_per_skill || 5,
         available_from: assessment.available_from ? assessment.available_from.slice(0, 16) : new Date().toISOString().slice(0, 16),
         available_until: assessment.available_until ? assessment.available_until.slice(0, 16) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
         dispute_period: assessment.dispute_period || 7,
         status: assessment.status || 'Active',
-        skill_id: assessment.skill_id?.toString() || ''
+        selected_skills: assessment.selected_skills || [],
+        selected_groups: assessment.selected_groups || []
       });
 
       // Load related data if institution_id exists
@@ -254,7 +300,8 @@ export default function AssessmentForm({
           id: parseInt(assessment.skill_id),
           name: assessment.skill_name || 'Unknown Skill',
           description: assessment.skill_description || '',
-          domain_id: assessment.domain_id
+          domain_id: assessment.domain_id,
+          domain_name: assessment.domain_name
         });
       }
     } catch (err) {
@@ -347,6 +394,84 @@ export default function AssessmentForm({
     }
   };
 
+  const loadAllSkills = async (institutionId: number) => {
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        const response = await fetch(`/api/teacher/skills?institution_id=${institutionId}`, {
+          headers: {
+            'x-institution-id': user.institution_id.toString()
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setSkills(data.skills);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading all skills:', error);
+    }
+  };
+
+  const loadGroups = async (institutionId: number) => {
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        const response = await fetch('/api/teacher/groups', {
+          headers: {
+            'x-institution-id': user.institution_id.toString()
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setGroups(data.groups);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading groups:', error);
+    }
+  };
+
+  const loadSourcesForSkill = async (skillId: number) => {
+    try {
+      console.log('Loading sources for skill:', skillId);
+      
+      // Use different API endpoints based on user type
+      let apiUrl = '';
+      let headers: HeadersInit = {};
+      
+      if (userType === 'teacher') {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          const user = JSON.parse(userData);
+          apiUrl = `/api/teacher/skills/${skillId}/sources`;
+          headers = {
+            'x-user-id': user.id.toString()
+          };
+        }
+      } else {
+        apiUrl = `/api/admin/skills/${skillId}/sources`;
+      }
+      
+      const response = await fetch(apiUrl, { headers });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Sources loaded for skill', skillId, ':', data.sources.length);
+        setSourcesBySkill(prev => ({
+          ...prev,
+          [skillId]: data.sources
+        }));
+      } else {
+        console.error('Failed to load sources for skill:', skillId, response.status);
+      }
+    } catch (error) {
+      console.error('Error loading sources for skill:', skillId, error);
+    }
+  };
+
   // Load initial data
   useEffect(() => {
     loadInitialData();
@@ -355,8 +480,17 @@ export default function AssessmentForm({
     }
   }, [assessmentId, loadInitialData, loadAssessment]);
 
+  // Load sources when skills are selected
+  useEffect(() => {
+    formData.selected_skills.forEach(skillId => {
+      if (!sourcesBySkill[skillId]) {
+        loadSourcesForSkill(skillId);
+      }
+    });
+  }, [formData.selected_skills]);
+
   const handleInstitutionChange = async (institutionId: number) => {
-    setFormData(prev => ({ ...prev, institution_id: institutionId.toString(), skill_id: '' }));
+    setFormData(prev => ({ ...prev, institution_id: institutionId.toString(), selected_skills: [], selected_groups: [] }));
     setDomains([]);
     setSkills([]);
     setSelectedDomain(null);
@@ -368,7 +502,7 @@ export default function AssessmentForm({
   };
 
   const handleDomainChange = async (domainId: number) => {
-    setFormData(prev => ({ ...prev, skill_id: '' }));
+    setFormData(prev => ({ ...prev, selected_skills: [], selected_groups: [] }));
     setSkills([]);
     setSelectedSkill(null);
     
@@ -380,14 +514,88 @@ export default function AssessmentForm({
   };
 
   const handleSkillChange = (skillId: number) => {
-    setFormData(prev => ({ ...prev, skill_id: skillId.toString() }));
+    setFormData(prev => ({ ...prev, selected_skills: [skillId], selected_groups: [] }));
     const skill = skills.find(s => s.id === skillId);
     setSelectedSkill(skill || null);
   };
 
+  const handleSkillToggle = (skillId: number) => {
+    setFormData(prev => {
+      const currentSkills = prev.selected_skills;
+      const isSelected = currentSkills.includes(skillId);
+      
+      if (isSelected) {
+        // Remove skill
+        return { ...prev, selected_skills: currentSkills.filter(id => id !== skillId) };
+      } else {
+        // Add skill (max 4)
+        if (currentSkills.length >= 4) {
+          setError(t('maxSkillsReached'));
+          return prev;
+        }
+        setError(null);
+        return { ...prev, selected_skills: [...currentSkills, skillId] };
+      }
+    });
+  };
+
+  const handleGroupToggle = (groupId: number) => {
+    setFormData(prev => {
+      const currentGroups = prev.selected_groups;
+      const isSelected = currentGroups.includes(groupId);
+      
+      if (isSelected) {
+        // Remove group
+        return { ...prev, selected_groups: currentGroups.filter(id => id !== groupId) };
+      } else {
+        // Add group
+        return { ...prev, selected_groups: [...currentGroups, groupId] };
+      }
+    });
+  };
+
+  const handleSourceToggle = (skillId: number, sourceId: number) => {
+    setSelectedSources(prev => {
+      const currentSources = prev[skillId] || [];
+      const isSelected = currentSources.includes(sourceId);
+      
+      if (isSelected) {
+        // Remove source
+        return {
+          ...prev,
+          [skillId]: currentSources.filter(id => id !== sourceId)
+        };
+      } else {
+        // Add source
+        return {
+          ...prev,
+          [skillId]: [...currentSources, sourceId]
+        };
+      }
+    });
+  };
+
+  // Check if any sources are selected for enhanced generation
+  const hasSelectedSources = Object.values(selectedSources).some(sources => sources.length > 0);
+
   const generateCase = async () => {
-    if (!selectedSkill || !selectedDomain) {
-      setError('Please select a skill first');
+    if (formData.selected_skills.length === 0) {
+      setError(t('pleaseSelectSkills'));
+      return;
+    }
+
+    // Check if sources are selected for each skill
+    const skillsWithoutSources = formData.selected_skills.filter(skillId => {
+      const selectedSourcesForSkill = selectedSources[skillId] || [];
+      return selectedSourcesForSkill.length === 0;
+    });
+
+    if (skillsWithoutSources.length > 0) {
+      const skillNames = skillsWithoutSources.map(skillId => {
+        const skill = skills.find(s => s.id === skillId);
+        return skill?.name || 'Unknown Skill';
+      });
+      setError(`Please select at least one source for each skill: ${skillNames.join(', ')}`);
       return;
     }
 
@@ -395,7 +603,31 @@ export default function AssessmentForm({
       setGeneratingCase(true);
       setError(null);
 
-      const response = await fetch('/api/ai/generate-case', {
+      // Prepare skills data with their selected sources
+      const skillsWithSources = formData.selected_skills.map(skillId => {
+        const skill = skills.find(s => s.id === skillId);
+        const domain = domains.find(d => d.id === skill?.domain_id);
+        const selectedSourcesForSkill = selectedSources[skillId] || [];
+        const sourcesData = selectedSourcesForSkill.map(sourceId => {
+          const source = sourcesBySkill[skillId]?.find(s => s.id === sourceId);
+          return {
+            id: sourceId,
+            title: source?.title || '',
+            authors: source?.authors || '',
+            publication_year: source?.publication_year || 0
+          };
+        });
+
+        return {
+          id: skillId,
+          name: skill?.name || '',
+          description: skill?.description || '',
+          domainName: domain?.name || '',
+          selectedSources: sourcesData
+        };
+      });
+
+      const response = await fetch('/api/ai/generate-case-enhanced', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -404,24 +636,85 @@ export default function AssessmentForm({
           educationalLevel: formData.educational_level,
           outputLanguage: formData.output_language,
           evaluationContext: formData.evaluation_context,
-          domainName: selectedDomain.name,
-          skillName: selectedSkill.name,
-          skillDescription: selectedSkill.description
+          selectedSkills: skillsWithSources
         })
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate case');
+        throw new Error(errorData.error || t('failedToGenerateCase'));
       }
 
       const data = await response.json();
       setFormData(prev => ({ ...prev, case_text: data.caseText }));
-      setSuccess('Case generated successfully!');
+      setSuccess(t('caseGeneratedSuccessfully'));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate case');
+      setError(err instanceof Error ? err.message : t('failedToGenerateCase'));
     } finally {
       setGeneratingCase(false);
+    }
+  };
+
+  const generateCaseSolution = async () => {
+    if (!formData.case_text) {
+      setError('Please generate a case first');
+      return;
+    }
+
+    try {
+      setGeneratingSolution(true);
+      setError(null);
+
+      // Prepare skills data with their selected sources
+      const skillsWithSources = formData.selected_skills.map(skillId => {
+        const skill = skills.find(s => s.id === skillId);
+        const domain = domains.find(d => d.id === skill?.domain_id);
+        const selectedSourcesForSkill = selectedSources[skillId] || [];
+        const sourcesData = selectedSourcesForSkill.map(sourceId => {
+          const source = sourcesBySkill[skillId]?.find(s => s.id === sourceId);
+          return {
+            id: sourceId,
+            title: source?.title || '',
+            authors: source?.authors || '',
+            publication_year: source?.publication_year || 0
+          };
+        });
+
+        return {
+          id: skillId,
+          name: skill?.name || '',
+          description: skill?.description || '',
+          domainName: domain?.name || '',
+          selectedSources: sourcesData
+        };
+      });
+
+      const response = await fetch('/api/ai/generate-case-solution-enhanced', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          caseText: formData.case_text,
+          assessmentDescription: formData.description,
+          difficultyLevel: formData.difficulty_level,
+          educationalLevel: formData.educational_level,
+          outputLanguage: formData.output_language,
+          evaluationContext: formData.evaluation_context,
+          selectedSkills: skillsWithSources
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate case solution');
+      }
+
+      const data = await response.json();
+      setFormData(prev => ({ ...prev, case_solution: data.caseSolution }));
+      setSuccess('Case solution generated successfully');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate case solution');
+    } finally {
+      setGeneratingSolution(false);
     }
   };
 
@@ -432,8 +725,18 @@ export default function AssessmentForm({
 
       const submitData = {
         ...formData,
-        status: saveAsDraft ? 'Inactive' : 'Active'
+        status: saveAsDraft ? 'Inactive' : 'Active',
+        selected_sources: selectedSources
       };
+
+      // Debug: Log the data being submitted
+      console.log('Submitting assessment data:', {
+        case_navigation_enabled: submitData.case_navigation_enabled,
+        case_sections: submitData.case_sections,
+        case_sections_metadata: submitData.case_sections_metadata,
+        hasSections: !!submitData.case_sections,
+        sectionsKeys: submitData.case_sections ? Object.keys(submitData.case_sections) : []
+      });
 
       // Use different API endpoints based on user type
       let url = '';
@@ -497,12 +800,19 @@ export default function AssessmentForm({
       case 0: // Basic Information
         return formData.institution_id && formData.name && formData.description;
       case 1: // Skill Selection
-        return formData.skill_id;
+        return formData.selected_skills.length > 0;
       case 2: // Assessment Details
         return formData.difficulty_level && formData.educational_level && 
                formData.evaluation_context && formData.questions_per_skill > 0;
       case 3: // Case Generation
-        return formData.case_text;
+        // Check if sources are selected for each skill
+        const allSkillsHaveSources = formData.selected_skills.every(skillId => {
+          const selectedSourcesForSkill = selectedSources[skillId] || [];
+          return selectedSourcesForSkill.length > 0;
+        });
+        return formData.case_text && allSkillsHaveSources;
+      case 4: // Case Solution
+        return formData.case_solution;
       default:
         return true;
     }
@@ -605,58 +915,77 @@ export default function AssessmentForm({
 
       case 1:
         return (
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth required>
-                <InputLabel>Domain</InputLabel>
-                <Select
-                  value={selectedDomain?.id || ''}
-                  onChange={(e) => handleDomainChange(Number(e.target.value))}
-                  label="Domain"
-                  disabled={!formData.institution_id}
-                >
-                  {domains.map((domain) => (
-                    <MenuItem key={domain.id} value={domain.id}>
-                      {domain.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+          <Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              {t('selectSkillsDescription')}
+            </Typography>
             
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth required>
-                <InputLabel>Skill</InputLabel>
-                <Select
-                  value={formData.skill_id}
-                  onChange={(e) => handleSkillChange(Number(e.target.value))}
-                  label="Skill"
-                  disabled={!selectedDomain}
-                >
-                  {skills.map((skill) => (
-                    <MenuItem key={skill.id} value={skill.id}>
-                      {skill.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {selectedSkill && (
-              <Grid size={12}>
-                <Card variant="outlined">
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Selected Skill: {selectedSkill.name}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {selectedSkill.description}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
+            {formData.selected_skills.length > 0 && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  {t('selectedSkills')} ({formData.selected_skills.length}/4):
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                  {formData.selected_skills.map(skillId => {
+                    const skill = skills.find(s => s.id === skillId);
+                    const domain = domains.find(d => d.id === skill?.domain_id);
+                    return (
+                      <Chip
+                        key={skillId}
+                        label={`${skill?.name} (${domain?.name})`}
+                        onDelete={() => handleSkillToggle(skillId)}
+                        color="primary"
+                        variant="outlined"
+                      />
+                    );
+                  })}
+                </Box>
+              </Box>
             )}
-          </Grid>
+
+            <Grid container spacing={2}>
+              {domains.map(domain => {
+                const domainSkills = skills.filter(skill => skill.domain_id === domain.id);
+                if (domainSkills.length === 0) return null;
+                
+                return (
+                  <Grid size={12} key={domain.id}>
+                    <Card variant="outlined">
+                      <CardContent>
+                        <Typography variant="h6" gutterBottom color="primary">
+                          {domain.name}
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          {domainSkills.map(skill => (
+                            <FormControlLabel
+                              key={skill.id}
+                              control={
+                                <Switch
+                                  checked={formData.selected_skills.includes(skill.id)}
+                                  onChange={() => handleSkillToggle(skill.id)}
+                                  disabled={!formData.selected_skills.includes(skill.id) && formData.selected_skills.length >= 4}
+                                />
+                              }
+                              label={
+                                <Box>
+                                  <Typography variant="body1">
+                                    {skill.name}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    {skill.description}
+                                  </Typography>
+                                </Box>
+                              }
+                            />
+                          ))}
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </Box>
         );
 
       case 2:
@@ -769,48 +1098,192 @@ export default function AssessmentForm({
                 required
               />
             </Grid>
+
+            <Grid size={12}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.integrity_protection}
+                    onChange={(e) => setFormData(prev => ({ ...prev, integrity_protection: e.target.checked }))}
+                  />
+                }
+                label={t('integrityProtection')}
+              />
+              <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mt: 1 }}>
+                {t('integrityProtectionDescription')}
+              </Typography>
+            </Grid>
+
+            <Grid size={12}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {t('assignGroupsDescription')}
+              </Typography>
+              
+              {formData.selected_groups.length > 0 && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    {t('selectedGroups')} ({formData.selected_groups.length}):
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                    {formData.selected_groups.map(groupId => {
+                      const group = groups.find(g => g.id === groupId);
+                      return (
+                        <Chip
+                          key={groupId}
+                          label={`${group?.name} (${group?.member_count} ${t('members')})`}
+                          onDelete={() => handleGroupToggle(groupId)}
+                          color="secondary"
+                          variant="outlined"
+                        />
+                      );
+                    })}
+                  </Box>
+                </Box>
+              )}
+
+              <Grid container spacing={2}>
+                {groups.map(group => (
+                  <Grid size={12} key={group.id}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={formData.selected_groups.includes(group.id)}
+                          onChange={() => handleGroupToggle(group.id)}
+                        />
+                      }
+                      label={
+                        <Box>
+                          <Typography variant="body1">
+                            {group.name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {group.description} ({group.member_count} {t('members')})
+                          </Typography>
+                        </Box>
+                      }
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </Grid>
           </Grid>
         );
 
       case 3:
         return (
           <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">Case Generation</Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 2 }}>
               <Button
                 variant="contained"
                 startIcon={generatingCase ? <CircularProgress size={20} /> : <AIIcon />}
                 onClick={generateCase}
-                disabled={generatingCase || !selectedSkill}
+                disabled={generatingCase || formData.selected_skills.length === 0}
               >
-                {generatingCase ? 'Generating...' : 'Generate Case'}
+                {generatingCase ? t('generatingCase') : t('generateCase')}
               </Button>
             </Box>
 
-            {selectedSkill && (
+            {hasSelectedSources && (
+              <Box sx={{ mb: 2, p: 2, bgcolor: 'success.50', border: 1, borderColor: 'success.200', borderRadius: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <Box sx={{ color: 'success.600', mr: 1 }}>
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </Box>
+                  <Typography variant="subtitle2" sx={{ color: 'success.800', fontWeight: 'medium' }}>
+                    Source-Aware Generation Enabled
+                  </Typography>
+                </Box>
+                <Typography variant="body2" sx={{ color: 'success.700' }}>
+                  The AI will analyze the actual content of your selected sources to create more accurate and relevant cases.
+                </Typography>
+              </Box>
+            )}
+
+            {formData.selected_skills.length > 0 && (
               <Card variant="outlined" sx={{ mb: 2 }}>
                 <CardContent>
                   <Typography variant="subtitle1" gutterBottom>
-                    Skill Context for Case Generation
+                    {t('skillsContextForCaseGeneration')}
                   </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                  <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                     <Chip label={formData.difficulty_level} color="primary" size="small" />
                     <Chip label={formData.educational_level} color="secondary" size="small" />
                     <Chip label={formData.output_language === 'es' ? 'Spanish' : 'English'} size="small" />
                   </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Skill:</strong> {selectedSkill.name}
+                  
+                  <Typography variant="h6" gutterBottom>
+                    {t('selectedSkills')} and Sources
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    <strong>Description:</strong> {selectedSkill.description}
-                  </Typography>
+                  
+                  {formData.selected_skills.map(skillId => {
+                    const skill = skills.find(s => s.id === skillId);
+                    const domain = domains.find(d => d.id === skill?.domain_id);
+                    const sourcesForSkill = sourcesBySkill[skillId] || [];
+                    const selectedSourcesForSkill = selectedSources[skillId] || [];
+                    
+                    return (
+                      <Box key={skillId} sx={{ mb: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                        <Typography variant="subtitle1" gutterBottom color="primary">
+                          <strong>{skill?.name}</strong> ({domain?.name})
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                          {skill?.description}
+                        </Typography>
+                        
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          <strong>Select sources for this skill:</strong>
+                        </Typography>
+                        
+                        {sourcesForSkill.length === 0 ? (
+                          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                            No sources available for this skill. Please add sources in the Sources management page.
+                          </Typography>
+                        ) : (
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            {sourcesForSkill.map(source => (
+                              <FormControlLabel
+                                key={source.id}
+                                control={
+                                  <Checkbox
+                                    checked={selectedSourcesForSkill.includes(source.id)}
+                                    onChange={() => handleSourceToggle(skillId, source.id)}
+                                    size="small"
+                                  />
+                                }
+                                label={
+                                  <Box>
+                                    <Typography variant="body2">
+                                      {source.title}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      {source.authors} ({source.publication_year})
+                                    </Typography>
+                                  </Box>
+                                }
+                              />
+                            ))}
+                          </Box>
+                        )}
+                        
+                        {selectedSourcesForSkill.length > 0 && (
+                          <Box sx={{ mt: 1 }}>
+                            <Typography variant="caption" color="primary">
+                              {selectedSourcesForSkill.length} source(s) selected
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    );
+                  })}
                 </CardContent>
               </Card>
             )}
 
             <TextField
               fullWidth
-              label="Case Text"
+              label={t('caseText')}
               value={formData.case_text}
               onChange={(e) => setFormData(prev => ({ ...prev, case_text: e.target.value }))}
               inputProps={{ maxLength: 8192 }}
@@ -820,14 +1293,140 @@ export default function AssessmentForm({
               required
               placeholder="The AI will generate a realistic case scenario here..."
             />
+
+
+
+            {/* Case Section Editor */}
+            <Box sx={{ mt: 3 }}>
+              <CaseSectionEditor
+                caseText={formData.case_text}
+                caseSections={formData.case_sections || undefined}
+                caseNavigationEnabled={formData.case_navigation_enabled}
+                onSectionsChange={(sections, metadata) => {
+                  console.log('AssessmentForm: onSectionsChange called with:', { sections, metadata });
+                  setFormData(prev => ({
+                    ...prev,
+                    case_sections: sections,
+                    case_sections_metadata: metadata
+                  }));
+                }}
+                onNavigationToggle={(enabled) => {
+                  console.log('AssessmentForm: onNavigationToggle called with:', enabled);
+                  setFormData(prev => ({
+                    ...prev,
+                    case_navigation_enabled: enabled
+                  }));
+                }}
+                onGenerateQuestions={async () => {
+                  if (!formData.case_sections?.context?.content || !formData.case_sections?.main_scenario?.content) {
+                    throw new Error('Context and main scenario are required to generate questions');
+                  }
+
+                  const selectedSkillsData = formData.selected_skills.map(skillId => {
+                    const skill = skills.find(s => s.id === skillId);
+                    const domain = domains.find(d => d.id === skill?.domain_id);
+                    return {
+                      id: skillId,
+                      name: skill?.name || '',
+                      description: skill?.description || '',
+                      domainName: domain?.name || ''
+                    };
+                  });
+
+                  const response = await fetch('/api/ai/generate-questions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      context: formData.case_sections!.context.content,
+                      mainScenario: formData.case_sections!.main_scenario.content,
+                      skills: selectedSkillsData,
+                      difficultyLevel: formData.difficulty_level,
+                      educationalLevel: formData.educational_level,
+                      outputLanguage: formData.output_language
+                    })
+                  });
+
+                  if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to generate questions');
+                  }
+
+                  const data = await response.json();
+                  return data.questions;
+                }}
+                isGeneratingQuestions={false}
+              />
+            </Box>
           </Box>
         );
 
       case 4:
         return (
           <Box>
-            <Typography variant="h6" gutterBottom>Assessment Preview</Typography>
-            
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mb: 2 }}>
+              <Button
+                variant="contained"
+                startIcon={generatingSolution ? <CircularProgress size={20} /> : <AIIcon />}
+                onClick={generateCaseSolution}
+                disabled={generatingSolution || !formData.case_text}
+              >
+                {generatingSolution ? 'Generating Solution...' : 'Generate Case Solution'}
+              </Button>
+            </Box>
+
+            {hasSelectedSources && (
+              <Box sx={{ mb: 2, p: 2, bgcolor: 'success.50', border: 1, borderColor: 'success.200', borderRadius: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <Box sx={{ color: 'success.600', mr: 1 }}>
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </Box>
+                  <Typography variant="subtitle2" sx={{ color: 'success.800', fontWeight: 'medium' }}>
+                    Source-Aware Solution Generation Enabled
+                  </Typography>
+                </Box>
+                <Typography variant="body2" sx={{ color: 'success.700' }}>
+                  The AI will analyze the actual content of your selected sources to create more accurate and comprehensive solutions.
+                </Typography>
+              </Box>
+            )}
+
+            <Card variant="outlined" sx={{ mb: 2 }}>
+              <CardContent>
+                <Typography variant="subtitle1" gutterBottom>
+                  Case Solution Generation
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  The AI will generate a comprehensive solution to the case, inspired by the selected sources. 
+                  You can edit the generated solution before saving.
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                  <Chip label={formData.difficulty_level} color="primary" size="small" />
+                  <Chip label={formData.educational_level} color="secondary" size="small" />
+                  <Chip label={formData.output_language === 'es' ? 'Spanish' : 'English'} size="small" />
+                </Box>
+              </CardContent>
+            </Card>
+
+            <TextField
+              fullWidth
+              label="Case Solution"
+              value={formData.case_solution}
+              onChange={(e) => setFormData(prev => ({ ...prev, case_solution: e.target.value }))}
+              inputProps={{ maxLength: 8192 }}
+              helperText={`${formData.case_solution.length}/8192 characters`}
+              multiline
+              rows={15}
+              required
+              placeholder="The AI will generate a comprehensive solution to the case here..."
+            />
+          </Box>
+        );
+
+      case 5:
+        return (
+          <Box>
             <Card variant="outlined" sx={{ mb: 2 }}>
               <CardContent>
                 <Typography variant="h5" gutterBottom>{formData.name}</Typography>
@@ -843,15 +1442,45 @@ export default function AssessmentForm({
 
                 <Divider sx={{ my: 2 }} />
                 
-                <Typography variant="h6" gutterBottom>Skill to Assess</Typography>
-                <Typography variant="subtitle1" gutterBottom>{selectedSkill?.name}</Typography>
-                <Typography variant="body2" color="text.secondary" paragraph>
-                  {selectedSkill?.description}
-                </Typography>
+                <Typography variant="h6" gutterBottom>{t('selectedSkills')}</Typography>
+                {formData.selected_skills.map(skillId => {
+                  const skill = skills.find(s => s.id === skillId);
+                  const domain = domains.find(d => d.id === skill?.domain_id);
+                  return (
+                    <Box key={skillId} sx={{ mb: 2 }}>
+                      <Typography variant="subtitle1" gutterBottom>
+                        {skill?.name} ({domain?.name})
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" paragraph>
+                        {skill?.description}
+                      </Typography>
+                    </Box>
+                  );
+                })}
+
+                {formData.selected_groups.length > 0 && (
+                  <>
+                    <Divider sx={{ my: 2 }} />
+                    <Typography variant="h6" gutterBottom>{t('selectedGroups')}</Typography>
+                    {formData.selected_groups.map(groupId => {
+                      const group = groups.find(g => g.id === groupId);
+                      return (
+                        <Box key={groupId} sx={{ mb: 1 }}>
+                          <Typography variant="body2">
+                            <strong>{group?.name}</strong> ({group?.member_count} {t('members')})
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ ml: 2 }}>
+                            {group?.description}
+                          </Typography>
+                        </Box>
+                      );
+                    })}
+                  </>
+                )}
 
                 <Divider sx={{ my: 2 }} />
                 
-                <Typography variant="h6" gutterBottom>Case Scenario</Typography>
+                <Typography variant="h6" gutterBottom>{t('caseText')}</Typography>
                 <Box sx={{ 
                   p: 2, 
                   bgcolor: 'grey.50', 
@@ -866,7 +1495,22 @@ export default function AssessmentForm({
 
                 <Divider sx={{ my: 2 }} />
                 
-                <Typography variant="h6" gutterBottom>Assessment Details</Typography>
+                <Typography variant="h6" gutterBottom>Case Solution</Typography>
+                <Box sx={{ 
+                  p: 2, 
+                  bgcolor: 'grey.50', 
+                  borderRadius: 1,
+                  maxHeight: 400,
+                  overflow: 'auto'
+                }}>
+                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+                    {formData.case_solution || 'No case solution generated yet.'}
+                  </Typography>
+                </Box>
+
+                <Divider sx={{ my: 2 }} />
+                
+                <Typography variant="h6" gutterBottom>{t('assessmentDetails')}</Typography>
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 6, md: 6 }}>
                     <Typography variant="body2">
@@ -886,6 +1530,11 @@ export default function AssessmentForm({
                   <Grid size={{ xs: 6, md: 6 }}>
                     <Typography variant="body2">
                       <strong>Dispute Period:</strong> {formData.dispute_period} days
+                    </Typography>
+                  </Grid>
+                  <Grid size={{ xs: 6, md: 6 }}>
+                    <Typography variant="body2">
+                      <strong>{t('integrityProtection')}:</strong> {formData.integrity_protection ? t('enabled') : t('disabled')}
                     </Typography>
                   </Grid>
                 </Grid>
@@ -916,19 +1565,127 @@ export default function AssessmentForm({
           onClick={() => router.back()}
           sx={{ mr: 2 }}
         >
-          Back
+          {t('back')}
         </Button>
-        <Typography variant="h4">
-          {assessmentId ? 'Edit Assessment' : 'Create Assessment'}
-        </Typography>
       </Box>
+
+      {/* Assessment Info Box */}
+      {showAssessmentInfo && (
+        <Box
+          sx={{
+            backgroundColor: '#fff3cd',
+            border: '1px solid #ffeaa7',
+            borderRadius: 1,
+            p: 2,
+            mb: 3,
+            position: 'relative'
+          }}
+        >
+          <IconButton
+            size="small"
+            onClick={() => setShowAssessmentInfo(false)}
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              color: 'text.secondary'
+            }}
+          >
+            <HelpOutline />
+          </IconButton>
+          <Typography variant="h6" sx={{ mb: 1, pr: 4 }}>
+            {t('whatIsAssessment')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('assessmentExplanation')}
+          </Typography>
+          
+          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold', color: 'text.primary' }}>
+            {t('assessmentNameImportant')}
+          </Typography>
+          
+          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold', color: 'text.primary' }}>
+            {t('evaluationContextImportant')}
+          </Typography>
+          
+          <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold', color: 'text.primary' }}>
+            {t('fieldExplanations')}
+          </Typography>
+          
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              • <strong>{t('assessmentName')}:</strong> {t('assessmentNameField')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • <strong>{t('description')}:</strong> {t('descriptionField')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • <strong>{t('showTeacherName')}:</strong> {t('showTeacherNameField')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • <strong>{t('selectSkills')}:</strong> {t('skillSelectionField')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • <strong>{t('difficultyLevel')}:</strong> {t('difficultyLevelField')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • <strong>{t('educationalLevel')}:</strong> {t('educationalLevelField')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • <strong>{t('outputLanguage')}:</strong> {t('outputLanguageField')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • <strong>{t('questionsPerSkill')}:</strong> {t('questionsPerSkillField')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • <strong>{t('evaluationContext')}:</strong> {t('evaluationContextField')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • <strong>{t('availableFrom')}:</strong> {t('availableFromField')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • <strong>{t('availableUntil')}:</strong> {t('availableUntilField')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • <strong>{t('disputePeriod')}:</strong> {t('disputePeriodField')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • <strong>{t('integrityProtection')}:</strong> {t('integrityProtectionField')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • <strong>{t('assignGroups')}:</strong> {t('groupAssignmentField')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • <strong>{t('generateCase')}:</strong> {t('caseGenerationField')}
+            </Typography>
+          </Box>
+          <Button
+            size="small"
+            onClick={() => setShowAssessmentInfo(false)}
+            sx={{ mt: 1 }}
+          >
+            {t('hideInfo')}
+          </Button>
+        </Box>
+      )}
+
+      {!showAssessmentInfo && (
+        <Button
+          size="small"
+          startIcon={<HelpOutline />}
+          onClick={() => setShowAssessmentInfo(true)}
+          sx={{ mb: 3 }}
+        >
+          {t('showInfo')}
+        </Button>
+      )}
 
       {/* Stepper */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Stepper activeStep={activeStep} alternativeLabel>
           {steps.map((label) => (
             <Step key={label}>
-              <StepLabel>{label}</StepLabel>
+              <StepLabel>{t(label)}</StepLabel>
             </Step>
           ))}
         </Stepper>
@@ -958,7 +1715,7 @@ export default function AssessmentForm({
           disabled={activeStep === 0}
           onClick={handleBack}
         >
-          Back
+          {t('back')}
         </Button>
 
         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -970,7 +1727,7 @@ export default function AssessmentForm({
                 disabled={loading}
                 startIcon={<SaveIcon />}
               >
-                Save as Draft
+                {t('saveAsDraft')}
               </Button>
               <Button
                 variant="contained"
@@ -978,7 +1735,7 @@ export default function AssessmentForm({
                 disabled={loading}
                 startIcon={<SaveIcon />}
               >
-                Save and Activate
+                {t('saveAndActivate')}
               </Button>
             </>
           ) : (
@@ -987,7 +1744,7 @@ export default function AssessmentForm({
               onClick={handleNext}
               disabled={!canProceed()}
             >
-              Next
+              {t('next')}
             </Button>
           )}
         </Box>

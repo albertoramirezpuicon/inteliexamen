@@ -1,3 +1,37 @@
+/**
+ * STUDENT ASSESSMENT RESULTS PAGE
+ * 
+ * PURPOSE: View assessment results and skill evaluations with dispute functionality
+ * 
+ * CONNECTIONS:
+ * - Accessible from /student/assessments/[id] after assessment completion
+ * - Links to /student/disputes for disputing results
+ * - Displays results from /student/assessments/[id]/attempt
+ * - Shows conversation history from assessment attempt
+ * 
+ * KEY FEATURES:
+ * - Skill-level evaluations and feedback display
+ * - AI feedback and comments for each skill
+ * - Dispute initiation within dispute period
+ * - Assessment conversation history review
+ * - Performance analysis and skill breakdown
+ * - Dispute status tracking and management
+ * 
+ * NAVIGATION FLOW:
+ * - Student completes assessment and is redirected here
+ * - Views detailed results and skill evaluations
+ * - Can initiate dispute if within dispute period
+ * - Access to full conversation history
+ * - Breadcrumb navigation for easy return
+ * 
+ * STUDENT SCOPE:
+ * - Views personal assessment results only
+ * - Manages personal disputes and challenges
+ * - Reviews AI evaluation and feedback
+ * - Tracks dispute resolution status
+ * - Monitors dispute deadlines and periods
+ */
+
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -30,7 +64,10 @@ import {
   Warning as WarningIcon,
   ExpandMore as ExpandMoreIcon,
   Person as PersonIcon,
-  SmartToy as SmartToyIcon
+  SmartToy as SmartToyIcon,
+  Help as HelpIcon,
+  QuestionAnswer as QuestionAnswerIcon,
+  Info as InfoIcon
 } from '@mui/icons-material';
 import { Breadcrumbs, Link } from '@mui/material';
 import Navbar from '@/components/layout/Navbar';
@@ -79,6 +116,7 @@ interface ConversationMessage {
   id: number;
   message_type: 'student' | 'ai';
   message_text: string;
+  message_subtype?: 'regular' | 'clarification_question' | 'clarification_response';
   created_at: string;
 }
 
@@ -523,25 +561,65 @@ export default function AssessmentResultsPage() {
             
             {results.length > 0 ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {results.map((result, index) => (
-                  <Card key={index} sx={{ backgroundColor: 'grey.50' }}>
-                    <CardContent>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                        <Typography variant="h6">
-                          {result.skillName}
+                {results.map((result, index) => {
+                  // Calculate color based on skill level (assuming max 5 levels)
+                  const getResultColor = (skillLevelOrder: number, maxLevels: number = 5) => {
+                    const percentage = skillLevelOrder / maxLevels;
+                    if (percentage <= 0.2) return '#ffebee'; // Light red for lowest levels
+                    if (percentage <= 0.4) return '#ffcdd2'; // Red
+                    if (percentage <= 0.6) return '#ffb74d'; // Orange
+                    if (percentage <= 0.8) return '#81c784'; // Light green
+                    return '#4caf50'; // Green for highest levels
+                  };
+                  
+                  // Get border color based on skill level label
+                  const getBorderColor = (skillLevelLabel: string) => {
+                    const label = skillLevelLabel.toLowerCase();
+                    if (label.includes('starting') || label.includes('beginner') || label.includes('basic') || label.includes('inicial')) {
+                      return '#f44336'; // Darker red
+                    }
+                    if (label.includes('developing') || label.includes('intermediate') || label.includes('intermedio')) {
+                      return '#d32f2f'; // Dark red
+                    }
+                    if (label.includes('proficient') || label.includes('avanzado') || label.includes('competent')) {
+                      return '#f57c00'; // Dark orange
+                    }
+                    if (label.includes('advanced') || label.includes('expert') || label.includes('experto')) {
+                      return '#388e3c'; // Dark green
+                    }
+                    if (label.includes('master') || label.includes('excellent') || label.includes('excelente')) {
+                      return '#2e7d32'; // Darker green
+                    }
+                    return '#f44336'; // Darker red for unknown levels
+                  };
+                  
+                  const backgroundColor = getResultColor(result.skillLevelOrder || 1, 5);
+                  const borderColor = getBorderColor(result.skillLevelLabel);
+                  
+                  return (
+                    <Card key={index} sx={{ 
+                      backgroundColor,
+                      border: `2px solid ${borderColor}`,
+                      borderRadius: 2
+                    }}>
+                      <CardContent>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                          <Typography variant="h6">
+                            {result.skillName}
+                          </Typography>
+                          <Chip 
+                            label={result.skillLevelLabel} 
+                            color="primary" 
+                            size="small"
+                          />
+                        </Box>
+                        <Typography variant="body2" color="text.secondary">
+                          {result.feedback}
                         </Typography>
-                        <Chip 
-                          label={result.skillLevelLabel} 
-                          color="success" 
-                          size="small"
-                        />
-                      </Box>
-                      <Typography variant="body2" color="text.secondary">
-                        {result.feedback}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </Box>
             ) : (
               <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
@@ -622,18 +700,40 @@ export default function AssessmentResultsPage() {
                               width: 20, 
                               height: 20, 
                               mr: 1,
-                              backgroundColor: message.message_type === 'student' ? 'primary.dark' : 'secondary.main'
+                              backgroundColor: message.message_type === 'student' ? 'primary.dark' : 
+                                message.message_subtype === 'clarification_question' ? 'warning.main' : 'secondary.main'
                             }}
                           >
-                            {message.message_type === 'student' ? <PersonIcon fontSize="small" /> : <SmartToyIcon fontSize="small" />}
+                            {message.message_type === 'student' ? <PersonIcon fontSize="small" /> : 
+                              message.message_subtype === 'clarification_question' ? <QuestionAnswerIcon fontSize="small" /> : <SmartToyIcon fontSize="small" />}
                           </Avatar>
                           <Typography variant="caption" sx={{ opacity: 0.8 }}>
                             {message.message_type === 'student' ? 'You' : 'AI'} • {formatConversationTime(message.created_at)}
                           </Typography>
                         </Box>
+                        {/* Clarification Indicator */}
+                        {message.message_subtype === 'clarification_question' && (
+                          <Box sx={{ mb: 0.5, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <InfoIcon sx={{ fontSize: 14, color: 'warning.main' }} />
+                            <Typography variant="caption" color="warning.main" sx={{ fontWeight: 'bold', fontSize: '0.75rem' }}>
+                              Clarification Question (Free Turn)
+                            </Typography>
+                          </Box>
+                        )}
+                        
                         <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', fontSize: '0.875rem' }}>
                           {message.message_text}
                         </Typography>
+                        
+                        {/* Clarification Response Indicator */}
+                        {message.message_subtype === 'clarification_response' && (
+                          <Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <InfoIcon sx={{ fontSize: 14, color: 'info.main' }} />
+                            <Typography variant="caption" color="info.main" sx={{ fontWeight: 'bold', fontSize: '0.75rem' }}>
+                              Clarification Response (Free Turn)
+                            </Typography>
+                          </Box>
+                        )}
                       </Box>
                     </Box>
                   ))}

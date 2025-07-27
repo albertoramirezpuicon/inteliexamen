@@ -24,13 +24,19 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  IconButton,
+  Checkbox,
+  FormControlLabel
 } from '@mui/material';
 import { 
   Save, 
   ArrowBack,
   Psychology,
-  AutoAwesome
+  AutoAwesome,
+  InfoOutlined,
+  Close,
+  HelpOutline
 } from '@mui/icons-material';
 import { useTranslations, useLocale } from 'next-intl';
 import Navbar from '@/components/layout/Navbar';
@@ -58,6 +64,7 @@ interface SkillLevel {
   order: number;
   label: string;
   description: string;
+  standard?: number;
 }
 
 interface LevelSetting {
@@ -71,6 +78,7 @@ export default function TeacherSkillLevelsPage({ params }: { params: Promise<{ i
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('teacher');
+  const tSkillLevels = useTranslations('skillLevels');
   
   const [user, setUser] = useState<User | null>(null);
   const [skill, setSkill] = useState<Skill | null>(null);
@@ -92,6 +100,8 @@ export default function TeacherSkillLevelsPage({ params }: { params: Promise<{ i
     message: '',
     severity: 'success'
   });
+
+  const [showInfo, setShowInfo] = useState(true);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -172,7 +182,8 @@ export default function TeacherSkillLevelsPage({ params }: { params: Promise<{ i
         const templateLevels = data.levelSettings.map((setting: LevelSetting) => ({
           order: setting.order,
           label: setting.label,
-          description: ''
+          description: '',
+          standard: 0
         }));
         setSkillLevels(templateLevels);
       } else {
@@ -192,6 +203,11 @@ export default function TeacherSkillLevelsPage({ params }: { params: Promise<{ i
       
       if (!user?.institution_id) {
         setError('User institution not found');
+        return;
+      }
+
+      // Validate that at least one level is marked as standard
+      if (!validateStandardLevel()) {
         return;
       }
 
@@ -220,8 +236,10 @@ export default function TeacherSkillLevelsPage({ params }: { params: Promise<{ i
         severity: 'success'
       });
 
-      // Refresh the data
-      fetchSkillLevels();
+      // Redirect to skills page after successful save
+      setTimeout(() => {
+        router.push(`/${locale}/teacher/skills`);
+      }, 1500);
     } catch (error) {
       setSnackbar({
         open: true,
@@ -233,10 +251,33 @@ export default function TeacherSkillLevelsPage({ params }: { params: Promise<{ i
     }
   };
 
-  const handleLevelChange = (index: number, field: 'description', value: string) => {
+  const handleLevelChange = (index: number, field: 'description' | 'standard', value: string | number) => {
     const updatedLevels = [...skillLevels];
     updatedLevels[index] = { ...updatedLevels[index], [field]: value };
     setSkillLevels(updatedLevels);
+  };
+
+  const handleStandardChange = (index: number, checked: boolean) => {
+    const updatedLevels = [...skillLevels];
+    // Set all levels to 0 first
+    updatedLevels.forEach(level => level.standard = 0);
+    // Set the selected level to 1 if checked
+    updatedLevels[index].standard = checked ? 1 : 0;
+    setSkillLevels(updatedLevels);
+  };
+
+  // Ensure at least one level is marked as standard
+  const validateStandardLevel = () => {
+    const hasStandard = skillLevels.some(level => level.standard === 1);
+    if (!hasStandard) {
+      setSnackbar({
+        open: true,
+        message: 'Please mark at least one level as the standard level',
+        severity: 'error'
+      });
+      return false;
+    }
+    return true;
   };
 
   const handleGenerateWithAI = async () => {
@@ -344,7 +385,7 @@ export default function TeacherSkillLevelsPage({ params }: { params: Promise<{ i
             href={`/${locale}/teacher/skills`}
             sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
           >
-            {t('skills')}
+            {t('skills.title')}
           </Link>
           <Typography color="text.primary">Skill Levels</Typography>
         </Breadcrumbs>
@@ -355,9 +396,58 @@ export default function TeacherSkillLevelsPage({ params }: { params: Promise<{ i
             onClick={() => router.push(`/${locale}/teacher/skills`)}
             sx={{ mr: 2 }}
           >
-            Back to Skills
+            {tSkillLevels('backToSkills')}
           </Button>
         </Box>
+
+        {/* Info Box for Skill Levels */}
+        {showInfo ? (
+          <Box
+            sx={{
+              backgroundColor: '#fff3cd',
+              border: '1px solid #ffeaa7',
+              borderRadius: 1,
+              p: 2,
+              mb: 3,
+              position: 'relative'
+            }}
+          >
+            <IconButton
+              size="small"
+              onClick={() => setShowInfo(false)}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                color: 'text.secondary'
+              }}
+            >
+              <HelpOutline />
+            </IconButton>
+            <Typography variant="h6" sx={{ mb: 1, pr: 4 }}>
+              {tSkillLevels('whatIsSkillLevel')}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {tSkillLevels('skillLevelExplanation')}
+            </Typography>
+            <Button
+              size="small"
+              onClick={() => setShowInfo(false)}
+              sx={{ mt: 1 }}
+            >
+              {tSkillLevels('hideInfo')}
+            </Button>
+          </Box>
+        ) : (
+          <Button
+            size="small"
+            startIcon={<HelpOutline />}
+            onClick={() => setShowInfo(true)}
+            sx={{ mb: 3 }}
+          >
+            {tSkillLevels('showInfo')}
+          </Button>
+        )}
 
         {/* Skill Info Card */}
         <Card sx={{ mb: 3 }}>
@@ -386,6 +476,9 @@ export default function TeacherSkillLevelsPage({ params }: { params: Promise<{ i
             <Typography variant="body2" color="text.secondary">
               Define the proficiency levels for this skill. Each level should have a clear description of what students should be able to demonstrate.
             </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              <strong>Standard Level:</strong> Mark one level as the "standard" - this is the target level that feedback should guide students toward.
+            </Typography>
           </Box>
           
           <Button
@@ -403,8 +496,9 @@ export default function TeacherSkillLevelsPage({ params }: { params: Promise<{ i
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell width="10%">Level</TableCell>
-                <TableCell width="90%">Skill Level Details</TableCell>
+                <TableCell width="8%">Level</TableCell>
+                <TableCell width="82%">Skill Level Details</TableCell>
+                <TableCell width="10%">Standard</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -438,6 +532,28 @@ export default function TeacherSkillLevelsPage({ params }: { params: Promise<{ i
                         required
                       />
                     </Box>
+                  </TableCell>
+                  <TableCell>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={level.standard === 1}
+                          onChange={(e) => handleStandardChange(index, e.target.checked)}
+                          color="primary"
+                        />
+                      }
+                      label={
+                        <Box>
+                          <Typography variant="body2">Standard</Typography>
+                          {level.standard === 1 && (
+                            <Typography variant="caption" color="primary" sx={{ fontWeight: 'bold' }}>
+                              Target Level
+                            </Typography>
+                          )}
+                        </Box>
+                      }
+                      labelPlacement="top"
+                    />
                   </TableCell>
                 </TableRow>
               ))}

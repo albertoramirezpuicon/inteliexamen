@@ -82,14 +82,12 @@ export async function PUT(
         d.description,
         d.institution_id,
         i.name as institution_name,
-        d.created_at,
-        d.updated_at,
         COUNT(s.id) as skills_count
        FROM inteli_domains d
        LEFT JOIN inteli_institutions i ON d.institution_id = i.id
        LEFT JOIN inteli_skills s ON d.id = s.domain_id
        WHERE d.id = ?
-       GROUP BY d.id, d.name, d.description, d.institution_id, i.name, d.created_at, d.updated_at`,
+       GROUP BY d.id, d.name, d.description, d.institution_id, i.name`,
       [domainId]
     );
 
