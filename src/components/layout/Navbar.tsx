@@ -118,7 +118,7 @@ export default function Navbar({ userType, userName }: NavbarProps) {
   };
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: 'var(--color-primary)' }}>
+    <AppBar position="static" sx={{ backgroundColor: '#0070f3' }}>
       <Toolbar>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
           {getTitle()}

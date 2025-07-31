@@ -514,7 +514,7 @@ export default function TeacherSkillsPage() {
 
   if (loading) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
         <Navbar userType="teacher" userName={getUserDisplayName()} />
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
           <CircularProgress />
@@ -525,7 +525,7 @@ export default function TeacherSkillsPage() {
 
   if (error) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
         <Navbar userType="teacher" userName={getUserDisplayName()} />
         <Box sx={{ p: 3 }}>
           <Alert 
@@ -550,7 +550,7 @@ export default function TeacherSkillsPage() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
       <Navbar userType="teacher" userName={getUserDisplayName()} />
       
       <Box sx={{ p: 3 }}>

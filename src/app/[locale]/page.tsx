@@ -41,7 +41,14 @@ import {
   Card,
   CardContent,
   Chip,
-  Stack
+  Stack,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Divider
 } from '@mui/material';
 import { 
   AdminPanelSettings as AdminIcon,
@@ -53,7 +60,9 @@ import {
   Security as SecurityIcon,
   Speed as SpeedIcon,
   Psychology as PsychologyIcon,
-  ArrowForward as ArrowForwardIcon
+  ArrowForward as ArrowForwardIcon,
+  Menu as MenuIcon,
+  Language as LanguageIcon
 } from '@mui/icons-material';
 import LoginFormWrapper from '@/components/auth/LoginFormWrapper';
 import { useTranslations, useLocale } from 'next-intl';
@@ -70,11 +79,13 @@ export default function LandingPage() {
     open: false,
     userType: null
   });
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLanguageSwitch = (newLocale: string) => {
     const currentPath = window.location.pathname;
     const newPath = currentPath.replace(`/${locale}`, `/${newLocale}`);
     router.push(newPath);
+    setMobileMenuOpen(false);
   };
 
   const handleLoginClick = (userType: 'admin' | 'teacher' | 'student') => {
@@ -82,6 +93,7 @@ export default function LandingPage() {
       open: true,
       userType
     });
+    setMobileMenuOpen(false);
   };
 
   const handleCloseModal = () => {
@@ -120,9 +132,9 @@ export default function LandingPage() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
       {/* Fixed Top Navbar */}
-      <div style={{
+      <Box sx={{
         position: 'fixed',
         top: 0,
         left: 0,
@@ -130,25 +142,38 @@ export default function LandingPage() {
         zIndex: 1300,
         backgroundColor: 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid var(--border)',
-        height: '64px',
+        borderBottom: '1px solid #e0e0e0',
+        height: { xs: '56px', sm: '64px' },
         display: 'flex',
         alignItems: 'center',
-        padding: '0 24px'
+        px: { xs: 2, sm: 3 }
       }}>
-        <div style={{
+        <Container maxWidth="lg" sx={{ 
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          width: '100%',
-          maxWidth: '1200px',
-          margin: '0 auto'
+          height: '100%'
         }}>
-          <Typography variant="h5" sx={{ color: 'var(--text-primary)', fontWeight: 700, letterSpacing: '-0.5px' }}>
+          {/* Logo/Title */}
+          <Typography 
+            variant="h5" 
+            sx={{ 
+              color: '#171717', 
+              fontWeight: 700, 
+              letterSpacing: '-0.5px',
+              fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+            }}
+          >
             {t('title')}
           </Typography>
           
-          <Stack direction="row" spacing={2} alignItems="center">
+          {/* Desktop Navigation */}
+          <Stack 
+            direction="row" 
+            spacing={2} 
+            alignItems="center"
+            sx={{ display: { xs: 'none', md: 'flex' } }}
+          >
             {/* Login Buttons */}
             <Button
               variant="outlined"
@@ -156,12 +181,12 @@ export default function LandingPage() {
               startIcon={<AdminIcon />}
               onClick={() => handleLoginClick('admin')}
               sx={{ 
-                color: 'var(--text-primary)', 
-                borderColor: 'var(--border)',
+                color: '#171717', 
+                borderColor: '#e0e0e0',
                 borderRadius: 2,
                 '&:hover': {
-                  borderColor: 'var(--primary)',
-                  backgroundColor: 'var(--hover)'
+                  borderColor: '#0070f3',
+                  backgroundColor: '#f5f5f5'
                 }
               }}
             >
@@ -174,12 +199,12 @@ export default function LandingPage() {
               startIcon={<TeacherIcon />}
               onClick={() => handleLoginClick('teacher')}
               sx={{ 
-                color: 'var(--text-primary)', 
-                borderColor: 'var(--border)',
+                color: '#171717', 
+                borderColor: '#e0e0e0',
                 borderRadius: 2,
                 '&:hover': {
-                  borderColor: 'var(--primary)',
-                  backgroundColor: 'var(--hover)'
+                  borderColor: '#0070f3',
+                  backgroundColor: '#f5f5f5'
                 }
               }}
             >
@@ -192,48 +217,127 @@ export default function LandingPage() {
               startIcon={<StudentIcon />}
               onClick={() => handleLoginClick('student')}
               sx={{ 
-                color: 'var(--text-primary)', 
-                borderColor: 'var(--border)',
+                color: '#171717', 
+                borderColor: '#e0e0e0',
                 borderRadius: 2,
                 '&:hover': {
-                  borderColor: 'var(--primary)',
-                  backgroundColor: 'var(--hover)'
+                  borderColor: '#0070f3',
+                  backgroundColor: '#f5f5f5'
                 }
               }}
             >
               {t('student')}
             </Button>
 
-            {/* Language Switcher - moved to rightmost */}
+            {/* Language Switcher */}
             <Button
               variant="outlined"
               size="small"
               onClick={() => handleLanguageSwitch(locale === 'en' ? 'es' : 'en')}
               sx={{ 
-                color: 'var(--text-primary)', 
-                borderColor: 'var(--border)',
+                color: '#171717', 
+                borderColor: '#e0e0e0',
                 borderRadius: 2,
                 px: 2,
                 '&:hover': {
-                  borderColor: 'var(--primary)',
-                  backgroundColor: 'var(--hover)'
+                  borderColor: '#0070f3',
+                  backgroundColor: '#f5f5f5'
                 }
               }}
             >
               {locale.toUpperCase()}
             </Button>
           </Stack>
-        </div>
-      </div>
+
+          {/* Mobile Menu Button */}
+          <IconButton
+            onClick={() => setMobileMenuOpen(true)}
+            sx={{ 
+              display: { xs: 'flex', md: 'none' },
+              color: '#171717',
+              ml: 'auto'
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+        </Container>
+      </Box>
+
+      {/* Mobile Navigation Drawer */}
+      <Drawer
+        anchor="right"
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: 280,
+            backgroundColor: '#ffffff',
+            borderLeft: '1px solid #e0e0e0'
+          }
+        }}
+      >
+        <Box sx={{ p: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6" sx={{ color: '#171717', fontWeight: 600 }}>
+              {t('title')}
+            </Typography>
+            <IconButton onClick={() => setMobileMenuOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          
+          <Divider sx={{ mb: 2 }} />
+          
+          <List>
+            <ListItem disablePadding>
+              <ListItemButton onClick={() => handleLoginClick('admin')}>
+                <ListItemIcon>
+                  <AdminIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText primary={t('admin')} />
+              </ListItemButton>
+            </ListItem>
+            
+            <ListItem disablePadding>
+              <ListItemButton onClick={() => handleLoginClick('teacher')}>
+                <ListItemIcon>
+                  <TeacherIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText primary={t('teacher')} />
+              </ListItemButton>
+            </ListItem>
+            
+            <ListItem disablePadding>
+              <ListItemButton onClick={() => handleLoginClick('student')}>
+                <ListItemIcon>
+                  <StudentIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText primary={t('student')} />
+              </ListItemButton>
+            </ListItem>
+            
+            <Divider sx={{ my: 2 }} />
+            
+            <ListItem disablePadding>
+              <ListItemButton onClick={() => handleLanguageSwitch(locale === 'en' ? 'es' : 'en')}>
+                <ListItemIcon>
+                  <LanguageIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText primary={`${locale.toUpperCase()} → ${locale === 'en' ? 'ES' : 'EN'}`} />
+              </ListItemButton>
+            </ListItem>
+          </List>
+        </Box>
+      </Drawer>
 
       {/* Main Content with top padding for navbar */}
-      <div style={{ paddingTop: '64px' }}>
+      <Box sx={{ pt: { xs: '56px', sm: '64px' } }}>
         {/* Hero Section */}
         <Box sx={{ 
-          minHeight: '80vh',
+          minHeight: { xs: '70vh', sm: '80vh' },
           display: 'flex',
           alignItems: 'center',
-          background: 'linear-gradient(135deg, var(--background) 0%, rgba(25, 118, 210, 0.05) 100%)',
+          background: 'linear-gradient(135deg, #ffffff 0%, rgba(25, 118, 210, 0.05) 100%)',
           position: 'relative',
           overflow: 'hidden'
         }}>
@@ -253,7 +357,7 @@ export default function LandingPage() {
               display: 'flex', 
               flexDirection: { xs: 'column', md: 'row' },
               alignItems: 'center',
-              gap: 6
+              gap: { xs: 4, md: 6 }
             }}>
               <Box sx={{ 
                 flex: { xs: 'none', md: '0 0 58.33%' },
@@ -266,9 +370,9 @@ export default function LandingPage() {
                   component="h1" 
                   gutterBottom
                   sx={{ 
-                    color: 'var(--text-primary)',
+                    color: '#171717',
                     fontWeight: 800,
-                    fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4rem' },
+                    fontSize: { xs: '2rem', sm: '2.5rem', md: '3.5rem', lg: '4rem' },
                     lineHeight: 1.1,
                     letterSpacing: '-0.02em',
                     mb: 3
@@ -283,9 +387,9 @@ export default function LandingPage() {
                   component="h2" 
                   gutterBottom
                   sx={{ 
-                    color: 'var(--primary)',
+                    color: '#0070f3',
                     fontWeight: 600,
-                    fontSize: { xs: '1.5rem', sm: '2rem', md: '2.25rem' },
+                    fontSize: { xs: '1.25rem', sm: '1.5rem', md: '2rem', lg: '2.25rem' },
                     mb: 4,
                     opacity: 0.9
                   }}
@@ -297,10 +401,10 @@ export default function LandingPage() {
                 <Typography 
                   variant="h6" 
                   sx={{ 
-                    color: 'var(--text-secondary)',
+                    color: '#666666',
                     maxWidth: 600,
                     mb: 6,
-                    fontSize: { xs: '1rem', sm: '1.125rem' },
+                    fontSize: { xs: '0.9rem', sm: '1rem', md: '1.125rem' },
                     lineHeight: 1.6,
                     opacity: 0.8
                   }}
@@ -321,9 +425,9 @@ export default function LandingPage() {
                     endIcon={<ArrowForwardIcon />}
                     onClick={() => handleLoginClick('student')}
                     sx={{ 
-                      px: 4, 
-                      py: 1.5,
-                      fontSize: '1.1rem',
+                      px: { xs: 3, sm: 4 }, 
+                      py: { xs: 1.25, sm: 1.5 },
+                      fontSize: { xs: '1rem', sm: '1.1rem' },
                       fontWeight: 600,
                       borderRadius: 3,
                       boxShadow: 3,
@@ -342,9 +446,9 @@ export default function LandingPage() {
                     size="large"
                     onClick={() => handleLoginClick('teacher')}
                     sx={{ 
-                      px: 4, 
-                      py: 1.5,
-                      fontSize: '1.1rem',
+                      px: { xs: 3, sm: 4 }, 
+                      py: { xs: 1.25, sm: 1.5 },
+                      fontSize: { xs: '1rem', sm: '1.1rem' },
                       fontWeight: 600,
                       borderRadius: 3,
                       borderWidth: 2,
@@ -360,37 +464,42 @@ export default function LandingPage() {
                 </Stack>
 
                 {/* Trust Indicators */}
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: { xs: 'center', md: 'flex-start' } }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  gap: 1, 
+                  flexWrap: 'wrap', 
+                  justifyContent: { xs: 'center', md: 'flex-start' } 
+                }}>
                   <Chip 
                     label="AI-Powered" 
                     color="primary" 
-                    size="medium"
+                    size="small"
                     sx={{ 
-                      fontSize: '0.9rem', 
-                      px: 2, 
-                      py: 1,
+                      fontSize: { xs: '0.75rem', sm: '0.9rem' }, 
+                      px: 1.5, 
+                      py: 0.5,
                       fontWeight: 600
                     }}
                   />
                   <Chip 
                     label="Secure" 
                     variant="outlined"
-                    size="medium"
+                    size="small"
                     sx={{ 
-                      fontSize: '0.9rem', 
-                      px: 2, 
-                      py: 1,
+                      fontSize: { xs: '0.75rem', sm: '0.9rem' }, 
+                      px: 1.5, 
+                      py: 0.5,
                       fontWeight: 600
                     }}
                   />
                   <Chip 
                     label="Analytics" 
                     variant="outlined"
-                    size="medium"
+                    size="small"
                     sx={{ 
-                      fontSize: '0.9rem', 
-                      px: 2, 
-                      py: 1,
+                      fontSize: { xs: '0.75rem', sm: '0.9rem' }, 
+                      px: 1.5, 
+                      py: 0.5,
                       fontWeight: 600
                     }}
                   />
@@ -402,13 +511,14 @@ export default function LandingPage() {
                 width: '100%',
                 display: 'flex', 
                 justifyContent: 'center',
-                alignItems: 'center'
+                alignItems: 'center',
+                mt: { xs: 4, md: 0 }
               }}>
                 <Box sx={{
                   width: '100%',
-                  maxWidth: 400,
-                  height: 400,
-                  background: 'linear-gradient(135deg, var(--primary) 0%, rgba(25, 118, 210, 0.8) 100%)',
+                  maxWidth: { xs: 300, sm: 350, md: 400 },
+                  height: { xs: 300, sm: 350, md: 400 },
+                  background: 'linear-gradient(135deg, #0070f3 0%, rgba(25, 118, 210, 0.8) 100%)',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
@@ -435,8 +545,8 @@ export default function LandingPage() {
                     sx={{
                       width: '100%',
                       height: '100%',
-                      maxWidth: 400,
-                      maxHeight: 400,
+                      maxWidth: { xs: 300, sm: 350, md: 400 },
+                      maxHeight: { xs: 300, sm: 350, md: 400 },
                       objectFit: 'cover',
                       borderRadius: '50%',
                       filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))'
@@ -449,16 +559,16 @@ export default function LandingPage() {
         </Box>
 
         {/* Features Section */}
-        <Container maxWidth="lg" sx={{ py: 8 }}>
-          <Box sx={{ textAlign: 'center', mb: 8 }}>
+        <Container maxWidth="lg" sx={{ py: { xs: 6, sm: 8 } }}>
+          <Box sx={{ textAlign: 'center', mb: { xs: 6, sm: 8 } }}>
             <Typography 
               variant="h2" 
               component="h2" 
               gutterBottom
               sx={{ 
-                color: 'var(--text-primary)',
+                color: '#171717',
                 fontWeight: 700,
-                fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
+                fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem', lg: '3rem' },
                 mb: 3
               }}
             >
@@ -468,11 +578,12 @@ export default function LandingPage() {
             <Typography 
               variant="h6" 
               sx={{ 
-                color: 'var(--text-secondary)',
+                color: '#666666',
                 maxWidth: 600,
                 mx: 'auto',
                 mb: 6,
-                opacity: 0.8
+                opacity: 0.8,
+                fontSize: { xs: '0.9rem', sm: '1rem' }
               }}
             >
               {t('features.subtitle')}
@@ -482,14 +593,14 @@ export default function LandingPage() {
           <Box sx={{ 
             display: 'grid',
             gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
-            gap: 4
+            gap: { xs: 3, sm: 4 }
           }}>
             {features.map((feature, index) => (
               <Box key={index}>
                 <Card 
                   sx={{ 
                     height: '100%',
-                    backgroundColor: 'var(--card-background)',
+                    backgroundColor: '#ffffff',
                     transition: 'all 0.3s ease',
                     borderRadius: 3,
                     '&:hover': {
@@ -498,7 +609,7 @@ export default function LandingPage() {
                     }
                   }}
                 >
-                  <CardContent sx={{ textAlign: 'center', p: 4 }}>
+                  <CardContent sx={{ textAlign: 'center', p: { xs: 3, sm: 4 } }}>
                     <Box sx={{ mb: 3 }}>
                       {feature.icon}
                     </Box>
@@ -507,9 +618,10 @@ export default function LandingPage() {
                       component="h3" 
                       gutterBottom
                       sx={{ 
-                        color: 'var(--text-primary)',
+                        color: '#171717',
                         fontWeight: 600,
-                        mb: 2
+                        mb: 2,
+                        fontSize: { xs: '1.25rem', sm: '1.5rem' }
                       }}
                     >
                       {feature.title}
@@ -517,8 +629,9 @@ export default function LandingPage() {
                     <Typography 
                       variant="body1" 
                       sx={{ 
-                        color: 'var(--text-secondary)',
-                        lineHeight: 1.6
+                        color: '#666666',
+                        lineHeight: 1.6,
+                        fontSize: { xs: '0.875rem', sm: '1rem' }
                       }}
                     >
                       {feature.description}
@@ -529,7 +642,7 @@ export default function LandingPage() {
             ))}
           </Box>
         </Container>
-      </div>
+      </Box>
 
       {/* Login Modal */}
       <Modal
@@ -540,7 +653,7 @@ export default function LandingPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          p: 2
+          p: { xs: 1, sm: 2 }
         }}
         BackdropProps={{
           sx: {
@@ -551,7 +664,7 @@ export default function LandingPage() {
       >
         <Paper 
           sx={{ 
-            p: 4, 
+            p: { xs: 3, sm: 4 }, 
             maxWidth: 500, 
             width: '100%',
             position: 'relative',

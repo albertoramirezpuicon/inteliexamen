@@ -255,9 +255,10 @@ export default function AssessmentForm({
         output_language: assessment.output_language || 'es',
         evaluation_context: assessment.evaluation_context || '',
         case_text: assessment.case_text || '',
-        case_sections: assessment.case_sections || null,
+        case_solution: assessment.case_solution || '',
+        case_sections: assessment.case_sections ? (typeof assessment.case_sections === 'string' ? JSON.parse(assessment.case_sections) : assessment.case_sections) : null,
         case_navigation_enabled: assessment.case_navigation_enabled === 1,
-        case_sections_metadata: assessment.case_sections_metadata || null,
+        case_sections_metadata: assessment.case_sections_metadata ? (typeof assessment.case_sections_metadata === 'string' ? JSON.parse(assessment.case_sections_metadata) : assessment.case_sections_metadata) : null,
         questions_per_skill: assessment.questions_per_skill || 5,
         available_from: assessment.available_from ? assessment.available_from.slice(0, 16) : new Date().toISOString().slice(0, 16),
         available_until: assessment.available_until ? assessment.available_until.slice(0, 16) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
@@ -266,6 +267,13 @@ export default function AssessmentForm({
         selected_skills: assessment.selected_skills || [],
         selected_groups: assessment.selected_groups || []
       });
+
+      // Initialize selected sources if they exist in the assessment data
+      if (assessment.selected_sources && assessment.selected_sources.length > 0) {
+        // We need to load the sources for each skill to properly initialize selectedSources
+        // This will be done after skills are loaded
+        console.log('Assessment has selected sources:', assessment.selected_sources);
+      }
 
       // Load related data if institution_id exists
       if (assessment.institution_id) {
@@ -303,6 +311,20 @@ export default function AssessmentForm({
           domain_id: assessment.domain_id,
           domain_name: assessment.domain_name
         });
+      }
+
+      // Load sources for each selected skill and initialize selectedSources
+      if (assessment.selected_skills && assessment.selected_skills.length > 0) {
+        const sourcesPromises = assessment.selected_skills.map(skillId => 
+          loadSourcesForSkill(skillId)
+        );
+        await Promise.all(sourcesPromises);
+        
+        // Initialize selectedSources with the assessment's selected sources
+        if (assessment.sources_by_skill) {
+          console.log('Initializing selectedSources with:', assessment.sources_by_skill);
+          setSelectedSources(assessment.sources_by_skill);
+        }
       }
     } catch (err) {
       console.error('Error in loadAssessment:', err);
@@ -579,7 +601,7 @@ export default function AssessmentForm({
   const hasSelectedSources = Object.values(selectedSources).some(sources => sources.length > 0);
 
   const generateCase = async () => {
-    if (formData.selected_skills.length === 0) {
+            if ((formData.selected_skills || []).length === 0) {
       setError(t('pleaseSelectSkills'));
       return;
     }
@@ -726,7 +748,9 @@ export default function AssessmentForm({
       const submitData = {
         ...formData,
         status: saveAsDraft ? 'Inactive' : 'Active',
-        selected_sources: selectedSources
+        selected_sources: selectedSources,
+        selected_skills: formData.selected_skills || [],
+        selected_groups: formData.selected_groups || []
       };
 
       // Debug: Log the data being submitted
@@ -800,13 +824,13 @@ export default function AssessmentForm({
       case 0: // Basic Information
         return formData.institution_id && formData.name && formData.description;
       case 1: // Skill Selection
-        return formData.selected_skills.length > 0;
+        return (formData.selected_skills || []).length > 0;
       case 2: // Assessment Details
         return formData.difficulty_level && formData.educational_level && 
                formData.evaluation_context && formData.questions_per_skill > 0;
       case 3: // Case Generation
         // Check if sources are selected for each skill
-        const allSkillsHaveSources = formData.selected_skills.every(skillId => {
+        const allSkillsHaveSources = (formData.selected_skills || []).every(skillId => {
           const selectedSourcesForSkill = selectedSources[skillId] || [];
           return selectedSourcesForSkill.length > 0;
         });
@@ -829,7 +853,9 @@ export default function AssessmentForm({
                 label="Assessment Name"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                helperText={`${formData.name.length}/45 characters`}
+                helperText={`${(formData.name || '').length}/45 characters`}
+                multiline
+                rows={2}
                 required
               />
             </Grid>
@@ -839,9 +865,9 @@ export default function AssessmentForm({
                 label="Description"
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                helperText={`${formData.description.length}/1024 characters`}
+                helperText={`${(formData.description || '').length}/1024 characters`}
                 multiline
-                rows={3}
+                rows={6}
                 required
               />
             </Grid>
@@ -920,13 +946,13 @@ export default function AssessmentForm({
               {t('selectSkillsDescription')}
             </Typography>
             
-            {formData.selected_skills.length > 0 && (
+            {(formData.selected_skills || []).length > 0 && (
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle2" gutterBottom>
-                  {t('selectedSkills')} ({formData.selected_skills.length}/4):
+                  {t('selectedSkills')} ({(formData.selected_skills || []).length}/4):
                 </Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                  {formData.selected_skills.map(skillId => {
+                  {(formData.selected_skills || []).map(skillId => {
                     const skill = skills.find(s => s.id === skillId);
                     const domain = domains.find(d => d.id === skill?.domain_id);
                     return (
@@ -961,9 +987,9 @@ export default function AssessmentForm({
                               key={skill.id}
                               control={
                                 <Switch
-                                  checked={formData.selected_skills.includes(skill.id)}
+                                  checked={(formData.selected_skills || []).includes(skill.id)}
                                   onChange={() => handleSkillToggle(skill.id)}
-                                  disabled={!formData.selected_skills.includes(skill.id) && formData.selected_skills.length >= 4}
+                                  disabled={!(formData.selected_skills || []).includes(skill.id) && (formData.selected_skills || []).length >= 4}
                                 />
                               }
                               label={
@@ -971,7 +997,13 @@ export default function AssessmentForm({
                                   <Typography variant="body1">
                                     {skill.name}
                                   </Typography>
-                                  <Typography variant="body2" color="text.secondary">
+                                  <Typography 
+                                    variant="body2" 
+                                    sx={{ 
+                                      color: 'text.secondary',
+                                      display: { xs: 'none', md: 'block' }
+                                    }}
+                                  >
                                     {skill.description}
                                   </Typography>
                                 </Box>
@@ -1055,9 +1087,9 @@ export default function AssessmentForm({
                 label="Evaluation Context"
                 value={formData.evaluation_context}
                 onChange={(e) => setFormData(prev => ({ ...prev, evaluation_context: e.target.value }))}
-                helperText={`${formData.evaluation_context.length}/1024 characters`}
+                helperText={`${(formData.evaluation_context || '').length}/1024 characters`}
                 multiline
-                rows={4}
+                rows={8}
                 required
                 placeholder="Describe the characteristics of the students, their environment, cultural features that can be relevant to create a case..."
               />
@@ -1122,22 +1154,22 @@ export default function AssessmentForm({
               {formData.selected_groups.length > 0 && (
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="subtitle2" gutterBottom>
-                    {t('selectedGroups')} ({formData.selected_groups.length}):
+                    {t('selectedGroups')} ({(formData.selected_groups || []).length}):
                   </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                    {formData.selected_groups.map(groupId => {
-                      const group = groups.find(g => g.id === groupId);
-                      return (
-                        <Chip
-                          key={groupId}
-                          label={`${group?.name} (${group?.member_count} ${t('members')})`}
-                          onDelete={() => handleGroupToggle(groupId)}
-                          color="secondary"
-                          variant="outlined"
-                        />
-                      );
-                    })}
-                  </Box>
+                                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                      {(formData.selected_groups || []).map(groupId => {
+                        const group = groups.find(g => g.id === groupId);
+                        return (
+                          <Chip
+                            key={groupId}
+                            label={`${group?.name} (${group?.member_count} ${t('members')})`}
+                            onDelete={() => handleGroupToggle(groupId)}
+                            color="secondary"
+                            variant="outlined"
+                          />
+                        );
+                      })}
+                    </Box>
                 </Box>
               )}
 
@@ -1177,7 +1209,7 @@ export default function AssessmentForm({
                 variant="contained"
                 startIcon={generatingCase ? <CircularProgress size={20} /> : <AIIcon />}
                 onClick={generateCase}
-                disabled={generatingCase || formData.selected_skills.length === 0}
+                disabled={generatingCase || (formData.selected_skills || []).length === 0}
               >
                 {generatingCase ? t('generatingCase') : t('generateCase')}
               </Button>
@@ -1217,7 +1249,7 @@ export default function AssessmentForm({
                     {t('selectedSkills')} and Sources
                   </Typography>
                   
-                  {formData.selected_skills.map(skillId => {
+                  {(formData.selected_skills || []).map(skillId => {
                     const skill = skills.find(s => s.id === skillId);
                     const domain = domains.find(d => d.id === skill?.domain_id);
                     const sourcesForSkill = sourcesBySkill[skillId] || [];
@@ -1287,7 +1319,7 @@ export default function AssessmentForm({
               value={formData.case_text}
               onChange={(e) => setFormData(prev => ({ ...prev, case_text: e.target.value }))}
               inputProps={{ maxLength: 8192 }}
-              helperText={`${formData.case_text.length}/8192 characters`}
+                              helperText={`${(formData.case_text || '').length}/8192 characters`}
               multiline
               rows={12}
               required
@@ -1415,7 +1447,7 @@ export default function AssessmentForm({
               value={formData.case_solution}
               onChange={(e) => setFormData(prev => ({ ...prev, case_solution: e.target.value }))}
               inputProps={{ maxLength: 8192 }}
-              helperText={`${formData.case_solution.length}/8192 characters`}
+              helperText={`${(formData.case_solution || '').length}/8192 characters`}
               multiline
               rows={15}
               required
@@ -1458,11 +1490,11 @@ export default function AssessmentForm({
                   );
                 })}
 
-                {formData.selected_groups.length > 0 && (
+                {(formData.selected_groups || []).length > 0 && (
                   <>
                     <Divider sx={{ my: 2 }} />
                     <Typography variant="h6" gutterBottom>{t('selectedGroups')}</Typography>
-                    {formData.selected_groups.map(groupId => {
+                    {(formData.selected_groups || []).map(groupId => {
                       const group = groups.find(g => g.id === groupId);
                       return (
                         <Box key={groupId} sx={{ mb: 1 }}>

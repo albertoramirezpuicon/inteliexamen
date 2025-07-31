@@ -75,6 +75,7 @@ export function splitTextIntoChunks(text: string, maxChunkSize: number = 1000, o
  */
 export async function generateEmbeddings(textChunks: string[]): Promise<number[][]> {
   try {
+    console.log('Generating embeddings for', textChunks.length, 'text chunks');
     const embeddings: number[][] = [];
     
     // Process chunks in batches to avoid rate limits
@@ -99,7 +100,21 @@ export async function generateEmbeddings(textChunks: string[]): Promise<number[]
     return embeddings;
   } catch (error) {
     console.error('Error generating embeddings:', error);
-    throw new Error('Failed to generate embeddings');
+    
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes('OpenAI API') || error.message.includes('api.openai.com')) {
+        throw new Error('OpenAI API error: ' + error.message);
+      } else if (error.message.includes('authentication') || error.message.includes('401')) {
+        throw new Error('OpenAI API authentication error: Invalid API key');
+      } else if (error.message.includes('rate limit') || error.message.includes('429')) {
+        throw new Error('OpenAI API rate limit exceeded');
+      } else {
+        throw new Error('Failed to generate embeddings: ' + error.message);
+      }
+    } else {
+      throw new Error('Failed to generate embeddings: Unknown error');
+    }
   }
 }
 
@@ -200,14 +215,31 @@ export function findSimilarChunks(
  */
 export async function generateQueryEmbedding(query: string): Promise<number[]> {
   try {
+    console.log('Generating query embedding for:', query.substring(0, 100) + '...');
+    
     const response = await openai.embeddings.create({
       model: 'text-embedding-3-small',
       input: query,
     });
     
+    console.log('Query embedding generated successfully');
     return response.data[0].embedding;
   } catch (error) {
     console.error('Error generating query embedding:', error);
-    throw new Error('Failed to generate query embedding');
+    
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes('OpenAI API') || error.message.includes('api.openai.com')) {
+        throw new Error('OpenAI API error: ' + error.message);
+      } else if (error.message.includes('authentication') || error.message.includes('401')) {
+        throw new Error('OpenAI API authentication error: Invalid API key');
+      } else if (error.message.includes('rate limit') || error.message.includes('429')) {
+        throw new Error('OpenAI API rate limit exceeded');
+      } else {
+        throw new Error('Failed to generate query embedding: ' + error.message);
+      }
+    } else {
+      throw new Error('Failed to generate query embedding: Unknown error');
+    }
   }
 } 

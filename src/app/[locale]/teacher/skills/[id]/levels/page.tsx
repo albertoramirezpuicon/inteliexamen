@@ -336,7 +336,7 @@ export default function TeacherSkillLevelsPage({ params }: { params: Promise<{ i
 
   if (loading) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
         <Navbar userType="teacher" userName={getUserDisplayName()} />
         <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
           <CircularProgress />
@@ -347,7 +347,7 @@ export default function TeacherSkillLevelsPage({ params }: { params: Promise<{ i
 
   if (error) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
         <Navbar userType="teacher" userName={getUserDisplayName()} />
         <Box sx={{ p: 3 }}>
           <Alert severity="error">{error}</Alert>
@@ -358,7 +358,7 @@ export default function TeacherSkillLevelsPage({ params }: { params: Promise<{ i
 
   if (!skill) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
         <Navbar userType="teacher" userName={getUserDisplayName()} />
         <Box sx={{ p: 3 }}>
           <Alert severity="error">Skill not found</Alert>
@@ -368,7 +368,7 @@ export default function TeacherSkillLevelsPage({ params }: { params: Promise<{ i
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
       <Navbar userType="teacher" userName={getUserDisplayName()} />
       
       <Box sx={{ p: 3 }}>

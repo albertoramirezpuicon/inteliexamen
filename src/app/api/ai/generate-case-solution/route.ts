@@ -44,9 +44,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ caseSolution });
   } catch (error) {
     console.error('Error generating case solution:', error);
+    
+    // Provide more specific error messages based on error type
+    let errorMessage = 'Failed to generate case solution';
+    let statusCode = 500;
+    
+    if (error instanceof Error) {
+      if (error.message.includes('OpenAI API')) {
+        errorMessage = 'AI service temporarily unavailable. Please try again.';
+        statusCode = 503; // Service Unavailable
+      } else if (error.message.includes('API key not configured')) {
+        errorMessage = 'AI service configuration error. Please contact support.';
+        statusCode = 500;
+      } else {
+        errorMessage = error.message;
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to generate case solution' },
-      { status: 500 }
+      { error: errorMessage },
+      { status: statusCode }
     );
   }
 }
@@ -115,8 +132,18 @@ async function generateCaseSolution(params: {
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`OpenAI API error: ${error}`);
+    let errorMessage = `OpenAI API error: ${response.status} ${response.statusText}`;
+    try {
+      const errorData = await response.json();
+      if (errorData.error?.message) {
+        errorMessage = `OpenAI API error: ${errorData.error.message}`;
+      }
+    } catch (parseError) {
+      // If JSON parsing fails, use the text response
+      const errorText = await response.text();
+      errorMessage = `OpenAI API error: ${errorText}`;
+    }
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();

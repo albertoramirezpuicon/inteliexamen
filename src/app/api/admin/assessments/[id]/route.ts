@@ -16,17 +16,10 @@ export async function GET(
         a.*,
         i.name as institution_name,
         CONCAT(u.given_name, ' ', u.family_name) as teacher_name,
-        s.name as skill_name,
-        s.description as skill_description,
-        d.name as domain_name,
-        d.id as domain_id,
-        s.id as skill_id
+        (SELECT COUNT(*) FROM inteli_assessments_attempts aa WHERE aa.assessment_id = a.id) as attempt_count
       FROM inteli_assessments a
       LEFT JOIN inteli_institutions i ON a.institution_id = i.id
       LEFT JOIN inteli_users u ON a.teacher_id = u.id
-      LEFT JOIN inteli_assessments_skills aas ON a.id = aas.assessment_id
-      LEFT JOIN inteli_skills s ON aas.skill_id = s.id
-      LEFT JOIN inteli_domains d ON s.domain_id = d.id
       WHERE a.id = ?`,
       [id]
     );
@@ -40,9 +33,77 @@ export async function GET(
         { status: 404 }
       );
     }
-    
-    console.log('Returning assessment:', assessmentResult[0]);
-    return NextResponse.json({ assessment: assessmentResult[0] });
+
+    const assessment = assessmentResult[0];
+
+    // Get associated skills
+    const skillsResult = await query(
+      `SELECT 
+        s.id,
+        s.name,
+        s.description,
+        s.domain_id,
+        d.name as domain_name
+      FROM inteli_assessments_skills aas
+      JOIN inteli_skills s ON aas.skill_id = s.id
+      JOIN inteli_domains d ON s.domain_id = d.id
+      WHERE aas.assessment_id = ?`,
+      [id]
+    );
+
+    // Get associated groups
+    const groupsResult = await query(
+      `SELECT 
+        g.id,
+        g.name,
+        g.description,
+        g.institution_id,
+        COUNT(ug.user_id) as member_count
+      FROM inteli_assessments_groups ag
+      JOIN inteli_groups g ON ag.group_id = g.id
+      LEFT JOIN inteli_users_groups ug ON g.id = ug.group_id
+      WHERE ag.assessment_id = ?
+      GROUP BY g.id, g.name, g.description, g.institution_id`,
+      [id]
+    );
+
+    // Get associated sources with skill associations
+    const sourcesResult = await query(
+      `SELECT 
+        s.id,
+        s.title,
+        s.authors,
+        s.publication_year,
+        s.pdf_processing_status,
+        s.is_custom,
+        ss.skill_id
+      FROM inteli_assessments_sources aas
+      JOIN inteli_sources s ON aas.source_id = s.id
+      JOIN inteli_skills_sources ss ON s.id = ss.source_id
+      WHERE aas.assessment_id = ?`,
+      [id]
+    );
+
+    // Group sources by skill
+    const sourcesBySkill: Record<number, number[]> = {};
+    sourcesResult.forEach(source => {
+      if (!sourcesBySkill[source.skill_id]) {
+        sourcesBySkill[source.skill_id] = [];
+      }
+      sourcesBySkill[source.skill_id].push(source.id);
+    });
+
+    const assessmentWithRelations = {
+      ...assessment,
+      selected_skills: skillsResult.map(s => s.id),
+      selected_groups: groupsResult.map(g => g.id),
+      selected_sources: sourcesResult.map(s => s.id),
+      sources_by_skill: sourcesBySkill,
+      attempt_count: assessment.attempt_count || 0
+    };
+
+    console.log('Returning assessment:', assessmentWithRelations);
+    return NextResponse.json({ assessment: assessmentWithRelations });
   } catch (error) {
     console.error('Error fetching assessment:', error);
     return NextResponse.json(

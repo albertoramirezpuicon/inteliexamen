@@ -179,18 +179,18 @@ export default function TeacherDashboard() {
 
   if (loading) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <Typography>{tCommon('loading')}</Typography>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
       <Navbar userType="teacher" userName={getUserDisplayName()} />
       
       <Box sx={{ p: 3 }}>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+        <Typography variant="body1" sx={{ mb: 4, color: '#666666' }}>
           {t('welcomeMessage', { name: getUserDisplayName() })}
         </Typography>
 
@@ -198,7 +198,7 @@ export default function TeacherDashboard() {
         <Typography variant="h5" sx={{ mb: 2, mt: 4, color: '#7b1fa2', fontWeight: 'bold' }}>
           {t('assessmentManagement')}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        <Typography variant="body2" sx={{ mb: 3, color: '#666666' }}>
           {t('assessmentManagementDescription')}
         </Typography>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 4 }}>
@@ -222,7 +222,7 @@ export default function TeacherDashboard() {
         <Typography variant="h5" sx={{ mb: 2, mt: 4, color: '#1976d2', fontWeight: 'bold' }}>
           {t('studentManagement')}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        <Typography variant="body2" sx={{ mb: 3, color: '#666666' }}>
           {t('studentManagementDescription')}
         </Typography>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 4 }}>
@@ -246,7 +246,7 @@ export default function TeacherDashboard() {
         <Typography variant="h5" sx={{ mb: 2, mt: 4, color: '#ff6f00', fontWeight: 'bold' }}>
           {t('academicContent')}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        <Typography variant="body2" sx={{ mb: 3, color: '#666666' }}>
           {t('academicContentDescription')}
         </Typography>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mb: 4 }}>
@@ -279,7 +279,7 @@ export default function TeacherDashboard() {
             <Typography variant="h5" sx={{ mb: 2, mt: 4, color: '#388e3c', fontWeight: 'bold' }}>
               {t('recentActivity')}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            <Typography variant="body2" sx={{ mb: 3, color: '#666666' }}>
               {t('recentActivityDescription')}
             </Typography>
             <Card sx={{ mb: 4 }}>

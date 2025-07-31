@@ -678,6 +678,9 @@ async function evaluateWithAI(params: {
   const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
   const MODEL = 'gpt-4o';
 
+  console.log('evaluateWithAI - OPENAI_API_KEY configured:', !!OPENAI_API_KEY);
+  console.log('evaluateWithAI - API key length:', OPENAI_API_KEY ? OPENAI_API_KEY.length : 0);
+
   if (!OPENAI_API_KEY) {
     throw new Error('OpenAI API key not configured');
   }
@@ -747,6 +750,7 @@ async function evaluateWithAI(params: {
   console.log('AI Prompt (first 2000 chars):', prompt.substring(0, 2000));
   console.log('AI Prompt length:', prompt.length);
 
+  console.log('Making OpenAI API request for student evaluation...');
   const response = await fetch(OPENAI_API_URL, {
     method: 'POST',
     headers: {
@@ -770,9 +774,21 @@ async function evaluateWithAI(params: {
     }),
   });
 
+  console.log('OpenAI API response status for student evaluation:', response.status);
+
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`OpenAI API error: ${error}`);
+    let errorMessage = `OpenAI API error: ${response.status} ${response.statusText}`;
+    try {
+      const errorData = await response.json();
+      if (errorData.error?.message) {
+        errorMessage = `OpenAI API error: ${errorData.error.message}`;
+      }
+    } catch (parseError) {
+      // If JSON parsing fails, use the text response
+      const errorText = await response.text();
+      errorMessage = `OpenAI API error: ${errorText}`;
+    }
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();

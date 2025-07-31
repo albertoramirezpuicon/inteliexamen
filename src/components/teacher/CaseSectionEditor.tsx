@@ -87,21 +87,41 @@ export default function CaseSectionEditor({
 }: CaseSectionEditorProps) {
   const [sections, setSections] = useState<CaseSections>(caseSections || defaultSections);
   const [metadata, setMetadata] = useState<CaseSectionsMetadata>(defaultMetadata);
+
+  // Initialize metadata from props when available
+  useEffect(() => {
+    // If we have case sections, we should also have metadata
+    if (caseSections) {
+      console.log('Sections initialized, ensuring metadata is set');
+      // Keep the existing metadata or use default
+    }
+  }, [caseSections]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Auto-split case text into sections when case text changes
+  // Initialize sections and metadata from props when they change
   useEffect(() => {
-    if (caseText && !caseSections) {
+    if (caseSections) {
+      console.log('Initializing sections from props:', caseSections);
+      setSections(caseSections);
+    }
+  }, [caseSections]);
+
+  // Initialize sections from case text only if no existing sections
+  useEffect(() => {
+    if (caseText && !caseSections && (!sections || (!sections.context.content && !sections.main_scenario.content && !sections.questions.content))) {
+      console.log('No existing sections found, initializing from case text');
       const splitSections = splitCaseTextIntoSections(caseText);
       setSections(splitSections);
     }
-  }, [caseText, caseSections]);
+  }, [caseText, caseSections, sections]);
 
-  // Auto-populate sections when case navigation is enabled and there's case text
+
+
+  // Auto-populate sections when case navigation is enabled and there's case text (only if no existing sections)
   useEffect(() => {
-    if (caseNavigationEnabled && caseText) {
-      console.log('Auto-populating sections from case text');
+    if (caseNavigationEnabled && caseText && !caseSections && (!sections || (!sections.context.content && !sections.main_scenario.content && !sections.questions.content))) {
+      console.log('Auto-populating sections from case text due to navigation enabled');
       const splitSections = splitCaseTextIntoSections(caseText);
       setSections(splitSections);
       
@@ -112,7 +132,7 @@ export default function CaseSectionEditor({
       };
       onSectionsChange(splitSections, updatedMetadata);
     }
-  }, [caseNavigationEnabled, caseText]);
+  }, [caseNavigationEnabled, caseText, caseSections, sections]);
 
   // Ensure sections is never null
   useEffect(() => {
@@ -120,6 +140,19 @@ export default function CaseSectionEditor({
       setSections(defaultSections);
     }
   }, [sections]);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('CaseSectionEditor state:', {
+      caseNavigationEnabled,
+      hasCaseSections: !!caseSections,
+      sectionsContent: sections ? {
+        context: sections.context.content.length,
+        main_scenario: sections.main_scenario.content.length,
+        questions: sections.questions.content.length
+      } : 'no sections'
+    });
+  }, [caseNavigationEnabled, caseSections, sections]);
 
   const splitCaseTextIntoSections = (text: string): CaseSections => {
     console.log('Splitting case text:', text.substring(0, 200) + '...');

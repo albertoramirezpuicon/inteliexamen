@@ -483,29 +483,29 @@ export default function TeacherAttemptsPage() {
 
   if (!user) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <Typography>Loading...</Typography>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
       <Navbar userType="teacher" userName={`${user.given_name} ${user.family_name}`} />
       
       <Box sx={{ p: 3 }}>
         <Breadcrumbs sx={{ mb: 2 }}>
-          <Link href={`/${locale}/teacher/dashboard`} color="inherit" underline="hover">
+          <Link href={`/${locale}/teacher/dashboard`} color="inherit" underline="hover" sx={{ color: '#0070f3' }}>
             {t('dashboard')}
           </Link>
-          <Typography color="text.primary">{t('attempts.title')}</Typography>
+          <Typography sx={{ color: '#171717' }}>{t('attempts.title')}</Typography>
         </Breadcrumbs>
         
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h4" gutterBottom sx={{ color: '#171717', fontWeight: 600 }}>
           {t('attempts.title')}
         </Typography>
         
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+        <Typography variant="body1" sx={{ mb: 4, color: '#666666' }}>
           {t('attempts.description')}
         </Typography>
 
@@ -533,10 +533,10 @@ export default function TeacherAttemptsPage() {
             >
               <HelpOutline />
             </IconButton>
-            <Typography variant="h6" sx={{ mb: 1, pr: 4 }}>
+            <Typography variant="h6" sx={{ mb: 1, pr: 4, color: '#171717', fontWeight: 600 }}>
               {t('attempts.whatIsAttempt')}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{ color: '#666666' }}>
               {t('attempts.attemptExplanation')}
             </Typography>
             <Button

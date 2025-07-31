@@ -66,7 +66,7 @@ export default function TeacherAssessmentEditPage({ params }: AssessmentEditPage
 
   if (loading) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
         <Navbar userType="teacher" />
         <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
           <CircularProgress />
@@ -77,7 +77,7 @@ export default function TeacherAssessmentEditPage({ params }: AssessmentEditPage
 
   if (error) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
         <Navbar userType="teacher" />
         <Box sx={{ p: 3 }}>
           <Alert severity="error">{error}</Alert>
@@ -88,7 +88,7 @@ export default function TeacherAssessmentEditPage({ params }: AssessmentEditPage
 
   if (!assessment) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
         <Navbar userType="teacher" />
         <Box sx={{ p: 3 }}>
           <Alert severity="error">Assessment not found</Alert>
@@ -98,7 +98,7 @@ export default function TeacherAssessmentEditPage({ params }: AssessmentEditPage
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
       <Navbar userType="teacher" />
       
       {assessment.attempt_count > 0 ? (

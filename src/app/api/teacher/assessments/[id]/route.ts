@@ -87,10 +87,38 @@ export async function GET(
       [id]
     );
 
+    // Get associated sources with skill associations
+    const sourcesResult = await query(
+      `SELECT 
+        s.id,
+        s.title,
+        s.authors,
+        s.publication_year,
+        s.pdf_processing_status,
+        s.is_custom,
+        ss.skill_id
+      FROM inteli_assessments_sources aas
+      JOIN inteli_sources s ON aas.source_id = s.id
+      JOIN inteli_skills_sources ss ON s.id = ss.source_id
+      WHERE aas.assessment_id = ?`,
+      [id]
+    );
+
+    // Group sources by skill
+    const sourcesBySkill: Record<number, number[]> = {};
+    sourcesResult.forEach(source => {
+      if (!sourcesBySkill[source.skill_id]) {
+        sourcesBySkill[source.skill_id] = [];
+      }
+      sourcesBySkill[source.skill_id].push(source.id);
+    });
+
     const assessmentWithRelations = {
       ...assessment,
       selected_skills: skillsResult.map(s => s.id),
       selected_groups: groupsResult.map(g => g.id),
+      selected_sources: sourcesResult.map(s => s.id),
+      sources_by_skill: sourcesBySkill,
       attempt_count: assessment.attempt_count || 0
     };
 

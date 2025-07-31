@@ -109,7 +109,7 @@ export default function TeacherAssessmentViewPage({ params }: AssessmentViewPage
 
   if (loading) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
         <Navbar userType="teacher" />
         <Box sx={{ p: 3 }}>
           <Typography>Loading...</Typography>
@@ -120,7 +120,7 @@ export default function TeacherAssessmentViewPage({ params }: AssessmentViewPage
 
   if (error || !assessment) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
         <Navbar userType="teacher" />
         <Box sx={{ p: 3 }}>
           <Typography color="error">{error || 'Assessment not found'}</Typography>
@@ -130,7 +130,7 @@ export default function TeacherAssessmentViewPage({ params }: AssessmentViewPage
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
       <Navbar userType="teacher" />
       
       <Box sx={{ p: 3 }}>

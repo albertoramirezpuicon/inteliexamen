@@ -62,7 +62,9 @@ import {
   DialogActions,
   DialogContentText,
   Breadcrumbs,
-  Link
+  Link,
+  Card,
+  Pagination
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -279,14 +281,14 @@ export default function TeacherAssessmentsPage() {
 
   if (loading && assessments.length === 0) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <Typography>{tCommon('loading')}</Typography>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
       <Navbar userType="teacher" />
       
       <Box sx={{ p: 3 }}>
@@ -294,19 +296,19 @@ export default function TeacherAssessmentsPage() {
           <Link
             color="inherit"
             href={`/${locale}/teacher/dashboard`}
-            sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
+            sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: '#0070f3' }}
           >
             <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
             {t('dashboard')}
           </Link>
-          <Typography color="text.primary">{t('assessments.title')}</Typography>
+          <Typography sx={{ color: '#171717' }}>{t('assessments.title')}</Typography>
         </Breadcrumbs>
 
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h4" gutterBottom sx={{ color: '#171717', fontWeight: 600 }}>
           {t('assessments.title')}
         </Typography>
         
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+        <Typography variant="body1" sx={{ mb: 4, color: '#666666' }}>
           {t('assessments.description')}
         </Typography>
 
@@ -334,10 +336,10 @@ export default function TeacherAssessmentsPage() {
             >
               <HelpOutline />
             </IconButton>
-            <Typography variant="h6" sx={{ mb: 1, pr: 4 }}>
+            <Typography variant="h6" sx={{ mb: 1, pr: 4, color: '#171717', fontWeight: 600 }}>
               {t('assessments.whatIsAssessment')}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{ color: '#666666' }}>
               {t('assessments.assessmentExplanation')}
             </Typography>
             <Button
@@ -410,114 +412,238 @@ export default function TeacherAssessmentsPage() {
           </Box>
         </Paper>
 
-        {/* Table */}
-        <Paper>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>{tCommon('name')}</TableCell>
-                  <TableCell>{tCommon('status')}</TableCell>
-                  <TableCell>{t('assessments.difficulty')}</TableCell>
-                  <TableCell>{t('assessments.domain')}</TableCell>
-                  <TableCell>{t('assessments.skill')}</TableCell>
-                  <TableCell>{t('assessments.groups')}</TableCell>
-                  <TableCell>Attempts</TableCell>
-                  <TableCell>{tCommon('createdAt')}</TableCell>
-                  <TableCell>{tCommon('actions')}</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {assessments.map((assessment) => (
-                  <TableRow key={assessment.id}>
-                    <TableCell>
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight="bold">
-                          {assessment.name}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {assessment.description}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={assessment.status}
-                        color={getStatusColor(assessment.status) as 'success' | 'default'}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={assessment.difficulty_level}
-                        color={getDifficultyColor(assessment.difficulty_level) as 'success' | 'warning' | 'error' | 'default'}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>{assessment.domain_name}</TableCell>
-                    <TableCell>{assessment.skill_name}</TableCell>
-                    <TableCell>
-                      {canManageGroups(assessment) ? (
-                        <Button
-                          size="small"
-                          startIcon={<GroupIcon />}
-                          onClick={() => handleOpenGroupsModal(assessment)}
-                        >
-                          {assessment.associated_groups || '0'}
-                        </Button>
-                      ) : (
-                        <Typography variant="body2">
-                          {assessment.associated_groups || '0'}
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell>{assessment.attempt_count}</TableCell>
-                    <TableCell>{formatDate(assessment.created_at)}</TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <IconButton
-                          size="small"
-                          onClick={() => router.push(`/${locale}/teacher/assessments/${assessment.id}`)}
-                        >
-                          <ViewIcon />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          onClick={() => router.push(`/${locale}/teacher/assessments/${assessment.id}/edit`)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => {
-                            setAssessmentToDelete(assessment);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Box>
-                    </TableCell>
+        {/* Desktop Table View */}
+        <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+          <Paper>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>{tCommon('name')}</TableCell>
+                    <TableCell>{tCommon('status')}</TableCell>
+                    <TableCell>{t('assessments.difficulty')}</TableCell>
+                    <TableCell>{t('assessments.domain')}</TableCell>
+                    <TableCell>{t('assessments.skill')}</TableCell>
+                    <TableCell>{t('assessments.groups')}</TableCell>
+                    <TableCell>Attempts</TableCell>
+                    <TableCell>{tCommon('createdAt')}</TableCell>
+                    <TableCell>{tCommon('actions')}</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          
-          <TablePagination
-            component="div"
-            count={total}
-            page={page}
-            onPageChange={(_, newPage) => setPage(newPage)}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10));
-              setPage(0);
-            }}
-            rowsPerPageOptions={[10, 20, 50]}
-          />
-        </Paper>
+                </TableHead>
+                <TableBody>
+                  {assessments.map((assessment) => (
+                    <TableRow key={assessment.id}>
+                      <TableCell>
+                        <Box>
+                          <Typography variant="subtitle2" fontWeight="bold">
+                            {assessment.name}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#666666' }}>
+                            {assessment.description}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={assessment.status}
+                          color={getStatusColor(assessment.status) as 'success' | 'default'}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={assessment.difficulty_level}
+                          color={getDifficultyColor(assessment.difficulty_level) as 'success' | 'warning' | 'error' | 'default'}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>{assessment.domain_name}</TableCell>
+                      <TableCell>{assessment.skill_name}</TableCell>
+                      <TableCell>
+                        {canManageGroups(assessment) ? (
+                          <Button
+                            size="small"
+                            startIcon={<GroupIcon />}
+                            onClick={() => handleOpenGroupsModal(assessment)}
+                          >
+                            {assessment.associated_groups || '0'}
+                          </Button>
+                        ) : (
+                          <Typography variant="body2">
+                            {assessment.associated_groups || '0'}
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>{assessment.attempt_count}</TableCell>
+                      <TableCell>{formatDate(assessment.created_at)}</TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <IconButton
+                            size="small"
+                            onClick={() => router.push(`/${locale}/teacher/assessments/${assessment.id}`)}
+                          >
+                            <ViewIcon />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => router.push(`/${locale}/teacher/assessments/${assessment.id}/edit`)}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => {
+                              setAssessmentToDelete(assessment);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            
+            <TablePagination
+              component="div"
+              count={total}
+              page={page}
+              onPageChange={(_, newPage) => setPage(newPage)}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={(e) => {
+                setRowsPerPage(parseInt(e.target.value, 10));
+                setPage(0);
+              }}
+              rowsPerPageOptions={[10, 20, 50]}
+            />
+          </Paper>
+        </Box>
+
+        {/* Mobile Card View */}
+        <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+          <Box sx={{ display: 'grid', gap: 2 }}>
+            {assessments.map((assessment) => (
+              <Card key={assessment.id} sx={{ p: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                  <Box sx={{ flex: 1, mr: 2 }}>
+                    <Typography variant="h6" sx={{ color: '#171717', fontWeight: 600, mb: 1 }}>
+                      {assessment.name}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#666666', mb: 2 }}>
+                      {assessment.description}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                    <IconButton
+                      size="small"
+                      onClick={() => router.push(`/${locale}/teacher/assessments/${assessment.id}`)}
+                    >
+                      <ViewIcon />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => router.push(`/${locale}/teacher/assessments/${assessment.id}/edit`)}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => {
+                        setAssessmentToDelete(assessment);
+                        setDeleteDialogOpen(true);
+                      }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                </Box>
+
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                  <Chip
+                    label={assessment.status}
+                    color={getStatusColor(assessment.status) as 'success' | 'default'}
+                    size="small"
+                  />
+                  <Chip
+                    label={assessment.difficulty_level}
+                    color={getDifficultyColor(assessment.difficulty_level) as 'success' | 'warning' | 'error' | 'default'}
+                    size="small"
+                  />
+                </Box>
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#666666', display: 'block' }}>
+                      {t('assessments.domain')}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#171717', fontWeight: 500 }}>
+                      {assessment.domain_name}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#666666', display: 'block' }}>
+                      {t('assessments.skill')}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#171717', fontWeight: 500 }}>
+                      {assessment.skill_name}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#666666', display: 'block' }}>
+                      {t('assessments.groups')}
+                    </Typography>
+                    {canManageGroups(assessment) ? (
+                      <Button
+                        size="small"
+                        startIcon={<GroupIcon />}
+                        onClick={() => handleOpenGroupsModal(assessment)}
+                        sx={{ p: 0, minWidth: 'auto' }}
+                      >
+                        {assessment.associated_groups || '0'}
+                      </Button>
+                    ) : (
+                      <Typography variant="body2" sx={{ color: '#171717', fontWeight: 500 }}>
+                        {assessment.associated_groups || '0'}
+                      </Typography>
+                    )}
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#666666', display: 'block' }}>
+                      Attempts
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: '#171717', fontWeight: 500 }}>
+                      {assessment.attempt_count}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box>
+                  <Typography variant="caption" sx={{ color: '#666666', display: 'block' }}>
+                    {tCommon('createdAt')}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#171717', fontWeight: 500 }}>
+                    {formatDate(assessment.created_at)}
+                  </Typography>
+                </Box>
+              </Card>
+            ))}
+          </Box>
+
+          {/* Mobile Pagination */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+            <Pagination
+              count={Math.ceil(total / rowsPerPage)}
+              page={page + 1}
+              onChange={(_, newPage) => setPage(newPage - 1)}
+              size="small"
+            />
+          </Box>
+        </Box>
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>

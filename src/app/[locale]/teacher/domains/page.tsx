@@ -433,7 +433,7 @@ export default function TeacherDomainsPage() {
 
   if (loading) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
         <Navbar userType="teacher" userName={getUserDisplayName()} />
         <Box sx={{ p: 3 }}>
           <Typography>Loading domains...</Typography>
@@ -444,7 +444,7 @@ export default function TeacherDomainsPage() {
 
   if (error) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
         <Navbar userType="teacher" userName={getUserDisplayName()} />
         <Box sx={{ p: 3 }}>
           <Typography color="error">{error}</Typography>
@@ -454,7 +454,7 @@ export default function TeacherDomainsPage() {
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
       <Navbar userType="teacher" userName={getUserDisplayName()} />
       
       <Box sx={{ p: 3 }}>

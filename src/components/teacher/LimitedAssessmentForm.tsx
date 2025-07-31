@@ -182,7 +182,7 @@ export default function LimitedAssessmentForm({
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
       <Box sx={{ p: 3 }}>
         <Breadcrumbs sx={{ mb: 2 }}>
           <Link 
@@ -254,6 +254,8 @@ export default function LimitedAssessmentForm({
                 fullWidth
                 label="Assessment Name"
                 value={assessment.name}
+                multiline
+                rows={2}
                 disabled
               />
             </Grid>
@@ -269,7 +271,7 @@ export default function LimitedAssessmentForm({
               <TextField
                 fullWidth
                 multiline
-                rows={3}
+                rows={6}
                 label="Description"
                 value={assessment.description}
                 disabled

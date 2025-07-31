@@ -8,9 +8,11 @@
     "dev:clean": "rm -rf .next && next dev",
     "build": "next build",
     "build:fast": "NEXT_TELEMETRY_DISABLED=1 next build --no-lint",
+    "build:safe": "timeout 1800 npm run build:fast || (echo 'Build timeout - cleaning up' && pkill -f jest-worker || true)",
     "start": "next start",
     "lint": "next lint",
-    "clean": "rm -rf .next"
+    "clean": "rm -rf .next",
+    "clean:all": "rm -rf .next node_modules && npm install"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.842.0",

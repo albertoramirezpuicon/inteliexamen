@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['@mui/material', '@mui/icons-material'],
     // Disable some features for faster builds
     typedRoutes: false,
+    // Disable experimental features that might cause Jest worker issues
+    workerThreads: false,
+    cpus: 1, // Limit CPU usage during build
     // Enable Turbopack for development (much faster)
     turbo: {
       rules: {
@@ -54,6 +57,14 @@ const nextConfig: NextConfig = {
         net: false,
         tls: false,
       };
+      
+      // Add worker thread limits to prevent Jest worker issues
+      config.infrastructureLogging = {
+        level: 'error',
+      };
+      
+      // Limit parallel processing
+      config.parallelism = 1;
     }
     
     return config;

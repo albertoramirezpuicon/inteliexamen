@@ -17,7 +17,7 @@ export default function TeacherAssessmentCreatePage() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: 'var(--background)' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#ffffff' }}>
       <Navbar userType="teacher" />
       
       <Box sx={{ p: 3 }}>
