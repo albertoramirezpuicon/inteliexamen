@@ -26,6 +26,13 @@
     "applySuggestions": "Aplicar Sugerencias",
     "cancel": "Cancelar"
   },
+  "skillLevelLabels": {
+    "novice": "Novato",
+    "beginner": "Principiante",
+    "intermediate": "Intermedio",
+    "advanced": "Avanzado",
+    "expert": "Experto"
+  },
   "common": {
     "welcome": "Hola",
     "loading": "Cargando...",
@@ -842,5 +849,53 @@
     "language": "Idioma",
     "readyToStart": "¿Listo para comenzar?",
     "chooseRole": "Elige tu rol y comienza a usar la plataforma"
+  },
+  "StudentAssessmentAttempt": {
+    "dashboard": "Panel Principal",
+    "assessments": "Evaluaciones",
+    "skillsBeingEvaluated": "Habilidades siendo evaluadas",
+    "skillLevels": "Niveles de Habilidad",
+    "skillLevelLegend": "Leyenda de Niveles de Habilidad",
+    "performanceEvaluationNote": "Tu rendimiento será evaluado contra estos niveles",
+    "academicSourcesForReference": "Fuentes Académicas para Referencia",
+    "academicSourcesDescription": "Estas fuentes académicas proporcionan la base teórica para las habilidades siendo evaluadas. Úsalas para mejorar tu comprensión y mejorar tus respuestas. La IA hará referencia a estas fuentes para proporcionarte pistas útiles y orientación durante la evaluación.",
+    "howToUseSourcesEffectively": "Cómo usar estas fuentes efectivamente",
+    "reviewSourcesBeforeStarting": "Revisa las fuentes antes de comenzar tu evaluación para entender conceptos clave",
+    "aiMayReferenceSources": "Cuando la IA proporcione pistas, puede hacer referencia a estas fuentes para guiar tu pensamiento",
+    "useTheoreticalFrameworks": "Usa los marcos teóricos de estas fuentes para estructurar tus respuestas",
+    "noSpecificSourcesAvailable": "No hay fuentes específicas disponibles para esta habilidad",
+    "custom": "Personalizado",
+    "pdfAvailable": "PDF Disponible",
+    "caseScenario": "Escenario del Caso",
+    "jumpToSection": "Saltar a Sección",
+    "aiAssessmentConversation": "Conversación de Evaluación con IA",
+    "attemptStarted": "Intento iniciado",
+    "turns": "turnos",
+    "freeClarifications": "Aclaraciones gratuitas",
+    "clarificationTooltip": "Las preguntas de aclaración y respuestas no cuentan hacia tu límite de turnos. Puedes pedir aclaración tantas veces como necesites.",
+    "startByResponding": "Comienza respondiendo al escenario del caso arriba. La IA evaluará tu respuesta y proporcionará retroalimentación.",
+    "maxTurnsReached": "Has alcanzado el número máximo de turnos de conversación. La IA ahora evaluará tus respuestas.",
+    "noMoreTurnsAvailable": "No hay más turnos disponibles",
+    "typeYourResponseHere": "Escribe tu respuesta aquí...",
+    "maxTurnsReachedWaiting": "Máximo de turnos alcanzado. Esperando evaluación de la IA...",
+    "enterToSendIntegrityDisabled": "Presiona Enter para enviar, Shift+Enter para nueva línea. Copiar/pegar está deshabilitado para la integridad de la evaluación.",
+    "enterToSend": "Presiona Enter para enviar, Shift+Enter para nueva línea.",
+    "skillLevelLabels": {
+      "novice": "Novato",
+      "beginner": "Principiante",
+      "intermediate": "Intermedio",
+      "advanced": "Avanzado",
+      "expert": "Experto",
+      "foundational": "Fundamental",
+      "introductory": "Introductorio",
+      "elementary": "Elemental",
+      "basic": "Básico",
+      "developing": "En Desarrollo",
+      "competent": "Competente",
+      "proficient": "Competente",
+      "skilled": "Hábil",
+      "master": "Maestro",
+      "outstanding": "Destacado"
+    }
   }
 } 

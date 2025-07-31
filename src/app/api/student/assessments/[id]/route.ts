@@ -124,13 +124,14 @@ export async function GET(
             s.created_at
           FROM inteli_sources s
           INNER JOIN inteli_assessments_sources as2 ON s.id = as2.source_id
-          WHERE as2.assessment_id = ?
+          INNER JOIN inteli_skills_sources ss ON s.id = ss.source_id
+          WHERE as2.assessment_id = ? AND ss.skill_id = ?
           ORDER BY s.title
         `;
         
         const [levelsResult, sourcesResult] = await Promise.all([
           query(levelsQuery, [skill.id]),
-          query(sourcesQuery, [assessmentId])
+          query(sourcesQuery, [assessmentId, skill.id])
         ]);
         
         return {

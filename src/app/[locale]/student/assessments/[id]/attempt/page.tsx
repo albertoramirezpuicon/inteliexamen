@@ -40,6 +40,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { 
   Box, 
   Typography, 
@@ -56,7 +57,10 @@ import {
   IconButton,
   Breadcrumbs,
   Link,
-  Tooltip
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent
 } from '@mui/material';
 import { 
   Send as SendIcon, 
@@ -68,7 +72,8 @@ import {
   QuestionAnswer as QuestionAnswerIcon,
   Info as InfoIcon,
   ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon
+  ExpandLess as ExpandLessIcon,
+  Close as CloseIcon
 } from '@mui/icons-material';
 import Navbar from '@/components/layout/Navbar';
 import CaseNavigationMenu from '@/components/student/CaseNavigationMenu';
@@ -164,9 +169,11 @@ interface AssessmentResult {
 }
 
 export default function AssessmentAttemptPage() {
+  const t = useTranslations('StudentAssessmentAttempt');
   const params = useParams();
   const router = useRouter();
   const assessmentId = params.id as string;
+  const locale = params.locale as string;
   
   const [assessment, setAssessment] = useState<Assessment | null>(null);
   const [attempt, setAttempt] = useState<Attempt | null>(null);
@@ -181,6 +188,11 @@ export default function AssessmentAttemptPage() {
   const [currentEvaluationType, setCurrentEvaluationType] = useState<'incomplete' | 'improvable' | 'final' | null>(null);
   const [activeSection, setActiveSection] = useState<string>('context');
   const [sourcesExpanded, setSourcesExpanded] = useState(false);
+  const [skillLevelsExpanded, setSkillLevelsExpanded] = useState(false);
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [selectedSource, setSelectedSource] = useState<Source | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -543,6 +555,149 @@ export default function AssessmentAttemptPage() {
     return Math.max(...assessment.skills.flatMap(skill => skill.levels.map(level => level.order)));
   };
 
+  // Translate skill level label based on current locale
+  const translateSkillLevelLabel = (label: string) => {
+    const labelLower = label.toLowerCase().trim();
+    
+    // Simple direct mapping approach
+    const translations: { [key: string]: string } = {
+      // English to Spanish
+      'novice': 'Novato',
+      'beginner': 'Principiante', 
+      'intermediate': 'Intermedio',
+      'advanced': 'Avanzado',
+      'expert': 'Experto',
+      'foundational': 'Fundamental',
+      'introductory': 'Introductorio',
+      'elementary': 'Elemental',
+      'basic': 'Básico',
+      'developing': 'En Desarrollo',
+      'competent': 'Competente',
+      'proficient': 'Competente',
+      'skilled': 'Hábil',
+      'master': 'Maestro',
+      'outstanding': 'Destacado',
+      'in progress': 'En Progreso',
+      'expected': 'Esperado',
+      'excellent': 'Excelente',
+      // Spanish to Spanish (in case already in Spanish)
+      'novato': 'Novato',
+      'principiante': 'Principiante',
+      'intermedio': 'Intermedio',
+      'avanzado': 'Avanzado',
+      'experto': 'Experto',
+      'fundamental': 'Fundamental',
+      'introductorio': 'Introductorio',
+      'elemental': 'Elemental',
+      'básico': 'Básico',
+      'en desarrollo': 'En Desarrollo',
+      'competente': 'Competente',
+      'hábil': 'Hábil',
+      'maestro': 'Maestro',
+      'destacado': 'Destacado',
+      'en progreso': 'En Progreso',
+      'esperado': 'Esperado',
+      'excelente': 'Excelente'
+    };
+    
+    // Check for exact match
+    if (translations[labelLower]) {
+      return translations[labelLower];
+    }
+    
+    // Check for partial matches
+    if (labelLower.includes('novice') || labelLower.includes('starting') || labelLower.includes('basic') || 
+        labelLower.includes('foundational') || labelLower.includes('introductory') || labelLower.includes('elementary')) {
+      return 'Novato';
+    }
+    if (labelLower.includes('beginner') || labelLower.includes('inicial') || labelLower.includes('básico') || 
+        labelLower.includes('principiante') || labelLower.includes('inicio') || labelLower.includes('base')) {
+      return 'Principiante';
+    }
+    if (labelLower.includes('intermediate') || labelLower.includes('intermedio') || labelLower.includes('developing') || 
+        labelLower.includes('medio') || labelLower.includes('moderado') || labelLower.includes('competent') || 
+        labelLower.includes('competente')) {
+      return 'Intermedio';
+    }
+    if (labelLower.includes('advanced') || labelLower.includes('avanzado') || labelLower.includes('proficient') || 
+        labelLower.includes('superior') || labelLower.includes('alto') || labelLower.includes('elevado') ||
+        labelLower.includes('skilled') || labelLower.includes('habilidoso')) {
+      return 'Avanzado';
+    }
+    if (labelLower.includes('expert') || labelLower.includes('experto') || labelLower.includes('master') || 
+        labelLower.includes('maestro') || labelLower.includes('superior') || labelLower.includes('excelente') ||
+        labelLower.includes('outstanding') || labelLower.includes('destacado') || labelLower.includes('excellent')) {
+      return 'Experto';
+    }
+    
+    // Additional partial matches for the new terms
+    if (labelLower.includes('in progress') || labelLower.includes('en progreso') || labelLower.includes('progress')) {
+      return 'En Progreso';
+    }
+    if (labelLower.includes('expected') || labelLower.includes('esperado') || labelLower.includes('expect')) {
+      return 'Esperado';
+    }
+    
+    // Debug: log untranslated labels with more details
+    console.log('Untranslated skill level label:', {
+      original: label,
+      lowercase: labelLower,
+      length: label.length
+    });
+    
+    // If no translation found, return original label
+    return label;
+  };
+
+  // Determine if a skill level is the target standard (typically middle level)
+  const isTargetStandard = (level: SkillLevel, allLevels: SkillLevel[]) => {
+    if (allLevels.length === 0) return false;
+    
+    // Sort levels by order
+    const sortedLevels = [...allLevels].sort((a, b) => a.order - b.order);
+    
+    // Target standard is typically the middle level
+    const middleIndex = Math.floor(sortedLevels.length / 2);
+    return level.order === sortedLevels[middleIndex].order;
+  };
+
+  // Handle opening PDF modal
+  const handleOpenPdfModal = async (source: Source) => {
+    setSelectedSource(source);
+    setPdfModalOpen(true);
+    setPdfLoading(true);
+    setPdfUrl(null);
+    
+    if (source.pdf_s3_key && source.pdf_processing_status === 'completed') {
+      const url = await getPdfUrl(source.pdf_s3_key);
+      setPdfUrl(url);
+    }
+    setPdfLoading(false);
+  };
+
+  // Handle closing PDF modal
+  const handleClosePdfModal = () => {
+    setPdfModalOpen(false);
+    setSelectedSource(null);
+    setPdfUrl(null);
+    setPdfLoading(false);
+  };
+
+  // Get PDF URL for display
+  const getPdfUrl = async (pdfS3Key: string) => {
+    try {
+      const response = await fetch(`/api/teacher/sources/download?key=${encodeURIComponent(pdfS3Key)}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.url;
+      }
+      throw new Error('Failed to get PDF URL');
+    } catch (error) {
+      console.error('Error getting PDF URL:', error);
+      return null;
+    }
+  };
+
     // Function to render AI message with cognitive recommendations
   const renderCompleteMessage = (messageText: string) => {
     // For the new simplified structure, just render the message as paragraphs
@@ -604,7 +759,7 @@ export default function AssessmentAttemptPage() {
             sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
           >
             <HomeIcon sx={{ mr: 0.5 }} fontSize="small" />
-            Dashboard
+            {t('dashboard')}
           </Link>
           <Link
             color="inherit"
@@ -612,7 +767,7 @@ export default function AssessmentAttemptPage() {
             sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}
           >
             <AssessmentIcon sx={{ mr: 0.5 }} fontSize="small" />
-            Assessments
+            {t('assessments')}
           </Link>
           <Typography color="text.primary" sx={{ display: 'flex', alignItems: 'center' }}>
             {assessment?.name}
@@ -641,20 +796,81 @@ export default function AssessmentAttemptPage() {
             {assessment && assessment.skills && assessment.skills.length > 0 && (
               <Box sx={{ mt: 2, p: 2, backgroundColor: 'grey.100', borderRadius: 1 }}>
                 <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  Skills being evaluated:
+                  {t('skillsBeingEvaluated')}:
                 </Typography>
                 {assessment.skills.map((skill, index) => (
-                  <Box key={skill.id} sx={{ mb: index < assessment.skills.length - 1 ? 1 : 0 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'text.primary' }}>
+                  <Box key={skill.id} sx={{ mb: index < assessment.skills.length - 1 ? 2 : 0 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'text.primary', mb: 0.5 }}>
                       {skill.name}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem' }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.875rem', mb: 1 }}>
                       {skill.description}
                     </Typography>
+                    
+                    {/* Skill Levels */}
+                    {skill.levels && skill.levels.length > 0 && (
+                      <Box sx={{ ml: 1 }}>
+                        <Box 
+                          sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: 1, 
+                            cursor: 'pointer',
+                            mb: skillLevelsExpanded ? 0.5 : 0
+                          }}
+                          onClick={() => setSkillLevelsExpanded(!skillLevelsExpanded)}
+                        >
+                          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'medium' }}>
+                            {t('skillLevels')}:
+                          </Typography>
+                          {skillLevelsExpanded ? <ExpandLessIcon fontSize="small" color="action" /> : <ExpandMoreIcon fontSize="small" color="action" />}
+                        </Box>
+                        {skillLevelsExpanded && (
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                            {skill.levels
+                              .sort((a, b) => a.order - b.order)
+                              .map((level) => {
+                                const isTarget = isTargetStandard(level, skill.levels);
+                                return (
+                                <Box 
+                                  key={level.id} 
+                                  sx={{ 
+                                    p: 0.5,
+                                    borderRadius: 0.5,
+                                    backgroundColor: isTarget ? '#e3f2fd' : '#f8fbff', // Light blue for target, lighter blue for others
+                                    border: 1,
+                                    borderColor: isTarget ? '#2196f3' : '#e3f2fd' // Blue border for target, light blue for others
+                                  }}
+                                >
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                                    <Box 
+                                      sx={{ 
+                                        width: 8, 
+                                        height: 8, 
+                                        borderRadius: '50%', 
+                                        backgroundColor: isTarget ? '#2196f3' : '#90caf9', // Blue for target, lighter blue for others
+                                        flexShrink: 0
+                                      }} 
+                                    />
+                                    <Typography variant="caption" sx={{ fontWeight: 'medium', color: 'text.primary' }}>
+                                      {translateSkillLevelLabel(level.label)}
+                                    </Typography>
+                                  </Box>
+                                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem', display: 'block', ml: 2 }}>
+                                    {level.description}
+                                  </Typography>
+                                </Box>
+                              )})}
+                          </Box>
+                        )}
+                      </Box>
+                    )}
                   </Box>
                 ))}
               </Box>
             )}
+
+
 
             {/* Academic Sources Panel */}
             {assessment && assessment.skills && assessment.skills.length > 0 && (
@@ -671,30 +887,28 @@ export default function AssessmentAttemptPage() {
                 >
                   <InfoIcon fontSize="small" color="primary" />
                   <Typography variant="subtitle2" color="primary.dark" sx={{ fontWeight: 'bold', flex: 1 }}>
-                    Academic Sources for Reference
+                    {t('academicSourcesForReference')}
                   </Typography>
                   {sourcesExpanded ? <ExpandLessIcon color="primary" /> : <ExpandMoreIcon color="primary" />}
                 </Box>
                 {sourcesExpanded && (
                   <>
                     <Typography variant="body2" color="primary.dark" sx={{ mb: 2, fontSize: '0.875rem' }}>
-                      These academic sources provide the theoretical foundation for the skills being evaluated. 
-                      Use them to enhance your understanding and improve your responses. The AI will reference these sources 
-                      to provide you with helpful hints and guidance throughout the assessment.
+                      {t('academicSourcesDescription')}
                     </Typography>
                     
                     <Box sx={{ mb: 2, p: 1.5, backgroundColor: 'primary.100', borderRadius: 1 }}>
                       <Typography variant="caption" color="primary.dark" sx={{ fontWeight: 'bold', display: 'block', mb: 0.5 }}>
-                        💡 How to use these sources effectively:
+                        💡 {t('howToUseSourcesEffectively')}:
                       </Typography>
                       <Typography variant="caption" color="primary.dark" sx={{ display: 'block', mb: 0.5 }}>
-                        • Review the sources before starting your assessment to understand key concepts
+                        • {t('reviewSourcesBeforeStarting')}
                       </Typography>
                       <Typography variant="caption" color="primary.dark" sx={{ display: 'block', mb: 0.5 }}>
-                        • When the AI provides hints, it may reference these sources to guide your thinking
+                        • {t('aiMayReferenceSources')}
                       </Typography>
                       <Typography variant="caption" color="primary.dark" sx={{ display: 'block' }}>
-                        • Use the theoretical frameworks from these sources to structure your responses
+                        • {t('useTheoreticalFrameworks')}
                       </Typography>
                     </Box>
                     
@@ -714,54 +928,36 @@ export default function AssessmentAttemptPage() {
                                 key={source.id || sourceIndex} 
                                 sx={{ 
                                   ml: 2, 
-                                  mb: 1, 
-                                  p: 1.5, 
-                                  backgroundColor: 'white', 
-                                  borderRadius: 1,
-                                  border: 1,
-                                  borderColor: 'primary.100'
+                                  mb: 1
                                 }}
                               >
-                                <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'text.primary', mb: 0.5 }}>
+                                <Typography 
+                                  variant="body2" 
+                                  sx={{ 
+                                    fontWeight: 'medium', 
+                                    color: 'primary.main', 
+                                    cursor: 'pointer',
+                                    textDecoration: 'underline',
+                                    '&:hover': {
+                                      color: 'primary.dark'
+                                    }
+                                  }}
+                                  onClick={() => handleOpenPdfModal(source)}
+                                >
                                   {source.title}
                                 </Typography>
-                                {source.authors && (
-                                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                {(source.authors || source.publication_year) && (
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
                                     {source.authors}
-                                    {source.publication_year && `, ${source.publication_year}`}
+                                    {source.authors && source.publication_year && ', '}
+                                    {source.publication_year}
                                   </Typography>
                                 )}
-                                                            <Box sx={{ display: 'flex', gap: 1, mb: 0.5 }}>
-                              {source.is_custom && (
-                                <Chip 
-                                  label="Custom" 
-                                  size="small" 
-                                  variant="outlined" 
-                                  color="secondary"
-                                />
-                              )}
-                              {source.pdf_processing_status === 'completed' && (
-                                <Chip 
-                                  label="PDF Available" 
-                                  size="small" 
-                                  variant="outlined" 
-                                  color="success"
-                                />
-                              )}
-                              {source.pdf_file_size && (
-                                <Chip 
-                                  label={`${Math.round(source.pdf_file_size / 1024)} KB`} 
-                                  size="small" 
-                                  variant="outlined" 
-                                  color="info"
-                                />
-                              )}
-                            </Box>
                               </Box>
                             ))
                           ) : (
                             <Typography variant="body2" color="text.secondary" sx={{ ml: 2, fontStyle: 'italic' }}>
-                              No specific sources available for this skill.
+                              {t('noSpecificSourcesAvailable')}
                             </Typography>
                           )}
                         </Box>
@@ -778,7 +974,7 @@ export default function AssessmentAttemptPage() {
           {/* Case Text Panel */}
           <Paper sx={{ width: '40%', p: 3, display: 'flex', flexDirection: 'column' }}>
             <Typography variant="h6" gutterBottom>
-              Case Scenario
+              {t('caseScenario')}
             </Typography>
             <Divider sx={{ mb: 2 }} />
             
@@ -788,7 +984,7 @@ export default function AssessmentAttemptPage() {
             {assessment?.case_sections && (
               <Box sx={{ mb: 2, p: 2, backgroundColor: 'primary.50', borderRadius: 1 }}>
                 <Typography variant="subtitle2" color="primary.dark" sx={{ mb: 1, fontWeight: 'bold' }}>
-                  Jump to Section:
+                  {t('jumpToSection')}:
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                   {Object.entries(assessment.case_sections)
@@ -919,26 +1115,26 @@ export default function AssessmentAttemptPage() {
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box>
                   <Typography variant="h6">
-                    AI Assessment Conversation
+                    {t('aiAssessmentConversation')}
                   </Typography>
                   {attempt && (
                     <Typography variant="body2" color="text.secondary">
-                      Attempt started: {new Date(attempt.created_at).toLocaleString()}
+                      {t('attemptStarted')}: {new Date(attempt.created_at).toLocaleString()}
                     </Typography>
                   )}
                 </Box>
                 {assessment && !isCompleted && (
                   <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                     <Chip
-                      label={`${getRemainingTurns()}/${getMaxTurns()} turns`}
+                      label={`${getRemainingTurns()}/${getMaxTurns()} ${t('turns')}`}
                       color={getRemainingTurns() === 0 ? 'error' : getRemainingTurns() <= 2 ? 'warning' : 'primary'}
                       size="small"
                       variant="filled"
                     />
-                    <Tooltip title="Clarification questions and responses don't count toward your turn limit. You can ask for clarification as many times as needed.">
+                    <Tooltip title={t('clarificationTooltip')}>
                       <Chip
                         icon={<HelpIcon />}
-                        label="Free clarifications"
+                        label={t('freeClarifications')}
                         color="success"
                         size="small"
                         variant="outlined"
@@ -955,7 +1151,10 @@ export default function AssessmentAttemptPage() {
               {conversation.length === 0 ? (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
                   <Typography variant="body1" color="text.secondary">
-                    Start by responding to the case scenario above. The AI will evaluate your response and provide feedback.
+                    {locale === 'es' 
+                      ? `Responde a la pregunta del caso escribiendo tu respuesta a continuación para comenzar la interacción con el agente de IA. Tienes hasta ${getMaxTurns()} turnos para mejorar tu rendimiento.`
+                      : `Reply to the case question by typing your reply below to start the interaction with the AI agent. You have up to ${getMaxTurns()} turns to improve your performance.`
+                    }
                   </Typography>
                 </Box>
               ) : (
@@ -1129,7 +1328,7 @@ export default function AssessmentAttemptPage() {
               <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
                 {getRemainingTurns() === 0 && (
                   <Alert severity="warning" sx={{ mb: 2 }}>
-                    You have reached the maximum number of conversation turns. The AI will now evaluate your responses.
+                    {t('maxTurnsReached')}
                   </Alert>
                 )}
                 <Box sx={{ display: 'flex', gap: 1 }}>
@@ -1138,7 +1337,7 @@ export default function AssessmentAttemptPage() {
                     fullWidth
                     multiline
                     rows={3}
-                    placeholder={getRemainingTurns() === 0 ? "No more turns available" : "Type your response here..."}
+                    placeholder={getRemainingTurns() === 0 ? t('noMoreTurnsAvailable') : t('typeYourResponseHere')}
                     value={studentReply}
                     onChange={(e) => setStudentReply(e.target.value)}
                     onKeyPress={handleKeyPress}
@@ -1165,10 +1364,10 @@ export default function AssessmentAttemptPage() {
                 </Box>
                 <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
                   {getRemainingTurns() === 0 
-                    ? "Maximum turns reached. Waiting for AI evaluation..."
+                    ? t('maxTurnsReachedWaiting')
                     : assessment?.integrity_protection === 1
-                      ? "Press Enter to send, Shift+Enter for new line. Copy/paste is disabled for assessment integrity."
-                      : "Press Enter to send, Shift+Enter for new line."
+                      ? t('enterToSendIntegrityDisabled')
+                      : t('enterToSend')
                   }
                 </Typography>
               </Box>
@@ -1176,6 +1375,72 @@ export default function AssessmentAttemptPage() {
           </Paper>
         </Box>
       </Box>
+
+      {/* PDF Viewer Modal */}
+      <Dialog
+        open={pdfModalOpen}
+        onClose={handleClosePdfModal}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            height: '90vh',
+            maxHeight: '90vh'
+          }
+        }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6">
+            {selectedSource?.title}
+          </Typography>
+          <IconButton onClick={handleClosePdfModal}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0, height: '100%' }}>
+          {pdfLoading ? (
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              height: '100%',
+              p: 3
+            }}>
+              <CircularProgress size={48} />
+              <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
+                Cargando PDF...
+              </Typography>
+            </Box>
+          ) : pdfUrl ? (
+            <iframe
+              src={pdfUrl}
+              style={{
+                width: '100%',
+                height: '100%',
+                border: 'none'
+              }}
+              title={selectedSource?.title || 'PDF Viewer'}
+            />
+          ) : (
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              height: '100%',
+              p: 3
+            }}>
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                PDF no disponible
+              </Typography>
+              <Typography variant="body2" color="text.secondary" textAlign="center">
+                El PDF para esta fuente no está disponible o aún está siendo procesado.
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+      </Dialog>
     </Box>
   );
-} 
+}
