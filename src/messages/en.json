@@ -766,6 +766,7 @@
     "maxTurnsReachedWaiting": "Maximum turns reached. Waiting for AI evaluation...",
     "enterToSendIntegrityDisabled": "Press Enter to send, Shift+Enter for new line. Copy/paste is disabled for assessment integrity.",
     "enterToSend": "Press Enter to send, Shift+Enter for new line.",
+    "disputeResults": "Dispute Results",
     "skillLevelLabels": {
       "novice": "Novice",
       "beginner": "Beginner",

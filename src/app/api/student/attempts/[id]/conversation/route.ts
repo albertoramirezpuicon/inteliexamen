@@ -130,6 +130,242 @@ export async function POST(
 
     await query(updateAttemptQuery, [attemptId]);
 
+    // Check if this is a finish request
+    const isFinishRequest = message === '[STUDENT_REQUESTED_FINISH]';
+    
+    if (isFinishRequest) {
+      console.log('Student requested to finish assessment');
+      
+      // Get assessment details for final evaluation
+      const assessmentQuery = `
+        SELECT 
+          a.id,
+          a.name,
+          a.case_text,
+          a.case_solution,
+          a.questions_per_skill,
+          a.output_language,
+          s.id as skill_id,
+          s.name as skill_name,
+          s.description as skill_description
+        FROM inteli_assessments a
+        INNER JOIN inteli_assessments_skills as2 ON a.id = as2.assessment_id
+        INNER JOIN inteli_skills s ON as2.skill_id = s.id
+        WHERE a.id = ?
+      `;
+
+      const assessmentResult = await query(assessmentQuery, [assessmentId]);
+
+      if (!assessmentResult || assessmentResult.length === 0) {
+        throw new Error('Assessment not found');
+      }
+
+      // Get conversation history
+      const historyQuery = `
+        SELECT 
+          message_type,
+          message_text,
+          message_subtype,
+          created_at
+        FROM inteli_assessments_conversations
+        WHERE attempt_id = ?
+        ORDER BY created_at ASC
+      `;
+
+      const historyResult = await query(historyQuery, [attemptId]);
+
+      // Get skills with levels and sources
+      const skillsQuery = `
+        SELECT 
+          s.id as skill_id,
+          s.name as skill_name,
+          s.description as skill_description,
+          sl.id as level_id,
+          sl.label as level_label,
+          sl.description as level_description,
+          sl.order as level_order,
+          sl.standard as level_standard
+        FROM inteli_skills s
+        INNER JOIN inteli_assessments_skills as2 ON s.id = as2.skill_id
+        INNER JOIN inteli_skill_levels sl ON s.id = sl.skill_id
+        WHERE as2.assessment_id = ?
+        ORDER BY s.id, sl.order
+      `;
+
+      const skillsResult = await query(skillsQuery, [assessmentId]);
+
+      // Organize skills with levels
+      const skillsWithLevelsAndSources = assessmentResult.map((assessment: any) => {
+        const skillLevels = skillsResult
+          .filter((level: any) => level.skill_id === assessment.skill_id)
+          .map((level: any) => ({
+            id: level.level_id,
+            label: level.level_label,
+            description: level.level_description,
+            order: level.level_order,
+            standard: level.level_standard
+          }));
+
+        return {
+          skill_id: assessment.skill_id,
+          skill_name: assessment.skill_name,
+          skill_description: assessment.skill_description,
+          levels: skillLevels,
+          sources: [] // No sources needed for finish request
+        };
+      });
+
+      // Generate final evaluation with lowest levels for each skill
+      const finalSkillResults = skillsWithLevelsAndSources.map(skill => {
+        const lowestLevel = skill.levels.reduce((lowest, current) => 
+          current.order < lowest.order ? current : lowest
+        );
+        
+        return {
+          skillId: skill.skill_id,
+          skillLevelId: lowestLevel.id,
+          feedback: assessmentResult[0].output_language === 'es'
+            ? 'Evaluación final solicitada por el estudiante. Se requiere más desarrollo en esta habilidad.'
+            : 'Final evaluation requested by student. Further development required in this skill.'
+        };
+      });
+
+      // Calculate weighted final grade based on skill weights and individual grades
+      let totalWeightedGrade = 0;
+      let totalWeight = 0;
+      
+      for (const result of finalSkillResults) {
+        // Find the skill details including weight
+        const skillData = assessmentResult.find(a => a.skill_id === result.skillId);
+        const skill = skillsWithLevelsAndSources.find(s => s.skill_id === result.skillId);
+        const level = skill?.levels.find(l => l.id === result.skillLevelId);
+        
+        if (skillData && skill && level) {
+          // Calculate fine-grained grade for this skill
+          const skillGrade = await calculateFineGrainedGrade(
+            result.skillId, 
+            level.label, 
+            historyResult, 
+            assessmentResult[0].institution_id
+          );
+          
+          // Get skill weight and convert to decimal
+          const skillWeight = skillData.skill_weight || 100;
+          const weightDecimal = skillWeight / 100;
+          
+          // Calculate weighted grade
+          const weightedGrade = skillGrade * weightDecimal;
+          totalWeightedGrade += weightedGrade;
+          totalWeight += weightDecimal;
+          
+          console.log('Skill grade calculation (finish request):', {
+            skillId: result.skillId,
+            skillName: skill.skill_name,
+            skillLevelLabel: level.label,
+            skillGrade,
+            skillWeight,
+            weightDecimal,
+            weightedGrade
+          });
+        }
+      }
+      
+      const finalGrade = totalWeight > 0 ? totalWeightedGrade / totalWeight : 0;
+
+      // Check if results already exist to prevent duplicates
+      const existingResultsQuery = `
+        SELECT COUNT(*) as count FROM inteli_assessments_results WHERE attempt_id = ?
+      `;
+      const existingResults = await query(existingResultsQuery, [attemptId]);
+      
+      if (existingResults[0].count === 0) {
+        // Save results only if none exist
+        for (const result of finalSkillResults) {
+          // Calculate fine-grained individual skill grade
+          const skill = skillsWithLevelsAndSources.find(s => s.skill_id === result.skillId);
+          const level = skill?.levels.find(l => l.id === result.skillLevelId);
+          const skillGrade = skill && level ? 
+            await calculateFineGrainedGrade(
+              result.skillId, 
+              level.label, 
+              historyResult, 
+              assessmentResult[0].institution_id
+            ) : 0;
+          
+          const saveResultQuery = `
+            INSERT INTO inteli_assessments_results (
+              attempt_id,
+              skill_id,
+              skill_level_id,
+              feedback,
+              grade
+            ) VALUES (?, ?, ?, ?, ?)
+          `;
+
+          await query(saveResultQuery, [
+            attemptId,
+            result.skillId,
+            result.skillLevelId,
+            result.feedback,
+            skillGrade
+          ]);
+        }
+      } else {
+        console.log('Results already exist for attempt, skipping duplicate save');
+      }
+
+      // Mark attempt as completed
+      const completeAttemptQuery = `
+        UPDATE inteli_assessments_attempts
+        SET status = 'Completed', completed_at = NOW(), updated_at = NOW(), 
+            final_grade = ?
+        WHERE id = ?
+      `;
+
+      await query(completeAttemptQuery, [finalGrade, attemptId]);
+
+      // Save AI response
+      const aiMessage = assessmentResult[0].output_language === 'es'
+        ? 'Has solicitado terminar la evaluación. He completado la evaluación con los niveles más bajos para cada habilidad, ya que no se proporcionó suficiente información para una evaluación completa.'
+        : 'You have requested to finish the assessment. I have completed the evaluation with the lowest levels for each skill, as insufficient information was provided for a complete evaluation.';
+
+      const saveAIQuery = `
+        INSERT INTO inteli_assessments_conversations (
+          attempt_id,
+          message_type,
+          message_text,
+          message_subtype,
+          created_at
+        ) VALUES (?, 'ai', ?, 'regular', NOW())
+      `;
+
+      await query(saveAIQuery, [attemptId, aiMessage]);
+
+      // Return response with final evaluation
+      return NextResponse.json({
+        success: true,
+        message: aiMessage,
+        evaluationType: 'final',
+        canDetermineLevel: true,
+        skillResults: finalSkillResults.map(result => {
+          const skill = skillsWithLevelsAndSources.find(s => s.skill_id === result.skillId);
+          const level = skill?.levels.find(l => l.id === result.skillLevelId);
+          
+          return {
+            skillId: result.skillId,
+            skillName: skill?.skill_name || '',
+            skillLevelId: result.skillLevelId,
+            skillLevelLabel: level?.label || '',
+            skillLevelDescription: level?.description || '',
+            skillLevelOrder: level?.order || 1,
+            feedback: result.feedback
+          };
+        }),
+        attemptCompleted: true,
+        finalGrade: finalGrade
+      });
+    }
+
     // Get assessment details for AI evaluation
     const assessmentQuery = `
       SELECT 
@@ -139,10 +375,14 @@ export async function POST(
         a.case_solution,
         a.questions_per_skill,
         a.output_language,
+        a.institution_id,
+        i.scoring_scale,
         s.id as skill_id,
         s.name as skill_name,
-        s.description as skill_description
+        s.description as skill_description,
+        as2.weight as skill_weight
       FROM inteli_assessments a
+      INNER JOIN inteli_institutions i ON a.institution_id = i.id
       INNER JOIN inteli_assessments_skills as2 ON a.id = as2.assessment_id
       INNER JOIN inteli_skills s ON as2.skill_id = s.id
       WHERE a.id = ?
@@ -247,11 +487,22 @@ export async function POST(
       }
     }
     
-    // Handle the current turn (student just sent a message, AI hasn't responded yet)
-    const currentTurn = currentPair.student ? 1 : 0;
-    const turnCount = conversationPairs.length + currentTurn;
+    // Count student messages (excluding clarification responses)
+    const studentMessages = historyResult.filter(msg => 
+      msg.message_type === 'student' && (!msg.message_subtype || msg.message_subtype === 'regular')
+    ).length;
+    
+    // Use student message count as turn count (consistent with frontend)
+    const turnCount = studentMessages;
     const maxTurns = assessmentResult.length * assessmentResult[0].questions_per_skill;
-    const isLastTurn = turnCount >= maxTurns;
+    
+    // Calculate 50%+1 rule threshold
+    const fiftyPercentPlusOne = Math.ceil(maxTurns * 0.5) + 1;
+    
+    // Check if this is the last turn based on either:
+    // 1. Maximum turns reached, OR
+    // 2. 50%+1 rule: if we're at or past 50%+1 turns, force final evaluation
+    const isLastTurn = turnCount >= maxTurns || turnCount >= fiftyPercentPlusOne;
     
     // Count clarification turns for debugging
     const clarificationQuestions = historyResult.filter(msg => 
@@ -263,11 +514,14 @@ export async function POST(
     
     console.log('Conversation analysis:', {
       totalMessages: historyResult.length,
-      conversationPairs: conversationPairs.length,
-      currentTurn,
+      studentMessages,
       turnCount,
       maxTurns,
+      fiftyPercentPlusOne,
+      fiftyPercentThreshold: Math.ceil(maxTurns * 0.5),
       isLastTurn,
+      isMaxTurnsReached: turnCount >= maxTurns,
+      isFiftyPercentPlusOneReached: turnCount >= fiftyPercentPlusOne,
       clarificationQuestions,
       clarificationResponses,
       totalClarificationTurns: clarificationQuestions + clarificationResponses,
@@ -301,17 +555,54 @@ export async function POST(
       skills: skillsWithLevelsAndSources,
       conversationHistory: historyResult,
       relevantSourceContent,
-    studentLanguage,
+      studentLanguage,
+      turnCount,
+      maxTurns,
+      fiftyPercentPlusOne
     });
 
     // Force final evaluation if it's the last turn and AI didn't evaluate as final
     if (isLastTurn && aiResponse.evaluationType !== 'final') {
-      console.log('Last turn reached, forcing final evaluation');
+      const isMaxTurnsReached = turnCount >= maxTurns;
+      const isFiftyPercentPlusOneReached = turnCount >= fiftyPercentPlusOne;
+      
+      console.log('Last turn reached, forcing final evaluation', {
+        isMaxTurnsReached,
+        isFiftyPercentPlusOneReached,
+        turnCount,
+        maxTurns,
+        fiftyPercentPlusOne
+      });
+      
       aiResponse.evaluationType = 'final';
       aiResponse.canDetermineLevel = true;
-      aiResponse.message = assessmentResult[0].output_language === 'es'
-        ? 'Has alcanzado el límite máximo de turnos. Procederé a evaluar tu respuesta final.'
-        : 'You have reached the maximum number of turns. I will now evaluate your final response.';
+      
+      // Generate skill results for forced final evaluation
+      aiResponse.skillResults = skillsWithLevelsAndSources.map(skill => {
+        // For forced final evaluation, assign the lowest level to each skill
+        const lowestLevel = skill.levels.reduce((lowest, current) => 
+          current.order < lowest.order ? current : lowest
+        );
+        
+        return {
+          skillId: skill.skill_id,
+          skillLevelId: lowestLevel.id,
+          feedback: assessmentResult[0].output_language === 'es'
+            ? 'Evaluación final forzada debido a respuestas insuficientes. Se requiere más desarrollo en esta habilidad.'
+            : 'Final evaluation forced due to insufficient responses. Further development required in this skill.'
+        };
+      });
+      
+      // Provide appropriate message based on which rule was triggered
+      if (isMaxTurnsReached) {
+        aiResponse.message = assessmentResult[0].output_language === 'es'
+          ? 'Has alcanzado el límite máximo de turnos. Procederé a evaluar tu respuesta final.'
+          : 'You have reached the maximum number of turns. I will now evaluate your final response.';
+      } else if (isFiftyPercentPlusOneReached) {
+        aiResponse.message = assessmentResult[0].output_language === 'es'
+          ? 'Has alcanzado el 50%+1 de turnos disponibles. Procederé a evaluar tu respuesta final.'
+          : 'You have reached 50%+1 of available turns. I will now evaluate your final response.';
+      }
     }
 
     // Save AI response
@@ -352,9 +643,29 @@ export async function POST(
 
     // Initialize enhancedSkillResults at function scope
     let enhancedSkillResults = [];
+    let totalGrade = 0;
+    let finalGrade = 0;
     
     // If level can be determined, save results and complete attempt
-    if (aiResponse.evaluationType === 'final' && aiResponse.canDetermineLevel && aiResponse.skillResults) {
+    if (aiResponse.evaluationType === 'final' && aiResponse.canDetermineLevel) {
+      // Ensure skill results exist for final evaluation
+      if (!aiResponse.skillResults || aiResponse.skillResults.length === 0) {
+        console.log('Final evaluation without skill results, generating default results');
+        aiResponse.skillResults = skillsWithLevelsAndSources.map(skill => {
+          // For final evaluation without results, assign the lowest level to each skill
+          const lowestLevel = skill.levels.reduce((lowest, current) => 
+            current.order < lowest.order ? current : lowest
+          );
+          
+          return {
+            skillId: skill.skill_id,
+            skillLevelId: lowestLevel.id,
+            feedback: assessmentResult[0].output_language === 'es'
+              ? 'Evaluación final sin resultados específicos. Se requiere más desarrollo en esta habilidad.'
+              : 'Final evaluation without specific results. Further development required in this skill.'
+          };
+        });
+      }
       console.log('AI Response:', JSON.stringify(aiResponse, null, 2));
       console.log('Available skill levels:', skillsWithLevelsAndSources.map(skill => ({
         skillId: skill.skill_id,
@@ -377,72 +688,177 @@ export async function POST(
       
       console.log('Valid skill level IDs:', Array.from(validSkillLevels.keys()));
       
-      // Validate and save results for each skill
+      // Check if results already exist to prevent duplicates
+      const existingResultsQuery = `
+        SELECT COUNT(*) as count FROM inteli_assessments_results WHERE attempt_id = ?
+      `;
+      const existingResults = await query(existingResultsQuery, [attemptId]);
       
-      for (const result of aiResponse.skillResults) {
-        console.log(`Processing result for skill ${result.skillId}, level ${result.skillLevelId}`);
-        
-        // Check if the skill level ID is valid
-        if (!validSkillLevels.has(result.skillLevelId)) {
-          console.error(`Invalid skill level ID: ${result.skillLevelId} for skill: ${result.skillId}`);
-          throw new Error(`Invalid skill level ID provided by AI: ${result.skillLevelId}`);
-        }
-        
-        const validLevel = validSkillLevels.get(result.skillLevelId);
-        
-        // Double-check that the skill ID matches
-        if (validLevel.skillId !== result.skillId) {
-          console.error(`Skill ID mismatch: AI provided ${result.skillId}, but level ${result.skillLevelId} belongs to skill ${validLevel.skillId}`);
-          throw new Error(`Skill ID mismatch in AI response`);
-        }
-        
-        const saveResultQuery = `
-          INSERT INTO inteli_assessments_results (
-            attempt_id,
-            skill_id,
-            skill_level_id,
-            feedback
-          ) VALUES (?, ?, ?, ?)
-        `;
+      if (existingResults[0].count === 0) {
+        // Validate and save results for each skill only if none exist
+        for (const result of aiResponse.skillResults) {
+          console.log(`Processing result for skill ${result.skillId}, level ${result.skillLevelId}`);
+          
+          // Check if the skill level ID is valid
+          if (!validSkillLevels.has(result.skillLevelId)) {
+            console.error(`Invalid skill level ID: ${result.skillLevelId} for skill: ${result.skillId}`);
+            throw new Error(`Invalid skill level ID provided by AI: ${result.skillLevelId}`);
+          }
+          
+          const validLevel = validSkillLevels.get(result.skillLevelId);
+          
+          // Double-check that the skill ID matches
+          if (validLevel.skillId !== result.skillId) {
+            console.error(`Skill ID mismatch: AI provided ${result.skillId}, but level ${result.skillLevelId} belongs to skill ${validLevel.skillId}`);
+            throw new Error(`Skill ID mismatch in AI response`);
+          }
+          
+          // Calculate fine-grained individual skill grade
+          const skill = skillsWithLevelsAndSources.find(s => s.skill_id === result.skillId);
+          const level = skill?.levels.find(l => l.id === result.skillLevelId);
+          const skillGrade = skill && level ? 
+            await calculateFineGrainedGrade(
+              result.skillId, 
+              level.label, 
+              historyResult, 
+              assessmentResult[0].institution_id
+            ) : 0;
+          
+          const saveResultQuery = `
+            INSERT INTO inteli_assessments_results (
+              attempt_id,
+              skill_id,
+              skill_level_id,
+              feedback,
+              grade
+            ) VALUES (?, ?, ?, ?, ?)
+          `;
 
-        await query(saveResultQuery, [
-          attemptId,
-          result.skillId,
-          result.skillLevelId,
-          result.feedback
-        ]);
+          await query(saveResultQuery, [
+            attemptId,
+            result.skillId,
+            result.skillLevelId,
+            result.feedback,
+            skillGrade
+          ]);
 
-        // Find the skill and level details for enhanced response
-        const skill = skillsWithLevelsAndSources.find(s => s.skill_id === result.skillId);
-        const level = validLevel.level;
+                  // Find the skill and level details for enhanced response
+          const skillForResponse = skillsWithLevelsAndSources.find(s => s.skill_id === result.skillId);
+          const levelForResponse = validLevel.level;
+          
+          console.log('Skill level details:', {
+            skillName: skillForResponse?.skill_name,
+            skillLevelLabel: levelForResponse.label,
+            skillLevelOrder: levelForResponse.order,
+            skillLevelId: result.skillLevelId
+          });
+          
+          enhancedSkillResults.push({
+            skillId: result.skillId,
+            skillName: skillForResponse?.skill_name || '',
+            skillLevelId: result.skillLevelId,
+            skillLevelLabel: levelForResponse.label,
+            skillLevelDescription: levelForResponse.description,
+            skillLevelOrder: levelForResponse.order,
+            feedback: result.feedback
+          });
+        }
+      } else {
+        console.log('Results already exist for attempt, skipping duplicate save');
         
-        console.log('Skill level details:', {
-          skillName: skill?.skill_name,
-          skillLevelLabel: level.label,
-          skillLevelOrder: level.order,
-          skillLevelId: result.skillLevelId
-        });
-        
-        enhancedSkillResults.push({
-          skillId: result.skillId,
-          skillName: skill?.skill_name || '',
-          skillLevelId: result.skillLevelId,
-          skillLevelLabel: level.label,
-          skillLevelDescription: level.description,
-          skillLevelOrder: level.order,
-          feedback: result.feedback
-        });
+        // Still need to build enhancedSkillResults for the response
+        for (const result of aiResponse.skillResults) {
+          const validLevel = validSkillLevels.get(result.skillLevelId);
+          const skillForResponse = skillsWithLevelsAndSources.find(s => s.skill_id === result.skillId);
+          
+          enhancedSkillResults.push({
+            skillId: result.skillId,
+            skillName: skillForResponse?.skill_name || '',
+            skillLevelId: result.skillLevelId,
+            skillLevelLabel: validLevel.level.label,
+            skillLevelDescription: validLevel.level.description,
+            skillLevelOrder: validLevel.level.order,
+            feedback: result.feedback
+          });
+        }
       }
 
-      // Mark attempt as completed
+      // Calculate weighted final grade based on skill weights and individual grades
+      let totalWeightedGrade = 0;
+      let totalWeight = 0;
+      
+      for (const result of enhancedSkillResults) {
+        // Find the skill details including weight
+        const skillData = assessmentResult.find(a => a.skill_id === result.skillId);
+        const skill = skillsWithLevelsAndSources.find(s => s.skill_id === result.skillId);
+        const level = skill?.levels.find(l => l.id === result.skillLevelId);
+        
+        if (skillData && skill && level) {
+          // Calculate fine-grained grade for this skill
+          const skillGrade = await calculateFineGrainedGrade(
+            result.skillId, 
+            level.label, 
+            historyResult, 
+            assessmentResult[0].institution_id
+          );
+          
+          // Get skill weight and convert to decimal
+          const skillWeight = skillData.skill_weight || 100;
+          const weightDecimal = skillWeight / 100;
+          
+          // Calculate weighted grade
+          const weightedGrade = skillGrade * weightDecimal;
+          totalWeightedGrade += weightedGrade;
+          totalWeight += weightDecimal;
+          
+          console.log('Skill grade calculation:', {
+            skillId: result.skillId,
+            skillName: skill.skill_name,
+            skillLevelLabel: level.label,
+            skillGrade,
+            skillWeight,
+            weightDecimal,
+            weightedGrade
+          });
+        }
+      }
+      
+      // Calculate final grade
+      finalGrade = totalWeight > 0 ? totalWeightedGrade / totalWeight : 0;
+      
+      console.log('Grade calculation:', {
+        totalWeightedGrade,
+        totalWeight,
+        finalGrade,
+        skillResults: enhancedSkillResults.map(r => ({
+          skillId: r.skillId,
+          skillLevelId: r.skillLevelId,
+          skillLevelOrder: r.skillLevelOrder
+        }))
+      });
+
+      // Mark attempt as completed with final grade
       const completeAttemptQuery = `
         UPDATE inteli_assessments_attempts
-        SET status = 'Completed', completed_at = NOW(), updated_at = NOW()
+        SET status = 'Completed', completed_at = NOW(), updated_at = NOW(), 
+            final_grade = ?
         WHERE id = ?
       `;
 
-      await query(completeAttemptQuery, [attemptId]);
+      await query(completeAttemptQuery, [finalGrade, attemptId]);
     }
+
+    // Debug the response data
+    console.log('Backend response data:', {
+      evaluationType: aiResponse.evaluationType,
+      canDetermineLevel: aiResponse.canDetermineLevel,
+      skillResultsLength: enhancedSkillResults?.length || 0,
+      attemptCompleted: aiResponse.evaluationType === 'final',
+      isLastTurn,
+      turnCount,
+      maxTurns,
+      fiftyPercentPlusOne
+    });
 
     return NextResponse.json({
       success: true,
@@ -452,7 +868,8 @@ export async function POST(
       skillResults: enhancedSkillResults || [],
       provokingQuestions: aiResponse.provokingQuestions || [],
       metacognitiveReflection: aiResponse.metacognitiveReflection || null,
-      attemptCompleted: aiResponse.evaluationType === 'final'
+      attemptCompleted: aiResponse.evaluationType === 'final',
+      finalGrade: aiResponse.evaluationType === 'final' ? finalGrade : null
     });
 
   } catch (error) {
@@ -484,6 +901,84 @@ export async function POST(
       { error: errorMessage },
       { status: statusCode }
     );
+  }
+}
+
+// Function to calculate fine-grained grade based on student performance within a skill level
+async function calculateFineGrainedGrade(
+  skillId: number,
+  skillLevelLabel: string,
+  conversationHistory: Array<{ message_type: string; message_text: string }>,
+  institutionId: number
+): Promise<number> {
+  try {
+    // Get skill level settings based on label and institution
+    const settingsQuery = `
+      SELECT 
+        sls.lower_limit,
+        sls.upper_limit,
+        sls.description as level_description
+      FROM inteli_skills_levels_settings sls
+      WHERE sls.institution_id = ? AND sls.label = ?
+    `;
+    
+    const settingsResult = await query(settingsQuery, [institutionId, skillLevelLabel]);
+    
+    if (!settingsResult || settingsResult.length === 0) {
+      console.log(`No settings found for skill level: ${skillLevelLabel}, using default range`);
+      // Default range if no settings found
+      return 7.0; // Default middle value
+    }
+    
+    const settings = settingsResult[0];
+    const lowerLimit = parseFloat(settings.lower_limit) || 0;
+    const upperLimit = parseFloat(settings.upper_limit) || 10;
+    const levelDescription = settings.level_description;
+    
+    // Analyze student performance within this level
+    const studentMessages = conversationHistory
+      .filter(msg => msg.message_type === 'student')
+      .map(msg => msg.message_text)
+      .join(' ');
+    
+    // Simple performance analysis based on message length, complexity, and content
+    let performanceScore = 0.5; // Default to middle of range
+    
+    if (studentMessages.length > 0) {
+      // Analyze message quality indicators
+      const wordCount = studentMessages.split(/\s+/).length;
+      const sentenceCount = studentMessages.split(/[.!?]+/).length;
+      const avgWordsPerSentence = wordCount / Math.max(sentenceCount, 1);
+      
+      // Performance indicators
+      if (wordCount > 50) performanceScore += 0.1; // Good length
+      if (avgWordsPerSentence > 8) performanceScore += 0.1; // Good complexity
+      if (studentMessages.includes('porque') || studentMessages.includes('because')) performanceScore += 0.1; // Reasoning
+      if (studentMessages.includes('ejemplo') || studentMessages.includes('example')) performanceScore += 0.1; // Examples
+      if (studentMessages.includes('teoría') || studentMessages.includes('theory')) performanceScore += 0.1; // Theory reference
+      
+      // Cap at 0.9 to leave room for exceptional performance
+      performanceScore = Math.min(performanceScore, 0.9);
+    }
+    
+    // Calculate grade within the range
+    const gradeRange = upperLimit - lowerLimit;
+    const fineGrainedGrade = lowerLimit + (gradeRange * performanceScore);
+    
+    console.log('Fine-grained grade calculation:', {
+      skillId,
+      skillLevelLabel,
+      lowerLimit,
+      upperLimit,
+      performanceScore,
+      fineGrainedGrade,
+      studentMessageCount: conversationHistory.filter(msg => msg.message_type === 'student').length
+    });
+    
+    return Math.round(fineGrainedGrade * 10) / 10; // Round to 1 decimal place
+  } catch (error) {
+    console.error('Error calculating fine-grained grade:', error);
+    return 7.0; // Default fallback
   }
 }
 
@@ -673,6 +1168,9 @@ async function evaluateWithAI(params: {
   }>;
   relevantSourceContent?: string;
   studentLanguage?: 'es' | 'en';
+  turnCount?: number;
+  maxTurns?: number;
+  fiftyPercentPlusOne?: number;
 }) {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
@@ -727,10 +1225,24 @@ async function evaluateWithAI(params: {
     }
   }
   
-  // Handle the current turn (student just sent a message, AI hasn't responded yet)
-  const currentTurn = currentPair.student ? 1 : 0;
-  const turnCount = conversationPairs.length + currentTurn;
+  // Count student messages (excluding clarification responses) - consistent with main function
+  const studentMessages = conversationHistory.filter(msg => 
+    msg.message_type === 'student' && (!msg.message_subtype || msg.message_subtype === 'regular')
+  ).length;
+  
+  // Use student message count as turn count (consistent with main function)
+  const turnCount = studentMessages;
   const maxTurns = skills.length * assessment.questions_per_skill;
+  
+  // Debug: Log turn counting in evaluateWithAI
+  console.log('evaluateWithAI - Turn counting:', {
+    studentMessages,
+    turnCount,
+    maxTurns,
+    skillsLength: skills.length,
+    questionsPerSkill: assessment.questions_per_skill,
+    conversationHistoryLength: conversationHistory.length
+  });
 
   // Use detected student language if available, otherwise fall back to assessment language
   const responseLanguage = studentLanguage || assessment.output_language;
@@ -740,8 +1252,8 @@ async function evaluateWithAI(params: {
     assessment,
     skills,
     conversationHistory,
-    turnCount,
-    maxTurns,
+    turnCount: turnCount,
+    maxTurns: maxTurns,
     outputLanguage: responseLanguage,
     relevantSourceContent: relevantSourceContent || undefined
   });
@@ -1094,6 +1606,20 @@ IMPORTANTE - EVALUACIÓN DE RESPUESTAS MÚLTIPLES:
 - Si el estudiante ya respondió a una pregunta o abordó un aspecto, reconócelo y pasa al siguiente
 - NO ignores las respuestas previas del estudiante - úsalas para evaluar su comprensión acumulativa
 
+CRÍTICO - EVITAR REPETICIÓN DE PREGUNTAS:
+- **NUNCA repitas exactamente la misma pregunta** que ya hiciste anteriormente
+- **NUNCA uses la misma formulación** para abordar un aspecto que ya mencionaste
+- **SIEMPRE proporciona una perspectiva diferente** cuando abordes un tema ya mencionado
+- **Usa ejemplos específicos** de las fuentes para ilustrar lo que buscas
+- **Proporciona contexto adicional** basado en las fuentes para ayudar al estudiante a entender
+- **Reformula la pregunta** usando diferentes marcos conceptuales o enfoques
+- **Conecta con experiencias específicas** o casos similares de las fuentes
+- **Usa analogías o metáforas** para explicar lo que buscas de manera diferente
+- **Proporciona pistas específicas** basadas en el contenido de las fuentes
+- **Si el estudiante no abordó algo, explica POR QUÉ es importante** según las fuentes
+- **Usa diferentes ángulos de análisis** para abordar el mismo tema
+- **Proporciona ejemplos concretos** de comportamientos de excelencia de las fuentes
+
 SISTEMA DE EVALUACIÓN CON PREGUNTAS PROVOCADORAS:
 
 1. INCOMPLETA: La respuesta no demuestra el potencial cognitivo necesario para los niveles más altos
@@ -1105,6 +1631,14 @@ SISTEMA DE EVALUACIÓN CON PREGUNTAS PROVOCADORAS:
      * Desarrollen el pensamiento sistémico requerido por las habilidades
      * Promuevan la consideración de múltiples perspectivas descritas en los niveles superiores
      * Se acerquen a la solución del caso mediante los procesos cognitivos específicos de las habilidades
+   - **CRÍTICO - REFORMULACIÓN DE PREGUNTAS**:
+     * Si ya preguntaste sobre un aspecto, usa un enfoque completamente diferente
+     * Proporciona ejemplos específicos de las fuentes para ilustrar lo que buscas
+     * Usa analogías o metáforas para explicar el concepto de manera diferente
+     * Conecta con experiencias específicas o casos similares de las fuentes
+     * Explica POR QUÉ el aspecto es importante según las fuentes
+     * Usa diferentes marcos conceptuales para abordar el mismo tema
+     * Proporciona pistas específicas basadas en el contenido de las fuentes
    - Usa **EJEMPLOS DE COMPORTAMIENTOS DE EXCELENCIA** basados en las fuentes y descripciones de habilidades
    - Proporciona **ESTÍMULOS CREATIVOS** que ilustren exactamente los enfoques descritos en los niveles superiores
    - Incluye una **REFLEXIÓN METACOGNITIVA** que fomente el desarrollo hacia los comportamientos objetivo
@@ -1287,6 +1821,20 @@ REGLAS PARA PREGUNTAS PROVOCADORAS:
   } else {
     return `You are an AI-powered educational mentor specialized in fostering student potential and creativity. Your primary goal is to awaken higher-order cognitive processes through provoking questions that stimulate critical thinking, innovation, and deep reflection.
 
+CRITICAL - AVOID QUESTION REPETITION:
+- **NEVER repeat exactly the same question** you asked previously
+- **NEVER use the same formulation** to address an aspect you already mentioned
+- **ALWAYS provide a different perspective** when addressing a previously mentioned topic
+- **Use specific examples** from the sources to illustrate what you're looking for
+- **Provide additional context** based on the sources to help the student understand
+- **Reformulate the question** using different conceptual frameworks or approaches
+- **Connect with specific experiences** or similar cases from the sources
+- **Use analogies or metaphors** to explain what you're looking for differently
+- **Provide specific hints** based on the source content
+- **If the student didn't address something, explain WHY it's important** according to the sources
+- **Use different angles of analysis** to address the same topic
+- **Provide concrete examples** of excellence behaviors from the sources
+
 PRINCIPLES OF PROVOKING QUESTIONS FOR COGNITIVE DEVELOPMENT
 
 Your interaction is designed to activate the student's creative and cognitive potential, not to provide direct answers. Each question should be an intellectual provocation that pushes the student toward higher levels of thinking, bringing them closer to the behaviors and cognitive processes described in the highest levels of the skills being evaluated.
@@ -1427,6 +1975,14 @@ THREE-TIER EVALUATION SYSTEM WITH PROVOKING QUESTIONS:
      * Develop systems thinking required by the skills
      * Promote consideration of multiple perspectives described in higher levels
      * Approach the case solution through the specific cognitive processes of the skills
+   - **CRITICAL - QUESTION REFORMULATION**:
+     * If you already asked about an aspect, use a completely different approach
+     * Provide specific examples from the sources to illustrate what you're looking for
+     * Use analogies or metaphors to explain the concept differently
+     * Connect with specific experiences or similar cases from the sources
+     * Explain WHY the aspect is important according to the sources
+     * Use different conceptual frameworks to address the same topic
+     * Provide specific hints based on the source content
    - Use **EXCELLENCE BEHAVIOR EXAMPLES** based on sources and skill descriptions
    - Provide **CREATIVE STIMULI** that illustrate exactly the approaches described in higher levels
    - Include a **METACOGNITIVE REFLECTION** that fosters development toward target behaviors

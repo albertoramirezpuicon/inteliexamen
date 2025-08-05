@@ -880,6 +880,7 @@
     "maxTurnsReachedWaiting": "Máximo de turnos alcanzado. Esperando evaluación de la IA...",
     "enterToSendIntegrityDisabled": "Presiona Enter para enviar, Shift+Enter para nueva línea. Copiar/pegar está deshabilitado para la integridad de la evaluación.",
     "enterToSend": "Presiona Enter para enviar, Shift+Enter para nueva línea.",
+    "disputeResults": "Disputar Resultados",
     "skillLevelLabels": {
       "novice": "Novato",
       "beginner": "Principiante",

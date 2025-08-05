@@ -28,16 +28,19 @@ export async function GET(
     // Get the completed attempt for this assessment and user
     const attemptQuery = `
       SELECT 
-        id,
-        assessment_id,
-        user_id,
-        final_grade,
-        status,
-        created_at,
-        completed_at
-      FROM inteli_assessments_attempts 
-      WHERE assessment_id = ? AND user_id = ?
-      ORDER BY created_at DESC
+        aa.id,
+        aa.assessment_id,
+        aa.user_id,
+        aa.final_grade,
+        aa.status,
+        aa.created_at,
+        aa.completed_at,
+        i.scoring_scale
+      FROM inteli_assessments_attempts aa
+      JOIN inteli_assessments a ON aa.assessment_id = a.id
+      JOIN inteli_institutions i ON a.institution_id = i.id
+      WHERE aa.assessment_id = ? AND aa.user_id = ?
+      ORDER BY aa.created_at DESC
       LIMIT 1
     `;
 
@@ -69,6 +72,7 @@ export async function GET(
         ar.id,
         ar.skill_id,
         ar.skill_level_id,
+        ar.grade,
         ar.feedback,
         s.name as skill_name,
         sl.label as skill_level_label,
@@ -88,6 +92,7 @@ export async function GET(
       id: number;
       skill_id: number;
       skill_level_id: number;
+      grade: number;
       skill_name: string;
       skill_level_label: string;
       skill_level_description: string;
@@ -96,6 +101,7 @@ export async function GET(
       id: result.id,
       skillId: result.skill_id,
       skillLevelId: result.skill_level_id,
+      grade: result.grade,
       skillName: result.skill_name,
       skillLevelLabel: result.skill_level_label,
       skillLevelDescription: result.skill_level_description,
@@ -112,6 +118,7 @@ export async function GET(
         createdAt: attempt.created_at,
         completedAt: attempt.completed_at
       },
+      maxScore: attempt.scoring_scale || 10, // Default to 10 if not set
       results: formattedResults
     });
 

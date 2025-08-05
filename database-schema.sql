@@ -30,7 +30,7 @@ CREATE TABLE `inteli_assessments` (
   `teacher_id` int NOT NULL,
   `show_teacher_name` tinyint NOT NULL DEFAULT '0',
   `integrity_protection` tinyint DEFAULT '1',
-  `name` varchar(45) COLLATE utf8mb3_unicode_ci NOT NULL,
+  `name` varchar(100) COLLATE utf8mb3_unicode_ci NOT NULL,
   `description` varchar(1024) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL,
   `difficulty_level` enum('Easy','Intermediate','Difficult') COLLATE utf8mb3_unicode_ci NOT NULL,
   `educational_level` enum('Primary','Secondary','Technical','University','Professional') CHARACTER SET utf8mb3 COLLATE utf8mb3_unicode_ci NOT NULL,
@@ -118,6 +118,7 @@ CREATE TABLE `inteli_assessments_results` (
   `skill_id` int NOT NULL,
   `skill_level_id` int NOT NULL,
   `feedback` varchar(1256) COLLATE utf8mb3_unicode_ci DEFAULT NULL,
+  `grade` decimal(9,2) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`),
   KEY `fk_ar_attempt_idx` (`attempt_id`),
@@ -126,19 +127,22 @@ CREATE TABLE `inteli_assessments_results` (
   CONSTRAINT `fk_ar_attempt` FOREIGN KEY (`attempt_id`) REFERENCES `inteli_assessments_attempts` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_ar_skill` FOREIGN KEY (`skill_id`) REFERENCES `inteli_skills` (`id`),
   CONSTRAINT `fk_ar_skill_level` FOREIGN KEY (`skill_level_id`) REFERENCES `inteli_skills_levels` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+
 
 CREATE TABLE `inteli_assessments_skills` (
   `id` int NOT NULL AUTO_INCREMENT,
   `assessment_id` int NOT NULL,
   `skill_id` int NOT NULL,
+  `weight` int NOT NULL DEFAULT '100',
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`),
   KEY `fk_as_assessment_idx` (`assessment_id`),
   KEY `fk_as_skill_idx` (`skill_id`),
-  CONSTRAINT `fk_as_assessment` FOREIGN KEY (`assessment_id`) REFERENCES `inteli_assessments` (`id`),
+  CONSTRAINT `fk_as_assessment` FOREIGN KEY (`assessment_id`) REFERENCES `inteli_assessments` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_as_skill` FOREIGN KEY (`skill_id`) REFERENCES `inteli_skills` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+
 
 CREATE TABLE `inteli_assessments_sources` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -183,11 +187,12 @@ CREATE TABLE `inteli_institutions` (
   `name` varchar(45) COLLATE utf8mb3_unicode_ci NOT NULL,
   `contact_name` varchar(255) COLLATE utf8mb3_unicode_ci NOT NULL,
   `contact_email` varchar(255) COLLATE utf8mb3_unicode_ci NOT NULL,
+  `scoring_scale` int NOT NULL DEFAULT '10',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
 
 CREATE TABLE `inteli_prompts` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -233,9 +238,12 @@ CREATE TABLE `inteli_skills_levels_settings` (
   `order` int NOT NULL,
   `label` varchar(45) COLLATE utf8mb3_unicode_ci NOT NULL,
   `description` varchar(1024) COLLATE utf8mb3_unicode_ci NOT NULL,
+  `lower_limit` decimal(9,2) DEFAULT NULL,
+  `upper_limit` decimal(9,2) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+
 
 CREATE TABLE `inteli_skills_sources` (
   `id` int NOT NULL AUTO_INCREMENT,

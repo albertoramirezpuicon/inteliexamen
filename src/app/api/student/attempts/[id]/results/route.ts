@@ -15,6 +15,34 @@ export async function GET(
       );
     }
 
+    // Get attempt details including institution scoring scale
+    const attemptQuery = `
+      SELECT 
+        aa.id,
+        aa.assessment_id,
+        aa.user_id,
+        aa.final_grade,
+        aa.status,
+        aa.created_at,
+        aa.completed_at,
+        i.scoring_scale
+      FROM inteli_assessments_attempts aa
+      JOIN inteli_assessments a ON aa.assessment_id = a.id
+      JOIN inteli_institutions i ON a.institution_id = i.id
+      WHERE aa.id = ?
+    `;
+
+    const attemptResult = await query(attemptQuery, [attemptId]);
+    
+    if (!attemptResult || attemptResult.length === 0) {
+      return NextResponse.json(
+        { error: 'Attempt not found' },
+        { status: 404 }
+      );
+    }
+
+    const attempt = attemptResult[0];
+
     // Get results with skill and level details
     const resultsQuery = `
       SELECT 
@@ -22,6 +50,7 @@ export async function GET(
         ar.attempt_id,
         ar.skill_id,
         ar.skill_level_id,
+        ar.grade,
         ar.feedback,
         s.name as skill_name,
         s.description as skill_description,
@@ -47,6 +76,7 @@ export async function GET(
       skill_level_label: string;
       skill_level_description: string;
       skill_level_order: number;
+      grade: number;
       feedback: string;
     }) => ({
       id: result.id,
@@ -57,11 +87,13 @@ export async function GET(
       skillLevelLabel: result.skill_level_label,
       skillLevelDescription: result.skill_level_description,
       skillLevelOrder: result.skill_level_order,
+      grade: result.grade,
       feedback: result.feedback
     }));
 
     return NextResponse.json({
-      results: formattedResults
+      results: formattedResults,
+      maxScore: attempt.scoring_scale || 10
     });
 
   } catch (error) {

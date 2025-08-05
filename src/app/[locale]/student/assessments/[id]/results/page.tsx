@@ -55,7 +55,10 @@ import {
   IconButton,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  Checkbox,
+  FormControlLabel,
+  FormGroup
 } from '@mui/material';
 import { 
   ArrowBack as ArrowBackIcon,
@@ -101,6 +104,7 @@ interface Result {
   skillName: string;
   skillLevelLabel: string;
   feedback: string;
+  grade?: number;
 }
 
 interface Dispute {
@@ -135,6 +139,8 @@ export default function AssessmentResultsPage() {
   const [disputeDialogOpen, setDisputeDialogOpen] = useState(false);
   const [disputeArgument, setDisputeArgument] = useState('');
   const [submittingDispute, setSubmittingDispute] = useState(false);
+  const [maxScore, setMaxScore] = useState<number>(10); // Default to 10, will be updated from institution settings
+  const [selectedSkills, setSelectedSkills] = useState<number[]>([]);
 
   const loadAssessmentResults = useCallback(async () => {
     try {
@@ -175,6 +181,7 @@ export default function AssessmentResultsPage() {
       
       setAttempt(resultsData.attempt);
       setResults(resultsData.results);
+      setMaxScore(resultsData.maxScore || 10);
 
       // Load conversation for this attempt
       if (resultsData.attempt && resultsData.attempt.id) {
@@ -288,7 +295,7 @@ export default function AssessmentResultsPage() {
   };
 
   const handleCreateDispute = async () => {
-    if (!disputeArgument.trim() || !results[0]) return;
+    if (!disputeArgument.trim() || selectedSkills.length === 0) return;
 
     try {
       setSubmittingDispute(true);
@@ -297,7 +304,7 @@ export default function AssessmentResultsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          resultId: results[0].id,
+          resultIds: selectedSkills,
           studentArgument: disputeArgument.trim()
         })
       });
@@ -310,6 +317,7 @@ export default function AssessmentResultsPage() {
       setDispute(data.dispute);
       setDisputeDialogOpen(false);
       setDisputeArgument('');
+      setSelectedSkills([]);
       
     } catch (err) {
       console.error('Error creating dispute:', err);
@@ -352,6 +360,18 @@ export default function AssessmentResultsPage() {
     }
   };
 
+  const getGradeColor = (grade: number, maxScore: number) => {
+    // Normalize grade to 0-1 range
+    const normalizedGrade = Math.min(Math.max(grade / maxScore, 0), 1);
+    
+    // Create light color gradient from red (0) to green (1)
+    const red = Math.round(255 * (1 - normalizedGrade) * 0.2 + 240); // Light red to light green
+    const green = Math.round(255 * normalizedGrade * 0.2 + 240);
+    const blue = 240; // Keep it light
+    
+    return `rgb(${red}, ${green}, ${blue})`;
+  };
+
   const getDisputeStatusColor = (status: string) => {
     switch (status) {
       case 'Pending': return 'warning';
@@ -359,6 +379,16 @@ export default function AssessmentResultsPage() {
       default: return 'default';
     }
   };
+
+  const handleSkillSelection = (resultId: number) => {
+    setSelectedSkills(prev => 
+      prev.includes(resultId) 
+        ? prev.filter(id => id !== resultId)
+        : [...prev, resultId]
+    );
+  };
+
+
 
   if (loading) {
     return (
@@ -562,39 +592,8 @@ export default function AssessmentResultsPage() {
             {results.length > 0 ? (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {results.map((result, index) => {
-                  // Calculate color based on skill level (assuming max 5 levels)
-                  const getResultColor = (skillLevelOrder: number, maxLevels: number = 5) => {
-                    const percentage = skillLevelOrder / maxLevels;
-                    if (percentage <= 0.2) return '#ffebee'; // Light red for lowest levels
-                    if (percentage <= 0.4) return '#ffcdd2'; // Red
-                    if (percentage <= 0.6) return '#ffb74d'; // Orange
-                    if (percentage <= 0.8) return '#81c784'; // Light green
-                    return '#4caf50'; // Green for highest levels
-                  };
-                  
-                  // Get border color based on skill level label
-                  const getBorderColor = (skillLevelLabel: string) => {
-                    const label = skillLevelLabel.toLowerCase();
-                    if (label.includes('starting') || label.includes('beginner') || label.includes('basic') || label.includes('inicial')) {
-                      return '#f44336'; // Darker red
-                    }
-                    if (label.includes('developing') || label.includes('intermediate') || label.includes('intermedio')) {
-                      return '#d32f2f'; // Dark red
-                    }
-                    if (label.includes('proficient') || label.includes('avanzado') || label.includes('competent')) {
-                      return '#f57c00'; // Dark orange
-                    }
-                    if (label.includes('advanced') || label.includes('expert') || label.includes('experto')) {
-                      return '#388e3c'; // Dark green
-                    }
-                    if (label.includes('master') || label.includes('excellent') || label.includes('excelente')) {
-                      return '#2e7d32'; // Darker green
-                    }
-                    return '#f44336'; // Darker red for unknown levels
-                  };
-                  
-                  const backgroundColor = getResultColor(result.skillLevelOrder || 1, 5);
-                  const borderColor = getBorderColor(result.skillLevelLabel);
+                  const backgroundColor = result.grade ? getGradeColor(result.grade, maxScore) : '#f5f5f5';
+                  const borderColor = result.grade ? getGradeColor(result.grade, maxScore) : '#e0e0e0';
                   
                   return (
                     <Card key={index} sx={{ 
@@ -605,7 +604,7 @@ export default function AssessmentResultsPage() {
                       <CardContent>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
                           <Typography variant="h6">
-                            {result.skillName}
+                            {result.skillName}{result.grade && ` (${result.grade})`}
                           </Typography>
                           <Chip 
                             label={result.skillLevelLabel} 
@@ -660,9 +659,44 @@ export default function AssessmentResultsPage() {
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Please provide a clear argument explaining why you believe the assessment results should be reviewed. 
+            Please select the skills you want to dispute and provide a clear argument explaining why you believe the assessment results should be reviewed. 
             Be specific about which aspects you disagree with and provide any relevant context.
           </Typography>
+
+          {/* Skill Selection */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Select Skills to Dispute
+            </Typography>
+            <FormGroup>
+              {results.map((result) => (
+                <FormControlLabel
+                  key={result.id}
+                  control={
+                    <Checkbox
+                      checked={selectedSkills.includes(result.id)}
+                      onChange={() => handleSkillSelection(result.id)}
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="body2">
+                        {result.skillName}{result.grade && ` (${result.grade})`}
+                      </Typography>
+                      <Chip 
+                        label={result.skillLevelLabel} 
+                        size="small"
+                        sx={{ 
+                          backgroundColor: result.grade ? getGradeColor(result.grade, maxScore) : '#f5f5f5',
+                          fontSize: '0.75rem'
+                        }}
+                      />
+                    </Box>
+                  }
+                />
+              ))}
+            </FormGroup>
+          </Box>
           
           {/* Conversation History Accordion */}
           {conversation.length > 0 && (
@@ -754,7 +788,11 @@ export default function AssessmentResultsPage() {
         </DialogContent>
         <DialogActions>
           <Button 
-            onClick={() => setDisputeDialogOpen(false)}
+            onClick={() => {
+              setDisputeDialogOpen(false);
+              setSelectedSkills([]);
+              setDisputeArgument('');
+            }}
             disabled={submittingDispute}
           >
             Cancel
@@ -763,7 +801,7 @@ export default function AssessmentResultsPage() {
             onClick={handleCreateDispute}
             variant="contained"
             color="warning"
-            disabled={!disputeArgument.trim() || submittingDispute}
+            disabled={!disputeArgument.trim() || selectedSkills.length === 0 || submittingDispute}
           >
             Submit Dispute
           </Button>

@@ -73,7 +73,8 @@ import {
   Info as InfoIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  Flag as FlagIcon
 } from '@mui/icons-material';
 import Navbar from '@/components/layout/Navbar';
 import CaseNavigationMenu from '@/components/student/CaseNavigationMenu';
@@ -165,6 +166,7 @@ interface AssessmentResult {
   skill_level_label: string;
   skill_level_description: string;
   skill_level_order: number;
+  grade?: number;
   feedback: string;
 }
 
@@ -184,6 +186,7 @@ export default function AssessmentAttemptPage() {
   const [error, setError] = useState<string | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
   const [results, setResults] = useState<AssessmentResult[]>([]);
+  const [maxScore, setMaxScore] = useState<number>(10);
   const [isInitialized, setIsInitialized] = useState(false);
   const [currentEvaluationType, setCurrentEvaluationType] = useState<'incomplete' | 'improvable' | 'final' | null>(null);
   const [activeSection, setActiveSection] = useState<string>('context');
@@ -293,6 +296,7 @@ export default function AssessmentAttemptPage() {
       if (response.ok) {
         const data = await response.json();
         setResults(data.results);
+        setMaxScore(data.maxScore || 10);
       }
     } catch (error) {
       console.error('Error loading results:', error);
@@ -365,13 +369,32 @@ export default function AssessmentAttemptPage() {
         // Note: All feedback is now included in the main message, so we don't need separate state
         // The UI will parse and display the complete message appropriately
 
+        // Debug the response data
+        console.log('Frontend received data:', {
+          evaluationType: data.evaluationType,
+          canDetermineLevel: data.canDetermineLevel,
+          attemptCompleted: data.attemptCompleted,
+          skillResultsLength: data.skillResults?.length || 0,
+          message: data.message?.substring(0, 100) + '...'
+        });
+
         // Check if assessment is completed
         if (data.attemptCompleted) {
+          console.log('Assessment completed, setting state...', {
+            finalGrade: data.finalGrade,
+            skillResultsLength: data.skillResults?.length || 0
+          });
           setIsCompleted(true);
-          setAttempt(prev => prev ? { ...prev, status: 'Completed' } : null);
+          setAttempt(prev => prev ? { 
+            ...prev, 
+            status: 'Completed',
+            final_grade: data.finalGrade
+          } : null);
           if (data.skillResults) {
             setResults(data.skillResults);
           }
+        } else {
+          console.log('Assessment not completed, evaluationType:', data.evaluationType);
         }
       }
 
@@ -391,6 +414,76 @@ export default function AssessmentAttemptPage() {
   const handleRetry = () => {
     setError(null);
     handleSendReply();
+  };
+
+  const handleFinishAssessment = async () => {
+    if (!attempt) return;
+    
+    try {
+      setIsSending(true);
+      setError(null);
+      
+      // Send a special message to indicate the student wants to finish
+      const response = await fetch(`/api/student/attempts/${attempt.id}/conversation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: '[STUDENT_REQUESTED_FINISH]',
+          messageType: 'finish_request'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to finish assessment');
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Add the finish request message to conversation
+        const finishMessage: ConversationMessage = {
+          id: Date.now(),
+          message_type: 'student',
+          message_text: assessment?.output_language === 'es' 
+            ? 'Quiero terminar la evaluación' 
+            : 'I want to finish the assessment',
+          created_at: new Date().toISOString()
+        };
+        
+        setConversation(prev => [...prev, finishMessage]);
+        
+        // Add AI response
+        const aiMessage: ConversationMessage = {
+          id: Date.now() + 1,
+          message_type: 'ai',
+          message_text: data.message,
+          created_at: new Date().toISOString()
+        };
+        
+        setConversation(prev => [...prev, aiMessage]);
+
+        // Check if assessment is completed
+        if (data.attemptCompleted) {
+          console.log('Assessment completed via finish request');
+          setIsCompleted(true);
+          setAttempt(prev => prev ? { 
+            ...prev, 
+            status: 'Completed',
+            final_grade: data.finalGrade
+          } : null);
+          if (data.skillResults) {
+            setResults(data.skillResults);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error finishing assessment:', err);
+      setError(err instanceof Error ? err.message : 'Failed to finish assessment');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -547,6 +640,15 @@ export default function AssessmentAttemptPage() {
     
     // Default fallback
     return '🌱'; // Seedling for unknown levels
+  };
+
+  // Calculate color gradient based on grade and max score (red to green)
+  const getGradeColor = (grade: number, maxScore: number) => {
+    const normalizedGrade = Math.min(Math.max(grade / maxScore, 0), 1);
+    const red = Math.round(255 * (1 - normalizedGrade) * 0.2 + 240); // Light red to light green
+    const green = Math.round(255 * normalizedGrade * 0.2 + 240);
+    const blue = 240; // Keep it light
+    return `rgb(${red}, ${green}, ${blue})`;
   };
 
   // Get the maximum skill level order for color calculation
@@ -791,6 +893,14 @@ export default function AssessmentAttemptPage() {
             <Typography variant="body1" color="text.secondary">
               {assessment?.description}
             </Typography>
+            
+            {/* Debug State Display */}
+            <Box sx={{ mt: 1, p: 1, backgroundColor: 'grey.100', borderRadius: 1, fontSize: '0.8rem' }}>
+              <Typography variant="caption" color="text.secondary">
+                Debug: isCompleted={isCompleted.toString()}, results.length={results.length}, 
+                attempt.status={attempt?.status}, evaluationType={currentEvaluationType}
+              </Typography>
+            </Box>
             
             {/* Skills Information */}
             {assessment && assessment.skills && assessment.skills.length > 0 && (
@@ -1238,6 +1348,79 @@ export default function AssessmentAttemptPage() {
                   </Box>
                 ))
               )}
+              
+              {/* Assessment Results - Display below conversation in same scrolling area */}
+              {isCompleted && results.length > 0 && (
+                <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', backgroundColor: 'grey.50' }}>
+                  <Typography variant="h6" gutterBottom color="text.primary">
+                    Assessment Completed! {getAssessmentIcon(results[0]?.skillLevelLabel || '')}
+                  </Typography>
+                  
+                  {/* Grade Display */}
+                  {attempt?.final_grade !== undefined && attempt?.final_grade !== null && (
+                    <Box sx={{ mb: 3, textAlign: 'center' }}>
+                      <Typography variant="h4" color="primary" gutterBottom>
+                        Final Grade: {isNaN(Number(attempt.final_grade)) ? 'N/A' : Number(attempt.final_grade).toFixed(1)}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Skills Assessed: {results.length}
+                      </Typography>
+                    </Box>
+                  )}
+                  
+                  {/* Skill Results */}
+                  {results.map((result, index) => {
+                    const backgroundColor = result.grade ? getGradeColor(result.grade, maxScore) : '#f5f5f5';
+                    const borderColor = result.grade ? getGradeColor(result.grade, maxScore) : '#e0e0e0';
+                    
+                    return (
+                      <Card key={index} sx={{ 
+                        mb: 2, 
+                        backgroundColor,
+                        border: `2px solid ${borderColor}`,
+                        borderRadius: 2
+                      }}>
+                        <CardContent>
+                          <Typography variant="h6" gutterBottom>
+                            {result.skillName}{result.grade && ` (${result.grade})`}
+                          </Typography>
+                          <Chip 
+                            label={result.skillLevelLabel} 
+                            color="primary" 
+                            sx={{ mb: 1 }}
+                          />
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontWeight: 'medium' }}>
+                            {result.skillLevelDescription}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {result.feedback}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                  
+                  {/* Navigation Buttons */}
+                  <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'center' }}>
+                    <Button
+                      variant="outlined"
+                      onClick={() => router.push('/student/dashboard')}
+                      startIcon={<HomeIcon />}
+                    >
+                      Back to Dashboard
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      onClick={() => router.push(`/student/assessments/${assessmentId}/results`)}
+                      startIcon={<QuestionAnswerIcon />}
+                    >
+                      {t('disputeResults')}
+                    </Button>
+                  </Box>
+                </Box>
+              )}
+              
               <div ref={messagesEndRef} />
             </Box>
 
@@ -1257,71 +1440,7 @@ export default function AssessmentAttemptPage() {
               </Box>
             )}
 
-            {/* Completed Results */}
-            {isCompleted && results.length > 0 && (
-              <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', backgroundColor: 'grey.50' }}>
-                <Typography variant="h6" gutterBottom color="text.primary">
-                  Assessment Completed! {getAssessmentIcon(results[0]?.skillLevelLabel || '')}
-                </Typography>
-                {results.map((result, index) => {
-                  // Debug logging
-                  console.log('Result:', {
-                    skillName: result.skillName,
-                    skillLevelOrder: result.skill_level_order,
-                    skillLevelLabel: result.skillLevelLabel
-                  });
-                  
-                  // Use a fixed maximum of 5 levels for consistent color calculation
-                  const maxLevelOrder = 5;
-                  let backgroundColor = getAssessmentColor(result.skill_level_order, maxLevelOrder);
-                  
-                  // Fallback to label-based color if the order-based calculation seems wrong
-                  if (result.skill_level_order > 3) { // If order is high but it's a "Starting" level
-                    backgroundColor = getAssessmentColorByLabel(result.skillLevelLabel);
-                  }
-                  
-                  // Get darker border color
-                  const borderColor = getAssessmentBorderColor(result.skillLevelLabel);
-                  
-                  console.log('Color calculation:', {
-                    skillLevelOrder: result.skill_level_order,
-                    skillLevelLabel: result.skillLevelLabel,
-                    maxLevelOrder,
-                    percentage: result.skill_level_order / maxLevelOrder,
-                    backgroundColor,
-                    borderColor,
-                    orderBasedColor: getAssessmentColor(result.skill_level_order, maxLevelOrder),
-                    labelBasedColor: getAssessmentColorByLabel(result.skillLevelLabel)
-                  });
-                  
-                  return (
-                    <Card key={index} sx={{ 
-                      mb: 2, 
-                      backgroundColor,
-                      border: `2px solid ${borderColor}`,
-                      borderRadius: 2
-                    }}>
-                      <CardContent>
-                        <Typography variant="h6" gutterBottom>
-                          {result.skillName}
-                        </Typography>
-                        <Chip 
-                          label={result.skillLevelLabel} 
-                          color="primary" 
-                          sx={{ mb: 1 }}
-                        />
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontWeight: 'medium' }}>
-                          {result.skillLevelDescription}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {result.feedback}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </Box>
-            )}
+
 
             {/* Input Area */}
             {!isCompleted && (
@@ -1360,6 +1479,16 @@ export default function AssessmentAttemptPage() {
                     sx={{ minWidth: 56, height: 56 }}
                   >
                     {isSending ? <CircularProgress size={24} /> : <SendIcon />}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    onClick={handleFinishAssessment}
+                    disabled={isSending || isCompleted}
+                    sx={{ minWidth: 56, height: 56 }}
+                    title={assessment?.output_language === 'es' ? 'Terminar evaluación' : 'Finish assessment'}
+                  >
+                    <FlagIcon />
                   </Button>
                 </Box>
                 <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
