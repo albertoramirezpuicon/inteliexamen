@@ -681,6 +681,46 @@
         "demo": "Contact us for a demo"
       }
     },
+    "whatIs": {
+      "title": "What is Inteliexamen?",
+      "subtitle": "The complete assessment ecosystem that transforms how organizations teach, evaluate, and inspire learning success.",
+      "forWho": {
+        "title": "Built for Every Learning Organization",
+        "description": "Whether you're running a government training program, managing a school district, leading a corporate university, or operating any educational institution, Inteliexamen provides the complete infrastructure you need to deliver meaningful assessments that actually help people learn and grow."
+      },
+      "organizations": {
+        "government": "Government Agencies",
+        "schools": "Schools & Universities",
+        "institutes": "Training Institutes",
+        "corporations": "Corporate Training"
+      },
+      "ecosystem": {
+        "title": "Your Complete Assessment Ecosystem",
+        "description": "Forget scattered tools and complicated workflows. Inteliexamen brings everything together in one intelligent platform that handles your entire assessment lifecycle—from defining what students need to learn, to measuring how well they've learned it, all powered by AI that makes teachers' lives easier.",
+        "components": {
+          "skills": "Skills Definition",
+          "levels": "Achievement Levels",
+          "users": "User Management",
+          "groups": "Learning Groups",
+          "assessments": "Smart Assessments"
+        }
+      },
+      "studentExperience": {
+        "title": "Where Students Actually Want to Learn",
+        "description": "This isn't your typical test-and-grade system. Our student area creates an environment where learners feel supported, motivated, and excited to demonstrate what they know. Instead of feeling judged, students engage in meaningful conversations that help them discover and improve their understanding.",
+        "benefits": {
+          "friendly": "Supportive learning environment that encourages growth",
+          "motivating": "Engaging conversations that inspire deeper thinking",
+          "aiPowered": "Intelligent feedback that guides improvement"
+        }
+      },
+      "imagePlaceholder": "[Image placeholder - see description above]",
+      "imageDescriptions": {
+        "organizations": "Diverse Organizations Using Inteliexamen",
+        "ecosystem": "Assessment Ecosystem Dashboard",
+        "students": "Students Engaging with AI Assessment"
+      }
+    },
     "features": {
       "title": "Why Teachers and Students Love Inteliexamen",
       "subtitle": "Finally, an assessment platform that encourages learning instead of just testing",
@@ -695,13 +735,97 @@
       "psychology": "Student-Centered Approach",
       "psychologyDesc": "Disputes allowed, multiple attempts encouraged - we focus on learning, not punishment"
     },
+    "contact": {
+      "title": "Get in Touch",
+      "subtitle": "Ready to transform your educational assessments? We'd love to hear from you.",
+      "form": {
+        "name": "Full Name",
+        "email": "Email Address",
+        "company": "Company/Institution",
+        "companyHelper": "Optional",
+        "message": "Message",
+        "messagePlaceholder": "Tell us about your needs, questions, or how we can help you...",
+        "send": "Send Message",
+        "sending": "Sending...",
+        "privacy": "We respect your privacy and will never share your information."
+      },
+      "validation": {
+        "required": "Please fill in all required fields.",
+        "invalidEmail": "Please enter a valid email address."
+      },
+      "success": {
+        "sent": "Thank you! Your message has been sent successfully. We'll get back to you soon."
+      },
+      "error": {
+        "general": "Something went wrong. Please try again or contact us directly."
+      }
+    },
     "admin": "Administrators",
     "teacher": "Teachers",
     "student": "Students",
     "login": "Login",
     "language": "Language",
     "readyToStart": "Ready to get started?",
-    "chooseRole": "Choose your role and start using the platform"
+    "chooseRole": "Choose your role and start using the platform",
+    "footer": {
+      "legal": "Legal",
+      "privacyPolicy": "Privacy Policy",
+      "contact": "Contact",
+      "allRightsReserved": "All rights reserved."
+    }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: January 2025",
+    "backToHome": "Back to Home",
+    "sections": {
+      "introduction": {
+        "title": "Introduction",
+        "content": "At Inteliexamen, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our educational assessment platform. By using our services, you agree to the collection and use of information in accordance with this policy."
+      },
+      "dataCollection": {
+        "title": "Information We Collect",
+        "intro": "We collect information you provide directly to us and information we obtain automatically when you use our services:",
+        "personalInfo": {
+          "title": "Personal Information",
+          "content": "When you register for an account, we collect information such as your name, email address, institutional affiliation, role (student, teacher, administrator), and any other information you choose to provide. For educational purposes, we may also collect assessment responses, performance data, and learning analytics."
+        },
+        "usageData": {
+          "title": "Usage Data",
+          "content": "We automatically collect information about how you interact with our platform, including log data, device information, IP addresses, browser type, pages visited, time spent on pages, and other usage statistics to improve our services and user experience."
+        }
+      },
+      "dataUsage": {
+        "title": "How We Use Your Information",
+        "content": "We use the information we collect to provide, maintain, and improve our educational assessment services; create and manage user accounts; facilitate assessments and provide AI-powered feedback; generate analytics and insights for educational purposes; communicate with you about our services; ensure platform security and prevent fraud; comply with legal obligations; and conduct research to enhance educational methodologies."
+      },
+      "dataSharing": {
+        "title": "Information Sharing and Disclosure",
+        "content": "We do not sell, trade, or rent your personal information to third parties. We may share your information only in the following circumstances: with your educational institution (for students and teachers); with service providers who assist in operating our platform under strict confidentiality agreements; when required by law or to protect our rights and safety; in connection with a business transfer or merger; and with your explicit consent for specific purposes."
+      },
+      "dataSecurity": {
+        "title": "Data Security",
+        "content": "We implement appropriate technical and organizational security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. This includes encryption of data in transit and at rest, secure authentication systems, regular security audits, and restricted access to personal information on a need-to-know basis."
+      },
+      "userRights": {
+        "title": "Your Rights and Choices",
+        "content": "You have the right to access, update, or delete your personal information; opt out of certain communications; request data portability; object to processing in certain circumstances; and lodge a complaint with a supervisory authority. To exercise these rights, please contact us using the information provided below."
+      },
+      "cookies": {
+        "title": "Cookies and Tracking Technologies",
+        "content": "We use cookies and similar tracking technologies to enhance your experience on our platform. These help us remember your preferences, provide personalized content, analyze usage patterns, and improve our services. You can control cookie settings through your browser, though some features may not function properly if cookies are disabled."
+      },
+      "policyChanges": {
+        "title": "Changes to This Privacy Policy",
+        "content": "We may update this Privacy Policy from time to time to reflect changes in our practices or for legal, operational, or regulatory reasons. We will notify you of any material changes by posting the new policy on our website and updating the 'Last Updated' date. Your continued use of our services after such changes indicates your acceptance of the updated policy."
+      },
+      "contact": {
+        "title": "Contact Us",
+        "content": "If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us at:",
+        "email": "Email:",
+        "company": "Company:"
+      }
+    }
   },
   "skillLevels": {
     "title": "Skill Levels",

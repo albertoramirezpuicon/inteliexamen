@@ -829,6 +829,46 @@
         "demo": "Contáctanos para una demo"
       }
     },
+    "whatIs": {
+      "title": "¿Qué es Inteliexamen?",
+      "subtitle": "El ecosistema completo de evaluación que transforma cómo las organizaciones enseñan, evalúan e inspiran el éxito del aprendizaje.",
+      "forWho": {
+        "title": "Diseñado para Toda Organización de Aprendizaje",
+        "description": "Ya sea que dirijas un programa de capacitación gubernamental, administres un distrito escolar, lideres una universidad corporativa, o manejes cualquier institución educativa, Inteliexamen proporciona la infraestructura completa que necesitas para entregar evaluaciones significativas que realmente ayuden a las personas a aprender y crecer."
+      },
+      "organizations": {
+        "government": "Agencias Gubernamentales",
+        "schools": "Escuelas y Universidades",
+        "institutes": "Institutos de Capacitación",
+        "corporations": "Capacitación Corporativa"
+      },
+      "ecosystem": {
+        "title": "Tu Ecosistema Completo de Evaluación",
+        "description": "Olvídate de herramientas dispersas y flujos de trabajo complicados. Inteliexamen reúne todo en una plataforma inteligente que maneja todo tu ciclo de vida de evaluación—desde definir qué necesitan aprender los estudiantes, hasta medir qué tan bien lo han aprendido, todo impulsado por IA que hace la vida de los profesores más fácil.",
+        "components": {
+          "skills": "Definición de Habilidades",
+          "levels": "Niveles de Logro",
+          "users": "Gestión de Usuarios",
+          "groups": "Grupos de Aprendizaje",
+          "assessments": "Evaluaciones Inteligentes"
+        }
+      },
+      "studentExperience": {
+        "title": "Donde los Estudiantes Realmente Quieren Aprender",
+        "description": "Este no es tu típico sistema de examinar-y-calificar. Nuestra área estudiantil crea un entorno donde los aprendices se sienten apoyados, motivados y emocionados de demostrar lo que saben. En lugar de sentirse juzgados, los estudiantes participan en conversaciones significativas que los ayudan a descubrir y mejorar su comprensión.",
+        "benefits": {
+          "friendly": "Ambiente de aprendizaje solidario que fomenta el crecimiento",
+          "motivating": "Conversaciones atractivas que inspiran pensamiento profundo",
+          "aiPowered": "Retroalimentación inteligente que guía la mejora"
+        }
+      },
+      "imagePlaceholder": "[Marcador de imagen - ver descripción arriba]",
+      "imageDescriptions": {
+        "organizations": "Organizaciones Diversas Usando Inteliexamen",
+        "ecosystem": "Panel del Ecosistema de Evaluación",
+        "students": "Estudiantes Interactuando con Evaluación IA"
+      }
+    },
     "features": {
       "title": "Por Qué Profesores y Estudiantes Aman Inteliexamen",
       "subtitle": "Finalmente, una plataforma de evaluación que fomenta el aprendizaje en lugar de solo evaluar",
@@ -843,13 +883,97 @@
       "psychology": "Enfoque Centrado en el Estudiante",
       "psychologyDesc": "Disputas permitidas, múltiples intentos alentados - nos enfocamos en el aprendizaje, no en el castigo"
     },
+    "contact": {
+      "title": "Contáctanos",
+      "subtitle": "¿Listo para transformar tus evaluaciones educativas? Nos encantaría escucharte.",
+      "form": {
+        "name": "Nombre Completo",
+        "email": "Correo Electrónico",
+        "company": "Empresa/Institución",
+        "companyHelper": "Opcional",
+        "message": "Mensaje",
+        "messagePlaceholder": "Cuéntanos sobre tus necesidades, preguntas o cómo podemos ayudarte...",
+        "send": "Enviar Mensaje",
+        "sending": "Enviando...",
+        "privacy": "Respetamos tu privacidad y nunca compartiremos tu información."
+      },
+      "validation": {
+        "required": "Por favor completa todos los campos requeridos.",
+        "invalidEmail": "Por favor ingresa una dirección de correo válida."
+      },
+      "success": {
+        "sent": "¡Gracias! Tu mensaje ha sido enviado exitosamente. Te contactaremos pronto."
+      },
+      "error": {
+        "general": "Algo salió mal. Por favor intenta de nuevo o contáctanos directamente."
+      }
+    },
     "admin": "Administración",
     "teacher": "Docentes",
     "student": "Estudiantes",
     "login": "Iniciar Sesión",
     "language": "Idioma",
     "readyToStart": "¿Listo para comenzar?",
-    "chooseRole": "Elige tu rol y comienza a usar la plataforma"
+    "chooseRole": "Elige tu rol y comienza a usar la plataforma",
+    "footer": {
+      "legal": "Legal",
+      "privacyPolicy": "Política de Privacidad",
+      "contact": "Contacto",
+      "allRightsReserved": "Todos los derechos reservados."
+    }
+  },
+  "privacy": {
+    "title": "Política de Privacidad",
+    "lastUpdated": "Última actualización: Enero 2025",
+    "backToHome": "Volver al Inicio",
+    "sections": {
+      "introduction": {
+        "title": "Introducción",
+        "content": "En Inteliexamen, estamos comprometidos con proteger tu privacidad y garantizar la seguridad de tu información personal. Esta Política de Privacidad explica cómo recopilamos, usamos, divulgamos y protegemos tu información cuando usas nuestra plataforma de evaluación educativa. Al usar nuestros servicios, aceptas la recopilación y uso de información de acuerdo con esta política."
+      },
+      "dataCollection": {
+        "title": "Información que Recopilamos",
+        "intro": "Recopilamos información que nos proporcionas directamente e información que obtenemos automáticamente cuando usas nuestros servicios:",
+        "personalInfo": {
+          "title": "Información Personal",
+          "content": "Cuando te registras para una cuenta, recopilamos información como tu nombre, dirección de correo electrónico, afiliación institucional, rol (estudiante, profesor, administrador), y cualquier otra información que elijas proporcionar. Para fines educativos, también podemos recopilar respuestas de evaluaciones, datos de rendimiento y analíticas de aprendizaje."
+        },
+        "usageData": {
+          "title": "Datos de Uso",
+          "content": "Recopilamos automáticamente información sobre cómo interactúas con nuestra plataforma, incluyendo datos de registro, información del dispositivo, direcciones IP, tipo de navegador, páginas visitadas, tiempo pasado en páginas y otras estadísticas de uso para mejorar nuestros servicios y experiencia del usuario."
+        }
+      },
+      "dataUsage": {
+        "title": "Cómo Usamos tu Información",
+        "content": "Usamos la información que recopilamos para proporcionar, mantener y mejorar nuestros servicios de evaluación educativa; crear y gestionar cuentas de usuario; facilitar evaluaciones y proporcionar retroalimentación con IA; generar analíticas e insights para fines educativos; comunicarnos contigo sobre nuestros servicios; garantizar la seguridad de la plataforma y prevenir fraude; cumplir con obligaciones legales; y realizar investigaciones para mejorar metodologías educativas."
+      },
+      "dataSharing": {
+        "title": "Compartir y Divulgación de Información",
+        "content": "No vendemos, intercambiamos o alquilamos tu información personal a terceros. Podemos compartir tu información solo en las siguientes circunstancias: con tu institución educativa (para estudiantes y profesores); con proveedores de servicios que ayudan a operar nuestra plataforma bajo estrictos acuerdos de confidencialidad; cuando sea requerido por ley o para proteger nuestros derechos y seguridad; en conexión con una transferencia comercial o fusión; y con tu consentimiento explícito para propósitos específicos."
+      },
+      "dataSecurity": {
+        "title": "Seguridad de Datos",
+        "content": "Implementamos medidas de seguridad técnicas y organizacionales apropiadas para proteger tu información personal contra acceso no autorizado, alteración, divulgación o destrucción. Esto incluye encriptación de datos en tránsito y en reposo, sistemas de autenticación seguros, auditorías de seguridad regulares y acceso restringido a información personal según sea necesario."
+      },
+      "userRights": {
+        "title": "Tus Derechos y Opciones",
+        "content": "Tienes derecho a acceder, actualizar o eliminar tu información personal; optar por no recibir ciertas comunicaciones; solicitar portabilidad de datos; objetar el procesamiento en ciertas circunstancias; y presentar una queja ante una autoridad supervisora. Para ejercer estos derechos, por favor contáctanos usando la información proporcionada a continuación."
+      },
+      "cookies": {
+        "title": "Cookies y Tecnologías de Seguimiento",
+        "content": "Usamos cookies y tecnologías de seguimiento similares para mejorar tu experiencia en nuestra plataforma. Estas nos ayudan a recordar tus preferencias, proporcionar contenido personalizado, analizar patrones de uso y mejorar nuestros servicios. Puedes controlar la configuración de cookies a través de tu navegador, aunque algunas funciones pueden no funcionar correctamente si las cookies están deshabilitadas."
+      },
+      "policyChanges": {
+        "title": "Cambios a Esta Política de Privacidad",
+        "content": "Podemos actualizar esta Política de Privacidad de vez en cuando para reflejar cambios en nuestras prácticas o por razones legales, operacionales o regulatorias. Te notificaremos de cualquier cambio material publicando la nueva política en nuestro sitio web y actualizando la fecha de 'Última Actualización'. Tu uso continuado de nuestros servicios después de tales cambios indica tu aceptación de la política actualizada."
+      },
+      "contact": {
+        "title": "Contáctanos",
+        "content": "Si tienes alguna pregunta, inquietud o solicitud con respecto a esta Política de Privacidad o nuestras prácticas de datos, por favor contáctanos en:",
+        "email": "Correo:",
+        "company": "Empresa:"
+      }
+    }
   },
   "StudentAssessmentAttempt": {
     "dashboard": "Panel Principal",

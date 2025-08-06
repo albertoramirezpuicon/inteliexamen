@@ -48,7 +48,8 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Divider
+  Divider,
+  Link
 } from '@mui/material';
 import { 
   AdminPanelSettings as AdminIcon,
@@ -68,6 +69,7 @@ import {
   WhatsApp as WhatsAppIcon
 } from '@mui/icons-material';
 import LoginFormWrapper from '@/components/auth/LoginFormWrapper';
+import ContactForm from '@/components/ContactForm';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
@@ -546,6 +548,332 @@ export default function LandingPage() {
           </Container>
         </Box>
 
+        {/* What is Inteliexamen Section */}
+        <Box sx={{ 
+          py: { xs: 8, sm: 10 },
+          backgroundColor: '#ffffff'
+        }}>
+          <Container maxWidth="lg">
+            {/* Section Header */}
+            <Box sx={{ textAlign: 'center', mb: { xs: 6, sm: 8 } }}>
+              <Typography 
+                variant="h2" 
+                component="h2" 
+                gutterBottom
+                sx={{ 
+                  color: '#171717',
+                  fontWeight: 700,
+                  fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem', lg: '3rem' },
+                  mb: 3
+                }}
+              >
+                {t('whatIs.title')}
+              </Typography>
+              
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  color: '#666666',
+                  maxWidth: 800,
+                  mx: 'auto',
+                  mb: 6,
+                  opacity: 0.8,
+                  fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' },
+                  lineHeight: 1.6
+                }}
+              >
+                {t('whatIs.subtitle')}
+              </Typography>
+            </Box>
+
+            {/* Content Grid */}
+            <Box sx={{ 
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' },
+              gap: { xs: 6, lg: 8 },
+              alignItems: 'center',
+              mb: { xs: 8, sm: 10 }
+            }}>
+              {/* Text Content */}
+              <Box sx={{ order: { xs: 2, lg: 1 } }}>
+                <Typography 
+                  variant="h4" 
+                  component="h3" 
+                  gutterBottom
+                  sx={{ 
+                    color: '#171717',
+                    fontWeight: 600,
+                    mb: 3,
+                    fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
+                  }}
+                >
+                  {t('whatIs.forWho.title')}
+                </Typography>
+                
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    color: '#444',
+                    lineHeight: 1.7,
+                    fontSize: { xs: '1rem', sm: '1.125rem' },
+                    mb: 4
+                  }}
+                >
+                  {t('whatIs.forWho.description')}
+                </Typography>
+
+                {/* Organization Types */}
+                <Box sx={{ 
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                  gap: 2,
+                  mb: 4
+                }}>
+                  {[
+                    { key: 'government', icon: '🏛️' },
+                    { key: 'schools', icon: '🏫' },
+                    { key: 'institutes', icon: '🎓' },
+                    { key: 'corporations', icon: '🏢' }
+                  ].map((org) => (
+                    <Box 
+                      key={org.key}
+                      sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center',
+                        p: 2,
+                        backgroundColor: '#f8f9fa',
+                        borderRadius: 2,
+                        border: '1px solid #e9ecef'
+                      }}
+                    >
+                      <Typography sx={{ fontSize: '1.5rem', mr: 2 }}>
+                        {org.icon}
+                      </Typography>
+                      <Typography 
+                        variant="body1" 
+                        sx={{ 
+                          fontWeight: 500,
+                          color: '#495057'
+                        }}
+                      >
+                        {t(`whatIs.organizations.${org.key}`)}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+
+              {/* Organizations Image */}
+              <Box sx={{ 
+                order: { xs: 1, lg: 2 },
+                display: 'flex',
+                justifyContent: 'center'
+              }}>
+                <Box
+                  component="img"
+                  src="/images/what-is/organizations.png"
+                  alt="Diverse organizations using Inteliexamen platform"
+                  sx={{
+                    width: '100%',
+                    maxWidth: { xs: 300, sm: 400, md: 450 },
+                    height: 'auto',
+                    aspectRatio: '1/1',
+                    borderRadius: 3,
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 12px 32px rgba(0, 0, 0, 0.18)'
+                    }
+                  }}
+                />
+              </Box>
+            </Box>
+
+            {/* Ecosystem Features */}
+            <Box sx={{ 
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' },
+              gap: { xs: 6, lg: 8 },
+              alignItems: 'center',
+              mb: { xs: 8, sm: 10 }
+            }}>
+              {/* Ecosystem Dashboard Image */}
+              <Box sx={{ 
+                display: 'flex',
+                justifyContent: 'center'
+              }}>
+                <Box
+                  component="img"
+                  src="/images/what-is/ecosystem-dashboard.png"
+                  alt="Assessment ecosystem dashboard interface"
+                  sx={{
+                    width: '100%',
+                    maxWidth: { xs: 300, sm: 400, md: 450 },
+                    height: 'auto',
+                    aspectRatio: '1/1',
+                    borderRadius: 3,
+                    boxShadow: '0 8px 24px rgba(25, 118, 210, 0.2)',
+                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 12px 32px rgba(25, 118, 210, 0.3)'
+                    }
+                  }}
+                />
+              </Box>
+
+              {/* Text Content */}
+              <Box>
+                <Typography 
+                  variant="h4" 
+                  component="h3" 
+                  gutterBottom
+                  sx={{ 
+                    color: '#171717',
+                    fontWeight: 600,
+                    mb: 3,
+                    fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
+                  }}
+                >
+                  {t('whatIs.ecosystem.title')}
+                </Typography>
+                
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    color: '#444',
+                    lineHeight: 1.7,
+                    fontSize: { xs: '1rem', sm: '1.125rem' },
+                    mb: 4
+                  }}
+                >
+                  {t('whatIs.ecosystem.description')}
+                </Typography>
+
+                {/* Ecosystem Components */}
+                <Box sx={{ 
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 1.5,
+                  mb: 4
+                }}>
+                  {['skills', 'levels', 'users', 'groups', 'assessments'].map((component) => (
+                    <Chip
+                      key={component}
+                      label={t(`whatIs.ecosystem.components.${component}`)}
+                      color="primary"
+                      variant="outlined"
+                      sx={{ 
+                        fontSize: '0.9rem',
+                        py: 0.5,
+                        fontWeight: 500
+                      }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            </Box>
+
+            {/* Student Experience */}
+            <Box sx={{ 
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' },
+              gap: { xs: 6, lg: 8 },
+              alignItems: 'center'
+            }}>
+              {/* Text Content */}
+              <Box sx={{ order: { xs: 2, lg: 1 } }}>
+                <Typography 
+                  variant="h4" 
+                  component="h3" 
+                  gutterBottom
+                  sx={{ 
+                    color: '#171717',
+                    fontWeight: 600,
+                    mb: 3,
+                    fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
+                  }}
+                >
+                  {t('whatIs.studentExperience.title')}
+                </Typography>
+                
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    color: '#444',
+                    lineHeight: 1.7,
+                    fontSize: { xs: '1rem', sm: '1.125rem' },
+                    mb: 4
+                  }}
+                >
+                  {t('whatIs.studentExperience.description')}
+                </Typography>
+
+                {/* Key Benefits */}
+                <Box sx={{ 
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2
+                }}>
+                  {['friendly', 'motivating', 'aiPowered'].map((benefit) => (
+                    <Box 
+                      key={benefit}
+                      sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center',
+                        p: 2,
+                        backgroundColor: '#f1f8e9',
+                        borderRadius: 2,
+                        border: '1px solid #c8e6c9'
+                      }}
+                    >
+                      <Typography sx={{ fontSize: '1.2rem', mr: 2 }}>
+                        ✨
+                      </Typography>
+                      <Typography 
+                        variant="body1" 
+                        sx={{ 
+                          fontWeight: 500,
+                          color: '#2e7d32'
+                        }}
+                      >
+                        {t(`whatIs.studentExperience.benefits.${benefit}`)}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+
+              {/* Student Engagement Image */}
+              <Box sx={{ 
+                order: { xs: 1, lg: 2 },
+                display: 'flex',
+                justifyContent: 'center'
+              }}>
+                <Box
+                  component="img"
+                  src="/images/what-is/student-engagement.png"
+                  alt="Students engaging with AI assessment platform"
+                  sx={{
+                    width: '100%',
+                    maxWidth: { xs: 300, sm: 400, md: 450 },
+                    height: 'auto',
+                    aspectRatio: '1/1',
+                    borderRadius: 3,
+                    boxShadow: '0 8px 24px rgba(156, 39, 176, 0.2)',
+                    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-4px)',
+                      boxShadow: '0 12px 32px rgba(156, 39, 176, 0.3)'
+                    }
+                  }}
+                />
+              </Box>
+            </Box>
+          </Container>
+        </Box>
+
         {/* Features Section */}
         <Container maxWidth="lg" sx={{ py: { xs: 6, sm: 8 } }}>
           <Box sx={{ textAlign: 'center', mb: { xs: 6, sm: 8 } }}>
@@ -628,6 +956,169 @@ export default function LandingPage() {
                 </Card>
               </Box>
             ))}
+          </Box>
+        </Container>
+      </Box>
+
+      {/* Contact Form Section */}
+      <Box sx={{ 
+        backgroundColor: '#f8f9fa',
+        py: { xs: 6, sm: 8 }
+      }}>
+        <Container maxWidth="md">
+          <Box sx={{ textAlign: 'center', mb: { xs: 4, sm: 6 } }}>
+            <Typography 
+              variant="h2" 
+              component="h2" 
+              gutterBottom
+              sx={{ 
+                color: '#171717',
+                fontWeight: 700,
+                fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' },
+                mb: 3
+              }}
+            >
+{t('contact.title')}
+            </Typography>
+            
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                color: '#666666',
+                maxWidth: 500,
+                mx: 'auto',
+                mb: 4,
+                opacity: 0.8,
+                fontSize: { xs: '0.9rem', sm: '1rem' }
+              }}
+            >
+              {t('contact.subtitle')}
+            </Typography>
+          </Box>
+
+          <ContactForm />
+        </Container>
+      </Box>
+
+      {/* Footer */}
+      <Box sx={{ 
+        backgroundColor: '#171717',
+        color: 'white',
+        py: { xs: 6, sm: 8 }
+      }}>
+        <Container maxWidth="lg">
+          <Box sx={{ 
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            justifyContent: 'space-between',
+            alignItems: { xs: 'center', md: 'flex-start' },
+            gap: { xs: 4, md: 6 }
+          }}>
+            {/* Company Info */}
+            <Box sx={{ 
+              textAlign: { xs: 'center', md: 'left' },
+              flex: 1
+            }}>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  fontWeight: 700,
+                  mb: 2,
+                  color: 'white'
+                }}
+              >
+                {t('title')}
+              </Typography>
+              <Typography 
+                variant="body1" 
+                sx={{ 
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  maxWidth: 400,
+                  lineHeight: 1.6
+                }}
+              >
+                {t('subtitle')}
+              </Typography>
+            </Box>
+
+            {/* Legal Links */}
+            <Box sx={{ 
+              textAlign: { xs: 'center', md: 'right' },
+              flex: 1
+            }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 600,
+                  mb: 2,
+                  color: 'white'
+                }}
+              >
+                {t('footer.legal')}
+              </Typography>
+              <Box sx={{ 
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1
+              }}>
+                <Link
+                  href={`/${locale}/privacy`}
+                  sx={{
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    textDecoration: 'none',
+                    '&:hover': {
+                      color: 'white',
+                      textDecoration: 'underline'
+                    }
+                  }}
+                >
+                  {t('footer.privacyPolicy')}
+                </Link>
+              </Box>
+            </Box>
+
+            {/* Contact Info */}
+            <Box sx={{ 
+              textAlign: { xs: 'center', md: 'right' },
+              flex: 1
+            }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 600,
+                  mb: 2,
+                  color: 'white'
+                }}
+              >
+                {t('footer.contact')}
+              </Typography>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  lineHeight: 1.6
+                }}
+              >
+                albertoramirezpuicon@gmail.com
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Copyright */}
+          <Box sx={{ 
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+            mt: 6,
+            pt: 3,
+            textAlign: 'center'
+          }}>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: 'rgba(255, 255, 255, 0.6)'
+              }}
+            >
+              © 2025 Inteliexamen. {t('footer.allRightsReserved')}
+            </Typography>
           </Box>
         </Container>
       </Box>
