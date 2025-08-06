@@ -817,30 +817,31 @@
   },
   "landing": {
     "title": "Inteliexamen",
-    "subtitle": "Plataforma de Evaluación Educativa con IA",
-    "description": "Experimenta el futuro de la evaluación educativa con nuestra plataforma inteligente que se adapta a las necesidades de los estudiantes y proporciona analíticas completas.",
+    "subtitle": "Donde el Aprendizaje se Encuentra con la Conversación",
+    "description": "Descubre un enfoque revolucionario de la educación donde los estudiantes participan en conversaciones significativas con IA para demostrar su conocimiento, mientras los profesores crean fácilmente evaluaciones integrales basadas en habilidades.",
     "hero": {
-      "tagline": "Transforma la Educación con Evaluación con IA",
-      "subtitle": "Evaluación inteligente que se adapta a cada estudiante",
-      "description": "Experimenta el futuro de la evaluación educativa con nuestra plataforma inteligente que se adapta a las necesidades de los estudiantes y proporciona analíticas completas para mejores resultados de aprendizaje.",
+      "tagline": "Evaluación Que Realmente Ayuda a los Estudiantes a Aprender",
+      "subtitle": "Se acabó la opción múltiple. Conversaciones reales, comprensión real.",
+      "description": "Los estudiantes resuelven casos complejos del mundo real a través del diálogo interactivo con IA. Los profesores ahorran horas creando evaluaciones significativas que miden lo que realmente importa. Todos ganan.",
       "cta": {
         "primary": "Comenzar a Aprender",
-        "secondary": "Para Docentes"
+        "secondary": "Para Docentes",
+        "demo": "Contáctanos para una demo"
       }
     },
     "features": {
-      "title": "Características Principales",
-      "subtitle": "Descubre qué hace de nuestra plataforma el futuro de la evaluación educativa",
-      "ai": "Evaluación con IA",
-      "aiDesc": "Generación inteligente de casos y pruebas adaptativas",
-      "analytics": "Analíticas Avanzadas",
-      "analyticsDesc": "Información detallada sobre el rendimiento estudiantil",
-      "security": "Plataforma Segura",
-      "securityDesc": "Seguridad empresarial y protección de datos",
-      "speed": "Rápida y Eficiente",
-      "speedDesc": "Creación y evaluación rápida de evaluaciones",
-      "psychology": "Psicología Educativa",
-      "psychologyDesc": "Basada en metodologías de aprendizaje probadas"
+      "title": "Por Qué Profesores y Estudiantes Aman Inteliexamen",
+      "subtitle": "Finalmente, una plataforma de evaluación que fomenta el aprendizaje en lugar de solo evaluar",
+      "ai": "Aprendizaje Conversacional",
+      "aiDesc": "Los estudiantes discuten casos del mundo real con IA, mejorando sus respuestas a través del diálogo en lugar de adivinar entre A, B, C, D",
+      "analytics": "Creación de Evaluaciones Sin Esfuerzo",
+      "analyticsDesc": "Los profesores crean evaluaciones integrales en minutos, no horas, con asistencia de IA y mapeo inteligente de habilidades",
+      "security": "Evaluación Justa y Segura",
+      "securityDesc": "Protección de integridad incorporada que previene el fraude mientras mantiene un ambiente de aprendizaje de apoyo",
+      "speed": "Evaluación Basada en Habilidades",
+      "speedDesc": "Define exactamente lo que los estudiantes necesitan saber y mide su progreso con niveles de logro claros",
+      "psychology": "Enfoque Centrado en el Estudiante",
+      "psychologyDesc": "Disputas permitidas, múltiples intentos alentados - nos enfocamos en el aprendizaje, no en el castigo"
     },
     "admin": "Administración",
     "teacher": "Docentes",

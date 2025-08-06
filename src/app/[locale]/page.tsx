@@ -60,9 +60,12 @@ import {
   Security as SecurityIcon,
   Speed as SpeedIcon,
   Psychology as PsychologyIcon,
-  ArrowForward as ArrowForwardIcon,
   Menu as MenuIcon,
-  Language as LanguageIcon
+  Language as LanguageIcon,
+  Email as EmailIcon
+} from '@mui/icons-material';
+import {
+  WhatsApp as WhatsAppIcon
 } from '@mui/icons-material';
 import LoginFormWrapper from '@/components/auth/LoginFormWrapper';
 import { useTranslations, useLocale } from 'next-intl';
@@ -101,6 +104,17 @@ export default function LandingPage() {
       open: false,
       userType: null
     });
+  };
+
+  const handleContactDemo = () => {
+    window.location.href = 'mailto:info@inteliexamen.com?subject=Demo Request&body=Hello, I would like to request a demo of the Inteliexamen platform.';
+  };
+
+  const handleWhatsAppContact = () => {
+    const phoneNumber = '51949358364';
+    const message = 'I am interested in know more about inteliexamen';
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const features = [
@@ -245,7 +259,7 @@ export default function LandingPage() {
                 }
               }}
             >
-              {locale.toUpperCase()}
+              {locale === 'en' ? 'ES' : 'EN'}
             </Button>
           </Stack>
 
@@ -412,18 +426,13 @@ export default function LandingPage() {
                   {t('hero.description')}
                 </Typography>
 
-                {/* Call to Action Buttons */}
-                <Stack 
-                  direction={{ xs: 'column', sm: 'row' }} 
-                  spacing={2} 
-                  justifyContent={{ xs: 'center', md: 'flex-start' }}
-                  sx={{ mb: 4 }}
-                >
+                {/* Demo Call to Action Button */}
+                <Box sx={{ mb: 4 }}>
                   <Button
                     variant="contained"
                     size="large"
-                    endIcon={<ArrowForwardIcon />}
-                    onClick={() => handleLoginClick('student')}
+                    startIcon={<EmailIcon />}
+                    onClick={handleContactDemo}
                     sx={{ 
                       px: { xs: 3, sm: 4 }, 
                       py: { xs: 1.25, sm: 1.5 },
@@ -438,30 +447,9 @@ export default function LandingPage() {
                       transition: 'all 0.3s ease'
                     }}
                   >
-                    {t('hero.cta.primary')}
+                    {t('hero.cta.demo')}
                   </Button>
-                  
-                  <Button
-                    variant="outlined"
-                    size="large"
-                    onClick={() => handleLoginClick('teacher')}
-                    sx={{ 
-                      px: { xs: 3, sm: 4 }, 
-                      py: { xs: 1.25, sm: 1.5 },
-                      fontSize: { xs: '1rem', sm: '1.1rem' },
-                      fontWeight: 600,
-                      borderRadius: 3,
-                      borderWidth: 2,
-                      '&:hover': {
-                        borderWidth: 2,
-                        transform: 'translateY(-2px)'
-                      },
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    {t('hero.cta.secondary')}
-                  </Button>
-                </Stack>
+                </Box>
 
                 {/* Trust Indicators */}
                 <Box sx={{ 
@@ -699,6 +687,31 @@ export default function LandingPage() {
           )}
         </Paper>
       </Modal>
+
+      {/* Floating WhatsApp Button */}
+      <IconButton
+        onClick={handleWhatsAppContact}
+        sx={{
+          position: 'fixed',
+          bottom: 20,
+          right: 20,
+          backgroundColor: '#25D366',
+          color: 'white',
+          width: 60,
+          height: 60,
+          boxShadow: '0 4px 12px rgba(37, 211, 102, 0.4)',
+          zIndex: 1000,
+          '&:hover': {
+            backgroundColor: '#20c05a',
+            boxShadow: '0 6px 16px rgba(37, 211, 102, 0.6)',
+            transform: 'scale(1.1)'
+          },
+          transition: 'all 0.3s ease'
+        }}
+        aria-label="Contact us on WhatsApp"
+      >
+        <WhatsAppIcon sx={{ fontSize: 30 }} />
+      </IconButton>
     </div>
   );
 } 

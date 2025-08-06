@@ -669,30 +669,31 @@
   },
   "landing": {
     "title": "Inteliexamen",
-    "subtitle": "AI-Powered Educational Assessment Platform",
-    "description": "Experience the future of educational assessment with our intelligent platform that adapts to student needs and provides comprehensive analytics.",
+    "subtitle": "Where Learning Meets Conversation",
+    "description": "Discover a revolutionary approach to education where students engage in meaningful conversations with AI to demonstrate their knowledge, while teachers effortlessly create comprehensive skill-based assessments.",
     "hero": {
-      "tagline": "Transform Education with AI-Powered Assessment",
-      "subtitle": "Intelligent evaluation that adapts to every student",
-      "description": "Experience the future of educational assessment with our intelligent platform that adapts to student needs and provides comprehensive analytics for better learning outcomes.",
+      "tagline": "Assessment That Actually Helps Students Learn",
+      "subtitle": "No more multiple choice. Real conversations, real understanding.",
+      "description": "Students solve complex, real-world cases through interactive dialogue with AI. Teachers save hours creating meaningful assessments that measure what truly matters. Everyone wins.",
       "cta": {
         "primary": "Start Learning",
-        "secondary": "For Teachers"
+        "secondary": "For Teachers",
+        "demo": "Contact us for a demo"
       }
     },
     "features": {
-      "title": "Key Features",
-      "subtitle": "Discover what makes our platform the future of educational assessment",
-      "ai": "AI-Powered Assessment",
-      "aiDesc": "Intelligent case generation and adaptive testing",
-      "analytics": "Advanced Analytics",
-      "analyticsDesc": "Detailed insights into student performance",
-      "security": "Secure Platform",
-      "securityDesc": "Enterprise-grade security and data protection",
-      "speed": "Fast & Efficient",
-      "speedDesc": "Quick assessment creation and evaluation",
-      "psychology": "Educational Psychology",
-      "psychologyDesc": "Based on proven learning methodologies"
+      "title": "Why Teachers and Students Love Inteliexamen",
+      "subtitle": "Finally, an assessment platform that encourages learning instead of just testing",
+      "ai": "Conversational Learning",
+      "aiDesc": "Students discuss real-world cases with AI, improving their answers through dialogue instead of guessing from A, B, C, D",
+      "analytics": "Effortless Assessment Creation",
+      "analyticsDesc": "Teachers create comprehensive evaluations in minutes, not hours, with AI assistance and smart skill mapping",
+      "security": "Fair & Secure Testing",
+      "securityDesc": "Built-in integrity protection prevents cheating while maintaining a supportive learning environment",
+      "speed": "Skills-Based Evaluation",
+      "speedDesc": "Define exactly what students need to know and measure their progress with clear achievement levels",
+      "psychology": "Student-Centered Approach",
+      "psychologyDesc": "Disputes allowed, multiple attempts encouraged - we focus on learning, not punishment"
     },
     "admin": "Administrators",
     "teacher": "Teachers",
