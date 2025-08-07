@@ -101,9 +101,12 @@ export default function ProtectedRoute({
         }}
       >
         <CircularProgress size={40} sx={{ mb: 2 }} />
-        <Typography variant="body1" color="text.secondary">
-          {t('loading')}
-        </Typography>
+                            <Typography variant="body1" color="text.secondary">
+                      {t('loading')}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      {t('redirectingToLogin')}
+                    </Typography>
       </Box>
     );
   }
@@ -119,9 +122,15 @@ export default function ProtectedRoute({
           alignItems: 'center' 
         }}
       >
-        <Typography variant="body1" color="text.secondary">
-          {t('accessDenied')}
-        </Typography>
+                            <Typography variant="h6" color="text.primary" sx={{ mb: 2 }}>
+                      {t('accessDenied')}
+                    </Typography>
+                    <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                      {t('accessDeniedDescription')}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {t('redirectingToLogin')}
+                    </Typography>
       </Box>
     );
   }

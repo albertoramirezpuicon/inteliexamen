@@ -225,6 +225,22 @@ All notable changes to this project will be documented in this file.
     - `src/app/api/admin/assessments/route.ts` (updated with server-side validation)
     - `src/app/api/admin/users/route.ts` (updated with server-side validation)
   - **Result**: Complete security coverage across all user areas with consistent authentication and authorization
+
+- **Access Denied UI Enhancement**: Improved the user experience when accessing protected areas without authentication
+  - **Root Cause**: Access denied message was showing raw translation key
+  - **Solution**: Added proper translations and enhanced the access denied UI
+  - **UI Improvements**:
+    - Added clear "Access Denied" heading
+    - Added descriptive message explaining why access was denied
+    - Added "Redirecting to login" message
+    - Improved typography and spacing
+  - **Translation Updates**:
+    - Added `accessDenied`, `accessDeniedDescription`, `redirectingToLogin`, and `authenticationRequired` keys
+    - Added translations in both English and Spanish
+  - **Files Modified**:
+    - `src/messages/en.json` (added new translation keys)
+    - `src/messages/es.json` (added new translation keys)
+    - `src/components/auth/ProtectedRoute.tsx` (enhanced UI)
   - **Visual Hints Section**: Created dedicated UI section with light blue background to display hints and examples
   - **Structured Display**: Hints are organized by aspect with clear visual hierarchy
   - **Examples Integration**: Analogous examples are displayed below each hint for better guidance
