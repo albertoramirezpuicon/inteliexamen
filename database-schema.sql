@@ -221,6 +221,7 @@ CREATE TABLE `inteli_skills` (
 CREATE TABLE `inteli_skills_levels` (
   `id` int NOT NULL AUTO_INCREMENT,
   `skill_id` int NOT NULL,
+  `skill_level_setting_id` int DEFAULT NULL,
   `order` int NOT NULL,
   `label` varchar(45) COLLATE utf8mb3_unicode_ci NOT NULL,
   `standard` int DEFAULT '0',
@@ -228,8 +229,11 @@ CREATE TABLE `inteli_skills_levels` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`),
   KEY `fk_sl_skill_idx` (`skill_id`),
-  CONSTRAINT `fk_sl_skill` FOREIGN KEY (`skill_id`) REFERENCES `inteli_skills` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+  KEY `fk_sl_setting_idx` (`skill_level_setting_id`),
+  CONSTRAINT `fk_sl_skill` FOREIGN KEY (`skill_id`) REFERENCES `inteli_skills` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_sl_setting` FOREIGN KEY (`skill_level_setting_id`) REFERENCES `inteli_skills_levels_settings` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=46 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci;
+
 
 
 CREATE TABLE `inteli_skills_levels_settings` (

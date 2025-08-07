@@ -216,6 +216,54 @@
   "teacher": {
     "dashboard": "Teacher Dashboard",
     "myAssessments": "My Assessments",
+    "assessmentManagement": "Assessment Management",
+    "assessmentManagementDescription": "Create and manage assessments, track student attempts",
+    "assessments": {
+      "title": "Assessments",
+      "description": "Create and manage assessments for your students",
+      "whatIsAssessment": "What is an Assessment?",
+      "assessmentExplanation": "An assessment is a measurement tool that allows you to evaluate student knowledge and skills. Each assessment is associated with a specific domain and skill, and can be assigned to student groups. Assessments can be in draft, active, or inactive status.",
+      "hideInfo": "Hide Info",
+      "showInfo": "Show Info",
+      "createAssessment": "Create Assessment",
+      "difficulty": "Difficulty",
+      "domain": "Domain",
+      "skill": "Skill",
+      "groups": "Groups",
+      "deleteConfirmation": "Are you sure you want to delete the assessment \"{name}\"? This action cannot be undone."
+    },
+    "assessmentsDescription": "{total} total assessments ({active} active)",
+    "attempts": {
+      "title": "Attempts"
+    },
+    "attemptsDescription": "{total} total attempts",
+    "studentManagement": "Student Management",
+    "studentManagementDescription": "Manage students, groups, and their access to assessments",
+    "groups": {
+      "title": "Groups"
+    },
+    "groupsDescription": "{total} total groups",
+    "users": {
+      "title": "Students"
+    },
+    "studentsDescription": "{total} total students",
+    "academicContent": "Academic Content",
+    "academicContentDescription": "Manage domains, skills, and educational resources",
+    "domains": {
+      "title": "Domains"
+    },
+    "domainsDescription": "{total} total domains",
+    "skillsDescription": "{total} total skills",
+    "sources": {
+      "title": "Sources",
+      "description": "Manage educational sources and references"
+    },
+    "skillLevels": {
+      "title": "Skill Levels"
+    },
+    "recentActivity": "Recent Activity",
+    "recentActivityDescription": "Latest student attempts and activities",
+    "attempted": "attempted",
     "studentAttempts": "Student Attempts",
     "results": "Results",
     "disputes": "Disputes",
@@ -227,9 +275,6 @@
     "manageDomains": "Manage Domains",
     "welcomeBack": "Welcome back",
     "manageEducationalContent": "Manage your educational content and track student progress",
-    "assessments": "Assessments",
-    "attempts": "Attempts",
-    "domains": "Domains",
     "skills": {
       "title": "Skills",
       "description": "Manage educational skills in your institution",

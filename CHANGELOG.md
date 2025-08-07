@@ -4,7 +4,69 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **Landing Page Contact Flow**: Updated contact demo button to scroll to contact form instead of opening email client
+  - **Root Cause**: The "Contact us for a demo" button was opening the user's email client instead of directing them to the contact form
+  - **Solution**: Modified the button to smoothly scroll to the contact form section when clicked
+  - **Technical Changes**:
+    - Updated `handleContactDemo` function to use `scrollIntoView` with smooth behavior
+    - Added `id="contact-section"` to the contact form section for targeting
+    - Maintained all existing styling and functionality
+  - **User Experience**: Users now have a seamless flow from the demo button to the contact form
+  - **Files Modified**: `src/app/[locale]/page.tsx` (updated contact demo handler and added section ID)
+
+- **Contact Email Update**: Changed contact email from personal email to business email address
+  - **Root Cause**: The platform was using a personal email address for contact information
+  - **Solution**: Updated all contact references to use the business email `contact@inteliexamen.com`
+  - **Changes Made**:
+    - Updated footer email display from `albertoramirezpuicon@gmail.com` to `contact@inteliexamen.com`
+    - Updated contact form API to send emails to `contact@inteliexamen.com` instead of personal email
+    - Updated email template greeting from "Hi Alberto!" to "Hi Inteliexamen Team!"
+  - **Benefits**: 
+    - Professional business email address for all contact communications
+    - Consistent branding across the platform
+    - Better separation between personal and business communications
+  - **Files Modified**:
+    - `src/app/[locale]/page.tsx` (updated footer email display)
+    - `src/app/api/contact/route.ts` (updated email recipient and greeting)
+
 ### Fixed
+- **Teacher Dashboard Translation Error**: Fixed missing translation keys causing "MISSING_MESSAGE" error
+  - **Root Cause**: Teacher dashboard was trying to use multiple translation keys that were missing from the teacher namespace in translation files
+  - **Solution**: Added comprehensive set of missing translation keys to both English and Spanish teacher sections
+  - **Translation Keys Added**:
+    - **English**: Added 20+ missing keys including `assessments.title`, `attempts.title`, `studentManagement`, `groups.title`, `users.title`, `academicContent`, `domains.title`, `sources.title`, `recentActivity`, and more
+    - **Spanish**: Added corresponding Spanish translations for all missing keys
+  - **Key Features**:
+    - Assessment management section with proper titles and descriptions
+    - Student management section with group and user management
+    - Academic content section with domains, skills, and sources
+    - Recent activity section with proper activity descriptions
+    - Dynamic descriptions with parameter interpolation (e.g., "{total} total assessments")
+  - **Files Modified**:
+    - `src/messages/en.json` (added comprehensive teacher translation keys)
+    - `src/messages/es.json` (added comprehensive teacher translation keys)
+  - **Result**: Eliminates all "Could not resolve `teacher.*`" errors in teacher dashboard and ensures proper multilingual support
+
+- **Translation Key Conflicts**: Fixed duplicate translation keys causing resolution conflicts
+  - **Root Cause**: Multiple `assessments` and `domains` keys existed in teacher namespace, causing conflicts between object and string versions
+  - **Solution**: Removed duplicate string versions of `assessments` and `domains` keys, keeping only the object versions with proper structure
+  - **Files Modified**:
+    - `src/messages/en.json` (removed duplicate `assessments`, `attempts`, `domains` string keys)
+    - `src/messages/es.json` (removed duplicate `assessments` and `domains` string keys)
+  - **Result**: Resolves translation key conflicts and ensures proper key resolution in teacher dashboard
+
+- **Teacher Skills Page Translation Error**: Fixed missing `skillLevels.title` translation key
+  - **Root Cause**: Teacher skills page was trying to use `t('skillLevels.title')` but this key was missing from the teacher namespace
+  - **Solution**: Added `skillLevels` object with `title` key to both English and Spanish teacher sections
+  - **Translation Keys Added**:
+    - English: `skillLevels: { title: "Skill Levels" }`
+    - Spanish: `skillLevels: { title: "Niveles de Habilidad" }`
+  - **Files Modified**:
+    - `src/messages/en.json` (added skillLevels object to teacher section)
+    - `src/messages/es.json` (added skillLevels object to teacher section)
+  - **Result**: Eliminates the "Could not resolve `teacher.skillLevels.title`" error in teacher skills page
+
 - **Conversation Turn Counting Bug**: Fixed critical issue where the system was incorrectly counting conversation turns, causing AI to ignore student responses beyond the first turn
   - **Root Cause**: The system was using `Math.max(studentMessages, aiMessages)` to count turns, which doesn't properly track conversation pairs
   - **Solution**: Implemented proper conversation pair counting that tracks complete student-AI exchanges
@@ -36,6 +98,73 @@ All notable changes to this project will be documented in this file.
 - **Better Debugging**: Added comprehensive logging to track conversation history processing and AI responses
 - **Frontend Hints Display**: Added UI components to display hints and examples to students in the assessment interface
   - **Hints State Management**: Added state variable to store and manage hints from AI responses
+
+- **Skill Level Settings Integration**: Enhanced skill levels management with proper settings reference
+  - **Root Cause**: The `skill_level_setting_id` field in `inteli_skills_levels` table was not being properly utilized in the APIs, limiting feedback interaction capabilities
+  - **Solution**: Updated skill levels APIs to properly handle and validate the `skill_level_setting_id` field
+  - **Technical Changes**:
+    - **TypeScript Types**: Added `SkillLevel` and `SkillLevelSetting` interfaces to `src/lib/types.ts`
+    - **API Updates**: Modified both teacher and admin skill levels APIs to:
+      - Include `skill_level_setting_id` in SELECT queries
+      - Validate that each level references the correct setting ID
+      - Include `skill_level_setting_id` in INSERT statements
+    - **Database Schema**: Added missing foreign key constraint and index for `skill_level_setting_id`
+    - **SQL Script**: Created `scripts/add-skill-level-setting-constraint.sql` for existing databases
+  - **Benefits**:
+    - **Feedback Enhancement**: Enables better feedback interaction with students by linking skill levels to institution settings
+    - **Data Integrity**: Ensures skill levels are properly linked to their corresponding settings
+    - **Consistency**: Maintains alignment between skill levels and institution templates
+  - **Files Modified**:
+    - `src/lib/types.ts` (added SkillLevel and SkillLevelSetting interfaces)
+    - `src/app/api/teacher/skills/[id]/levels/route.ts` (updated to handle skill_level_setting_id)
+    - `src/app/api/admin/skills/[id]/levels/route.ts` (updated to handle skill_level_setting_id)
+    - `database-schema.sql` (added foreign key constraint)
+    - `scripts/add-skill-level-setting-constraint.sql` (new script for existing databases)
+  - **Result**: Skill levels now properly reference their corresponding settings, facilitating enhanced feedback interaction
+
+- **Teacher Assessments Page Translation Error**: Fixed missing `assessments.description` and related translation keys
+  - **Root Cause**: Teacher assessments page was trying to use multiple translation keys that were missing from the teacher namespace
+  - **Solution**: Added comprehensive set of missing translation keys to both English and Spanish teacher sections
+  - **Translation Keys Added**:
+    - **English**: `assessments.description`, `assessments.whatIsAssessment`, `assessments.assessmentExplanation`, `assessments.hideInfo`, `assessments.showInfo`, `assessments.createAssessment`
+    - **Spanish**: Corresponding Spanish translations for all missing keys
+  - **Key Features**:
+    - Assessment description and explanation text
+    - Help/info section with assessment definition
+    - UI action buttons (hide/show info, create assessment)
+  - **Files Modified**:
+    - `src/messages/en.json` (added missing teacher assessments translation keys)
+    - `src/messages/es.json` (added missing teacher assessments translation keys)
+  - **Result**: Eliminates the "Could not resolve `teacher.assessments.description`" error in teacher assessments page
+
+- **Teacher Assessments Table Headers Translation Error**: Fixed missing table header translation keys
+  - **Root Cause**: Teacher assessments page table headers were trying to use translation keys that were missing from the teacher namespace
+  - **Solution**: Added missing table header translation keys to both English and Spanish teacher sections
+  - **Translation Keys Added**:
+    - **English**: `assessments.difficulty`, `assessments.domain`, `assessments.skill`, `assessments.groups`
+    - **Spanish**: `assessments.difficulty`, `assessments.domain`, `assessments.skill`, `assessments.groups`
+  - **Key Features**:
+    - Table column headers for difficulty, domain, skill, and groups
+    - Consistent terminology across assessment management interface
+  - **Files Modified**:
+    - `src/messages/en.json` (added missing table header translation keys)
+    - `src/messages/es.json` (added missing table header translation keys)
+  - **Result**: Eliminates the "Could not resolve `teacher.assessments.difficulty`" error in teacher assessments page
+
+- **Teacher Assessments Delete Confirmation Translation Error**: Fixed missing delete confirmation translation key
+  - **Root Cause**: Teacher assessments page delete confirmation dialog was trying to use `assessments.deleteConfirmation` key that was missing from the teacher namespace
+  - **Solution**: Added missing delete confirmation translation key to both English and Spanish teacher sections
+  - **Translation Keys Added**:
+    - **English**: `assessments.deleteConfirmation: "Are you sure you want to delete the assessment \"{name}\"? This action cannot be undone."`
+    - **Spanish**: `assessments.deleteConfirmation: "¿Estás seguro de que quieres eliminar la evaluación \"{name}\"? Esta acción no se puede deshacer."`
+  - **Key Features**:
+    - Parameterized confirmation message with assessment name
+    - Clear warning about irreversible action
+    - Consistent terminology across languages
+  - **Files Modified**:
+    - `src/messages/en.json` (added missing delete confirmation translation key)
+    - `src/messages/es.json` (added missing delete confirmation translation key)
+  - **Result**: Eliminates the "Could not resolve `teacher.assessments.deleteConfirmation`" error in teacher assessments page
   - **Visual Hints Section**: Created dedicated UI section with light blue background to display hints and examples
   - **Structured Display**: Hints are organized by aspect with clear visual hierarchy
   - **Examples Integration**: Analogous examples are displayed below each hint for better guidance

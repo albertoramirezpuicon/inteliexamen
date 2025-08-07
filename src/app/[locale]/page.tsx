@@ -109,7 +109,11 @@ export default function LandingPage() {
   };
 
   const handleContactDemo = () => {
-    window.location.href = 'mailto:info@inteliexamen.com?subject=Demo Request&body=Hello, I would like to request a demo of the Inteliexamen platform.';
+    // Scroll to contact form section
+    const contactSection = document.getElementById('contact-section');
+    if (contactSection) {
+      contactSection.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const handleWhatsAppContact = () => {
@@ -961,10 +965,13 @@ export default function LandingPage() {
       </Box>
 
       {/* Contact Form Section */}
-      <Box sx={{ 
-        backgroundColor: '#f8f9fa',
-        py: { xs: 6, sm: 8 }
-      }}>
+      <Box 
+        id="contact-section"
+        sx={{ 
+          backgroundColor: '#f8f9fa',
+          py: { xs: 6, sm: 8 }
+        }}
+      >
         <Container maxWidth="md">
           <Box sx={{ textAlign: 'center', mb: { xs: 4, sm: 6 } }}>
             <Typography 
@@ -1099,7 +1106,7 @@ export default function LandingPage() {
                   lineHeight: 1.6
                 }}
               >
-                albertoramirezpuicon@gmail.com
+                contact@inteliexamen.com
               </Typography>
             </Box>
           </Box>

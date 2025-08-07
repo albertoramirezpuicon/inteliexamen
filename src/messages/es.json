@@ -248,6 +248,54 @@
   "teacher": {
     "dashboard": "Panel del docente",
     "myAssessments": "Mis evaluaciones",
+    "assessmentManagement": "Gestión de Evaluaciones",
+    "assessmentManagementDescription": "Crea y gestiona evaluaciones, rastrea intentos de estudiantes",
+    "assessments": {
+      "title": "Evaluaciones",
+      "description": "Crea y gestiona evaluaciones para tus estudiantes",
+      "whatIsAssessment": "¿Qué es una Evaluación?",
+      "assessmentExplanation": "Una evaluación es una herramienta de medición que permite evaluar el conocimiento y habilidades de los estudiantes. Cada evaluación está asociada a un dominio y habilidad específica, y puede ser asignada a grupos de estudiantes. Las evaluaciones pueden estar en estado borrador, activo o inactivo.",
+      "hideInfo": "Ocultar Info",
+      "showInfo": "Mostrar Info",
+      "createAssessment": "Crear Evaluación",
+      "difficulty": "Dificultad",
+      "domain": "Dominio",
+      "skill": "Habilidad",
+      "groups": "Grupos",
+      "deleteConfirmation": "¿Estás seguro de que quieres eliminar la evaluación \"{name}\"? Esta acción no se puede deshacer."
+    },
+    "assessmentsDescription": "{total} evaluaciones totales ({active} activas)",
+    "attempts": {
+      "title": "Intentos"
+    },
+    "attemptsDescription": "{total} intentos totales",
+    "studentManagement": "Gestión de Estudiantes",
+    "studentManagementDescription": "Gestiona estudiantes, grupos y su acceso a evaluaciones",
+    "groups": {
+      "title": "Grupos"
+    },
+    "groupsDescription": "{total} grupos totales",
+    "users": {
+      "title": "Estudiantes"
+    },
+    "studentsDescription": "{total} estudiantes totales",
+    "academicContent": "Contenido Académico",
+    "academicContentDescription": "Gestiona dominios, habilidades y recursos educativos",
+    "domains": {
+      "title": "Dominios"
+    },
+    "domainsDescription": "{total} dominios totales",
+    "skillsDescription": "{total} habilidades totales",
+    "sources": {
+      "title": "Fuentes",
+      "description": "Gestiona fuentes educativas y referencias"
+    },
+    "skillLevels": {
+      "title": "Niveles de Habilidad"
+    },
+    "recentActivity": "Actividad Reciente",
+    "recentActivityDescription": "Últimos intentos de estudiantes y actividades",
+    "attempted": "intentó",
     "studentAttempts": "Intentos de estudiantes",
     "results": "Resultados",
     "disputes": "Disputas",
@@ -259,21 +307,6 @@
     "manageDomains": "Gestionar dominios",
     "welcomeBack": "Hola de nuevo",
     "manageEducationalContent": "Gestiona tu contenido educativo y rastrea el progreso de los estudiantes",
-    "assessments": {
-          "title": "Evaluaciones",
-    "description": "Gestiona evaluaciones para tus estudiantes",
-    "createAssessment": "Crear Evaluación",
-    "editAssessment": "Editar Evaluación",
-      "difficulty": "Dificultad",
-      "domain": "Dominio",
-      "skill": "Habilidad",
-      "groups": "Grupos",
-      "whatIsAssessment": "¿Qué es una Evaluación?",
-      "assessmentExplanation": "Una evaluación es una herramienta de medición que permite evaluar el conocimiento y habilidades de los estudiantes. Cada evaluación está asociada a un dominio y habilidad específica, y puede ser asignada a grupos de estudiantes. Las evaluaciones pueden estar en estado borrador, activo o inactivo.",
-      "hideInfo": "Ocultar Info",
-      "showInfo": "Mostrar Info",
-      "deleteConfirmation": "¿Estás seguro de que quieres eliminar \"{name}\"? Esta acción no se puede deshacer."
-    },
     "attempts": {
       "title": "Intentos",
       "description": "Revisa los intentos de evaluación de tus estudiantes",
@@ -297,7 +330,6 @@
       "showInfo": "Mostrar Info",
       "deleteConfirmation": "¿Estás seguro de que quieres eliminar el intento de \"{name}\"? Esta acción no se puede deshacer."
     },
-    "domains": "Dominios",
     "skills": {
       "title": "Habilidades",
       "description": "Gestiona habilidades educativas en tu institución",

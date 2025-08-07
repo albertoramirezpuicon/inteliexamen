@@ -71,4 +71,26 @@ export interface Domain {
   name: string;
   description?: string;
   skills_count?: number;
+}
+
+// Skill Level interface
+export interface SkillLevel {
+  id: number;
+  skill_id: number;
+  skill_level_setting_id: number;
+  order: number;
+  label: string;
+  standard: number;
+  description: string;
+}
+
+// Skill Level Setting interface (institution template)
+export interface SkillLevelSetting {
+  id: number;
+  institution_id: number;
+  order: number;
+  label: string;
+  description: string;
+  lower_limit?: number;
+  upper_limit?: number;
 } 

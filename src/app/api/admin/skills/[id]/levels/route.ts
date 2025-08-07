@@ -36,7 +36,7 @@ export async function GET(
 
     // Get existing skill levels
     const skillLevels = await query(
-      `SELECT id, \`order\`, label, description, standard
+      `SELECT id, skill_level_setting_id, \`order\`, label, description, standard
        FROM inteli_skills_levels
        WHERE skill_id = ?
        ORDER BY \`order\``,
@@ -118,6 +118,13 @@ export async function POST(
         );
       }
       
+      if (!level.skill_level_setting_id || level.skill_level_setting_id !== template.id) {
+        return NextResponse.json(
+          { error: `Level ${i + 1} must reference the correct skill level setting (expected: ${template.id})` },
+          { status: 400 }
+        );
+      }
+      
       if (!level.description || level.description.trim() === '') {
         return NextResponse.json(
           { error: `Description is required for level: ${template.label}` },
@@ -132,15 +139,15 @@ export async function POST(
     // Insert new skill levels
     for (const level of levels) {
       await query(
-        `INSERT INTO inteli_skills_levels (skill_id, \`order\`, label, description, standard)
-         VALUES (?, ?, ?, ?)`,
-        [id, level.order, level.label, level.description.trim(), level.standard || 0]
+        `INSERT INTO inteli_skills_levels (skill_id, skill_level_setting_id, \`order\`, label, description, standard)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [id, level.skill_level_setting_id, level.order, level.label, level.description.trim(), level.standard || 0]
       );
     }
 
     // Get updated skill levels
     const updatedLevels = await query(
-      `SELECT id, \`order\`, label, description, standard
+      `SELECT id, skill_level_setting_id, \`order\`, label, description, standard
        FROM inteli_skills_levels
        WHERE skill_id = ?
        ORDER BY \`order\``,

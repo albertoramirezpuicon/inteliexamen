@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
           </div>
           
           <div class="content">
-            <p>Hi Alberto!</p>
+            <p>Hi Inteliexamen Team!</p>
             
             <p>You have received a new contact form submission from your Inteliexamen website:</p>
             
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     // Send email using Resend
     const result = await resend.emails.send({
       from: 'Contact Form <contact@web.inteliexamen.com>',
-      to: ['albertoramirezpuicon@gmail.com'],
+      to: ['contact@inteliexamen.com'],
       replyTo: email, // User's email as reply-to
       subject: subject,
       html: htmlContent,
