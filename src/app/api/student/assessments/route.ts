@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { validateStudentAccess } from '@/lib/serverAuth';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user ID from query parameters or headers
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId') || request.headers.get('x-user-id') || '1';
-
-    if (!userId) {
+    // Validate student access
+    const user = await validateStudentAccess(request);
+    
+    if (!user) {
       return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
+        { error: 'Unauthorized access' },
+        { status: 401 }
       );
     }
+
+    const userId = user.id.toString();
 
     // Get assessments associated with groups where the user is a member
     const assessments = await query(`

@@ -1,10 +1,20 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { query, insertQuery } from '@/lib/db';
+import { validateAdminAccess } from '@/lib/serverAuth';
 
 // GET - List all users
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Validate admin access
+    const user = await validateAdminAccess(request);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized access' },
+        { status: 401 }
+      );
+    }
     const users = await query(`
       SELECT 
         u.id, 
@@ -33,8 +43,17 @@ export async function GET() {
 }
 
 // POST - Create new user
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // Validate admin access
+    const user = await validateAdminAccess(request);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized access' },
+        { status: 401 }
+      );
+    }
     const { email, password, given_name, family_name, role, institution_id, language_preference } = await request.json();
 
     // Validate required fields

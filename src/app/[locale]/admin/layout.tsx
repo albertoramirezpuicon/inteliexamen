@@ -20,14 +20,17 @@
  */
 
 import { NextIntlClientProvider } from 'next-intl';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+
+interface AdminLayoutProps {
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
+}
 
 export default async function AdminLayout({
   children,
   params
-}: {
-  children: React.ReactNode;
-  params: Promise<{ locale: string }>;
-}) {
+}: AdminLayoutProps) {
   const { locale } = await params;
   
   // Load messages for the current locale
@@ -35,7 +38,9 @@ export default async function AdminLayout({
 
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
-      {children}
+      <ProtectedRoute userType="admin">
+        {children}
+      </ProtectedRoute>
     </NextIntlClientProvider>
   );
 } 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { validateTeacherAccess } from '@/lib/serverAuth';
 
 interface CountResult {
   total: number;
@@ -16,16 +17,18 @@ interface RecentAttempt {
 // GET - Get dashboard statistics for teacher
 export async function GET(request: NextRequest) {
   try {
-    // Get teacher info from request headers
-    const teacherId = request.headers.get('x-user-id');
-    const teacherInstitutionId = request.headers.get('x-institution-id');
-
-    if (!teacherId || !teacherInstitutionId) {
+    // Validate teacher access
+    const user = await validateTeacherAccess(request);
+    
+    if (!user) {
       return NextResponse.json(
-        { error: 'Teacher information not provided' },
-        { status: 400 }
+        { error: 'Unauthorized access' },
+        { status: 401 }
       );
     }
+
+    const teacherId = user.id.toString();
+    const teacherInstitutionId = user.institution_id.toString();
 
     console.log('Teacher dashboard stats - Teacher ID:', teacherId, 'Institution ID:', teacherInstitutionId);
 

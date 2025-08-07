@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { validateStudentAccess } from '@/lib/serverAuth';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Validate student access
+    const user = await validateStudentAccess(request);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized access' },
+        { status: 401 }
+      );
+    }
+
     const { id: attemptId } = await params;
 
     if (!attemptId) {

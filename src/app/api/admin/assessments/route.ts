@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query, insertQuery } from '@/lib/db';
 import pool from '@/lib/db';
+import { validateAdminAccess } from '@/lib/serverAuth';
 
 // GET - List assessments with filtering and pagination
 export async function GET(request: NextRequest) {
   try {
+    // Validate admin access
+    const user = await validateAdminAccess(request);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized access' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -99,6 +110,16 @@ export async function GET(request: NextRequest) {
 // POST - Create new assessment
 export async function POST(request: NextRequest) {
   try {
+    // Validate admin access
+    const user = await validateAdminAccess(request);
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized access' },
+        { status: 401 }
+      );
+    }
+
     const {
       institution_id,
       teacher_id,
